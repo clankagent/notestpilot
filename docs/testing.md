@@ -125,6 +125,7 @@ CLI runs handle Linux SIGTERM and Ctrl+C as cancellation. Interrupted observatio
 retain the completed samples and are marked incomplete. Reports retain earlier
 passed steps and include a failed cancellation step, with overall passed:false
 and progress state cancelled. The runner closes its own child processes. A real
-Linux signal test verifies this during preparation before any game launches;
-live game cancellation still needs its separate runtime check. A cancelled run
+Linux signal tooling test verifies preparation without launching a game. A
+separate remote game check interrupted a 180-second observation after 10.616 seconds,
+retained 11 samples and archived logs, and verified all its game processes stopped. A cancelled run
 is never equivalent to completing the requested workload.

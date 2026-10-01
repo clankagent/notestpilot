@@ -19,6 +19,7 @@ internal static class Observation
     private static double maximumFrameMs;
     private static readonly Process process = Process.GetCurrentProcess();
     private static readonly Dictionary<uint, float> lastDamage = new Dictionary<uint, float>();
+    private static readonly Dictionary<uint, object> firstAirborneContacts = new Dictionary<uint, object>();
 
     internal static void Install(Harmony harmony)
     {
@@ -31,6 +32,10 @@ internal static class Observation
             prefix: new HarmonyMethod(typeof(Observation), nameof(DamageEvent)));
         harmony.Patch(AccessTools.Method(typeof(AeroPart), "OnCollisionEnter"),
             prefix: new HarmonyMethod(typeof(Observation), nameof(CollisionEvent)));
+        harmony.Patch(AccessTools.Method(typeof(Unit), "DetachPart"),
+            prefix: new HarmonyMethod(typeof(Observation), nameof(DetachEvent)));
+        harmony.Patch(AccessTools.Method(typeof(AeroPart), "BreakAllJoints"),
+            prefix: new HarmonyMethod(typeof(Observation), nameof(JointsEvent)));
     }
 
     private static void AircraftEvent(Aircraft __instance, MethodBase __originalMethod)
@@ -50,36 +55,72 @@ internal static class Observation
             fire = damageInfo.fireDamage.Decompress(), impact = damageInfo.impactDamage.Decompress() });
     }
 
+    private static void DetachEvent(Unit __instance, byte partID)
+    { if (__instance is Aircraft aircraft) Record(aircraft, "DetachPart", new { partID }); }
+
+    private static void JointsEvent(AeroPart __instance)
+    {
+        if (__instance.parentUnit is Aircraft aircraft && aircraft.Player != null)
+            Record(aircraft, "BreakAllJoints", PartSnapshot(__instance));
+    }
+
+    private static object PartSnapshot(UnitPart part)
+    {
+        if (part == null) return null;
+        var body = part.rb;
+        var aero = part as AeroPart;
+        return new { name = part.name, partID = part.id, part.hitPoints,
+            detached = part.IsDetached(), bodyId = body != null ? (int?)body.GetInstanceID() : null,
+            bodyName = body != null ? body.name : null, bodyMass = body != null ? (float?)body.mass : null,
+            bodyVelocity = body != null ? new[] { body.velocity.x, body.velocity.y, body.velocity.z } : null,
+            joints = aero?.Joints?.Where(j => j != null).Select(j => new {
+                connectedPart = j.connectedPart != null ? j.connectedPart.name : null,
+                connectedPartID = j.connectedPart != null ? (byte?)j.connectedPart.id : null,
+                exists = j.joint != null, j.breakForce, j.breakTorque }).ToArray() };
+    }
+
     private static void CollisionEvent(AeroPart __instance, Collision collision)
     {
         if (!(__instance.parentUnit is Aircraft aircraft) || aircraft.Player == null || !aircraft.LocalSim) return;
-        // Discard gentle wheel/ground contacts; record hard contacts without
-        // changing the original collision or damage calculation.
-        if (collision.impulse.magnitude < 1000 || collision.relativeVelocity.sqrMagnitude < 25) return;
+        // Keep the first contact above ground even if it falls below the hard
+        // contact filter. A later breakup must not erase the initiating contact.
+        bool firstAirborne = aircraft.radarAlt > 80 && collision.impulse.sqrMagnitude > 0
+            && !firstAirborneContacts.ContainsKey(aircraft.NetId);
+        if (!firstAirborne && (collision.impulse.magnitude < 1000 || collision.relativeVelocity.sqrMagnitude < 25)) return;
         var collider = collision.collider;
         var part = collider != null ? collider.GetComponentInParent<UnitPart>() : null;
         var other = part != null ? part.parentUnit : collider?.GetComponentInParent<Unit>();
-        Record(aircraft, "Collision", new {
+        var recorded = Record(aircraft, "Collision", new {
+            sourcePart = PartSnapshot(__instance), otherPartState = PartSnapshot(part),
+            colliderId = collider != null ? (int?)collider.GetInstanceID() : null,
+            otherBodyId = collision.rigidbody != null ? (int?)collision.rigidbody.GetInstanceID() : null,
             collider = collider?.name, otherUnitNetId = other != null ? (uint?)other.NetId : null,
             otherUnitType = other?.definition?.jsonKey, otherPart = part?.name,
             impulse = collision.impulse.magnitude, relativeSpeed = collision.relativeVelocity.magnitude
         });
+        if (firstAirborne && recorded != null)
+        {
+            if (firstAirborneContacts.Count >= 64) firstAirborneContacts.Clear();
+            firstAirborneContacts[aircraft.NetId] = recorded;
+        }
     }
 
-    private static void Record(Aircraft aircraft, string action, object damage = null)
+    private static object Record(Aircraft aircraft, string action, object damage = null)
     {
-        if (aircraft == null || aircraft.Player == null) return;
+        if (aircraft == null || aircraft.Player == null) return null;
         // Only infrequent lifecycle events get a stack; no per-frame stacks.
         var callers = new StackTrace(false).GetFrames()?.Skip(2).Take(8)
             .Select(f => f.GetMethod().DeclaringType?.FullName + "." + f.GetMethod().Name).ToArray();
         var position = aircraft.GlobalPosition();
-        events.Enqueue(new { seq = ++sequence, seconds = Time.realtimeSinceStartup,
+        var recorded = new { seq = ++sequence, seconds = Time.realtimeSinceStartup,
             action, aircraftNetId = aircraft.NetId, playerNetId = aircraft.Player.NetId,
             state = aircraft.unitState.ToString(), aircraft.disabled, aircraft.Ignition,
             aircraft.speed, radarAltitude = aircraft.radarAlt,
             position = new[] { position.x, position.y, position.z },
-            pilots = aircraft.pilots.Select(p => new { p.dead, p.ejected, state = p.GetCurrentState() }).ToArray(), callers, damage });
+            pilots = aircraft.pilots.Select(p => new { p.dead, p.ejected, state = p.GetCurrentState() }).ToArray(), callers, damage };
+        events.Enqueue(recorded);
         while (events.Count > 64) events.Dequeue();
+        return recorded;
     }
 
     internal static void Frame()
@@ -102,6 +143,7 @@ internal static class Observation
         process.Refresh();
         return new {
         eventCount = sequence, events = events.ToArray(),
+        firstAirborneContacts = firstAirborneContacts.Values.ToArray(),
         // Cumulative samples include loading/menu time. Runner uses window deltas.
         frames, fixedSteps, frameBuckets = frameBuckets.ToArray(), maximumFrameMs,
         realtimeSeconds = Time.realtimeSinceStartup,

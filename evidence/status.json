@@ -1,5 +1,5 @@
 {
-  "checkpoint": "2026-10-01: revised four-pilot ten-minute baseline passed; repeated Spatial comparisons unverified",
+  "checkpoint": "2026-10-01: four-pilot baseline passed; Spatial flight and occupied mission rotation failed; live cancellation verified",
   "game": {
     "version": "0.34.1",
     "steam_build": 24724541,
@@ -12,13 +12,13 @@
     "platforms": [
       "Linux Python3.14:43 passed",
       "Windows Python3.12:42 passed, POSIX signal test skipped",
-      "CI Ubuntu Python3.11/3.14:previous39 passed, latest43 pending"
+      "CI Ubuntu Python3.11/3.14:43 passed"
     ],
     "scope": "test tooling, not game behaviour",
     "previous_remote_linux_passed": 30,
     "latest_ci_passed_before_pause_checkpoint": 35,
     "latest_remote_linux_passed": 43,
-    "latest_ci_passed": 39,
+    "latest_ci_passed": 43,
     "windows_passed": 42,
     "windows_skipped": 1
   },
@@ -3886,6 +3886,1091 @@
         "External thread windows approximate the bridge window using nearest CPU-counter samples."
       ],
       "scope": "Four native UDP clients on unchanged stock Escalation:180sec taxi/takeoff,600sec airborne flight with0.5sec gun bursts every20sec. All50checks passed; original aircraft/player identities retained and server gun ammunition ends328/316/320/322. First baseline only, not a repeated mod benefit or long combat/lifecycle pass."
+    },
+    {
+      "id": "ryzen-four-half-spatial-01",
+      "scenario": "Native Escalation: 4 pilots, 600s airborne",
+      "passed": false,
+      "checks": 49,
+      "failed_steps": [
+        "Sustained multiplayer flight and gun firing"
+      ],
+      "input_sha256": {
+        "scenario": "efccebbdb3a26dbfccbdab560ac05c6d5e5ff47de311b28c69a6f402d86e5017",
+        "gameAssembly": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a",
+        "bridge": "aa01f25ec40c6d57d87a8fdad6a7d73a2655efdc907a690acaae1665b5820424"
+      },
+      "loaded_server_plugins": [
+        {
+          "guid": "agent.noperf.spatial",
+          "version": "0.1.0"
+        },
+        {
+          "guid": "clankagent.notestpilot.bridge",
+          "version": "0.1.0"
+        }
+      ],
+      "observations": [
+        {
+          "name": "Every pilot taxis, takes off and climbs",
+          "passed": true,
+          "requested_seconds": 180,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1065,
+          "units_max": 1086,
+          "registered_aircraft_min": 11,
+          "registered_aircraft_max": 13,
+          "processes": {
+            "server": {
+              "seconds": 179.8162309,
+              "cpu_cores": 0.6982128330218493,
+              "updates_per_second": 58.604275861284336,
+              "fixed_steps_per_second": 60.00014540400424,
+              "resident_peak_bytes": 1143291904,
+              "frames": 10538,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                4906,
+                5446,
+                167,
+                19,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 179.80979920000001,
+              "cpu_cores": 0.5894561946655018,
+              "updates_per_second": 58.92337373790916,
+              "fixed_steps_per_second": 59.99673014483851,
+              "resident_peak_bytes": 1146286080,
+              "frames": 10595,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                4913,
+                5613,
+                60,
+                9,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 179.81374499999998,
+              "cpu_cores": 0.5902218431633244,
+              "updates_per_second": 58.86090632281754,
+              "fixed_steps_per_second": 60.00097489766425,
+              "resident_peak_bytes": 1145409536,
+              "frames": 10584,
+              "frames_over_50ms": 2,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                4880,
+                5628,
+                65,
+                9,
+                2,
+                0
+              ]
+            },
+            "client3": {
+              "seconds": 179.7950215,
+              "cpu_cores": 0.5923412067335803,
+              "updates_per_second": 58.944902431572615,
+              "fixed_steps_per_second": 60.001661391942385,
+              "resident_peak_bytes": 1145716736,
+              "frames": 10598,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                4859,
+                5669,
+                66,
+                4,
+                0,
+                0
+              ]
+            },
+            "client4": {
+              "seconds": 179.793877,
+              "cpu_cores": 0.5914550694070632,
+              "updates_per_second": 58.89522033055664,
+              "fixed_steps_per_second": 59.996481415215264,
+              "resident_peak_bytes": 1142517760,
+              "frames": 10589,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                4875,
+                5633,
+                75,
+                6,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 175.8467968770001,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.4830341041663281
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.10139507978909384
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.08109331675785071
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.026045399070894548
+              },
+              {
+                "name": "Loading.Preload",
+                "main_thread": false,
+                "cpu_cores": 0.0015354274561444384
+              }
+            ],
+            "guest_cpu_steal_percent": 0.8508486818345974,
+            "guest_cpu_busy_percent": 76.11845431563742,
+            "guest_min_available_memory_bytes": 2326028288,
+            "guest_max_swap_used_bytes": 135168,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 41.95021252027623,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.012430138272742641,
+              "memory_full_stall_percent": 0.011417324828522922,
+              "io_some_stall_percent": 0.09710327571075232,
+              "io_full_stall_percent": 0.025493782540353765
+            }
+          }
+        },
+        {
+          "name": "Sustained multiplayer flight and gun firing",
+          "passed": false,
+          "requested_seconds": null,
+          "partial_window_derived_from_samples": true,
+          "units_min": 1018,
+          "units_max": 1074,
+          "registered_aircraft_min": 10,
+          "registered_aircraft_max": 12,
+          "processes": {
+            "server": {
+              "seconds": 557.813247,
+              "cpu_cores": 0.7649872108541013,
+              "updates_per_second": 55.77314659936715,
+              "fixed_steps_per_second": 59.98961154108267,
+              "resident_peak_bytes": 1148407808,
+              "frames": 31111,
+              "frames_over_50ms": 17,
+              "frames_over_100ms": 4,
+              "frame_bucket_counts": [
+                12784,
+                16635,
+                1461,
+                214,
+                13,
+                4
+              ]
+            },
+            "client1": {
+              "seconds": 557.811512,
+              "cpu_cores": 0.6664975390468456,
+              "updates_per_second": 57.12503115209999,
+              "fixed_steps_per_second": 60.000554452522664,
+              "resident_peak_bytes": 1203212288,
+              "frames": 31865,
+              "frames_over_50ms": 2,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                13363,
+                17639,
+                780,
+                81,
+                2,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 557.8141019999999,
+              "cpu_cores": 0.663088291733435,
+              "updates_per_second": 57.198267102971165,
+              "fixed_steps_per_second": 59.998483150574785,
+              "resident_peak_bytes": 1204670464,
+              "frames": 31906,
+              "frames_over_50ms": 4,
+              "frames_over_100ms": 1,
+              "frame_bucket_counts": [
+                13334,
+                17745,
+                758,
+                65,
+                3,
+                1
+              ]
+            },
+            "client3": {
+              "seconds": 557.822315,
+              "cpu_cores": 0.665659996050893,
+              "updates_per_second": 57.120339475841874,
+              "fixed_steps_per_second": 59.99939245886927,
+              "resident_peak_bytes": 1209159680,
+              "frames": 31863,
+              "frames_over_50ms": 6,
+              "frames_over_100ms": 1,
+              "frame_bucket_counts": [
+                13147,
+                17843,
+                809,
+                58,
+                5,
+                1
+              ]
+            },
+            "client4": {
+              "seconds": 557.823114,
+              "cpu_cores": 0.6602630668330463,
+              "updates_per_second": 57.21347717405629,
+              "fixed_steps_per_second": 60.00109920149347,
+              "resident_peak_bytes": 1207607296,
+              "frames": 31915,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                13359,
+                17736,
+                753,
+                67,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 558.2782771909997,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.5167852875301723
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.12250163188169731
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.09045668094788292
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.02978801196362956
+              },
+              {
+                "name": "IPC:CSteamEngin",
+                "main_thread": false,
+                "cpu_cores": 0.0011463816991414866
+              }
+            ],
+            "guest_cpu_steal_percent": 0.8942359817235112,
+            "guest_cpu_busy_percent": 84.91050806999002,
+            "guest_min_available_memory_bytes": 2134286336,
+            "guest_max_swap_used_bytes": 256335872,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 55.09058610474596,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.027764827386785332,
+              "memory_full_stall_percent": 0.02427714018928785,
+              "io_some_stall_percent": 0.1006759573071673,
+              "io_full_stall_percent": 0.019253122392800283
+            }
+          }
+        }
+      ],
+      "limits": [
+        "Server and headless dedicated-build UDP clients share four vCPUs and 8 GiB.",
+        "Baseline includes BepInEx and NOTestPilot, not a loader-free stock server.",
+        "Frame intervals are Unity Update wall times, not retail network latency.",
+        "External thread windows approximate the bridge window using nearest CPU-counter samples."
+      ],
+      "scope": "Four-client matched0.5sec-burst Spatial attempt failed557.992sec into the600sec airborne observation. Client2 recorded impact damage/self-part collisions around792m before descent; initiating cause remains unknown. No whole-server mod benefit/regression attribution from this incomplete pair. Patch activation verified."
+    },
+    {
+      "id": "ryzen-cancellation-01",
+      "scenario": "Native dedicated startup and two-client flight and rockets",
+      "passed": false,
+      "checks": 28,
+      "failed_steps": [
+        "Both clients steer, taxi and attempt takeoff for three minutes"
+      ],
+      "input_sha256": {
+        "scenario": "01eb0f55e4afdb0ab300f6d25498004cdb5994f0345cb847d65f3827e5644a84",
+        "gameAssembly": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a",
+        "bridge": "aa01f25ec40c6d57d87a8fdad6a7d73a2655efdc907a690acaae1665b5820424"
+      },
+      "loaded_server_plugins": [
+        {
+          "guid": "clankagent.notestpilot.bridge",
+          "version": "0.1.0"
+        }
+      ],
+      "observations": [
+        {
+          "name": "Both clients steer, taxi and attempt takeoff for three minutes",
+          "passed": false,
+          "requested_seconds": 180,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1063,
+          "units_max": 1066,
+          "registered_aircraft_min": 9,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 10.292672499999998,
+              "cpu_cores": 0.6781523457585968,
+              "updates_per_second": 59.848401860644074,
+              "fixed_steps_per_second": 59.945558357171095,
+              "resident_peak_bytes": 1080459264,
+              "frames": 616,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                336,
+                280,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 10.28068,
+              "cpu_cores": 0.5466564468498194,
+              "updates_per_second": 59.82094569619908,
+              "fixed_steps_per_second": 60.01548535699973,
+              "resident_peak_bytes": 1096785920,
+              "frames": 615,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                314,
+                298,
+                3,
+                0,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 10.2814731,
+              "cpu_cores": 0.549532148267742,
+              "updates_per_second": 59.81633118312589,
+              "fixed_steps_per_second": 60.01085583737996,
+              "resident_peak_bytes": 1098809344,
+              "frames": 615,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                344,
+                269,
+                1,
+                1,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 10.02810032599973,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.44873902870047144
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.10271137768033015
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.09174220142320749
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.02393274819735848
+              },
+              {
+                "name": "Loading.Preload",
+                "main_thread": false,
+                "cpu_cores": 0.0059831870493396245
+              }
+            ],
+            "guest_cpu_steal_percent": 0.8306065945129625,
+            "guest_cpu_busy_percent": 47.8228039265039,
+            "guest_min_available_memory_bytes": 4580937728,
+            "guest_max_swap_used_bytes": 438272,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 7.02525879376627,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.0018348440284641498,
+              "memory_full_stall_percent": 0.0017450962227240556,
+              "io_some_stall_percent": 0.07493941779297873,
+              "io_full_stall_percent": 0.028878849491479227
+            }
+          }
+        }
+      ],
+      "limits": [
+        "Server and headless dedicated-build UDP clients share four vCPUs and 8 GiB.",
+        "Baseline includes BepInEx and NOTestPilot, not a loader-free stock server.",
+        "Frame intervals are Unity Update wall times, not retail network latency.",
+        "External thread windows approximate the bridge window using nearest CPU-counter samples."
+      ],
+      "scope": "Intentional live-game SIGTERM during a180sec observation. Controller verified cancellation at10.616sec,11partial samples retained, archived logs and all owned game children stopped. Game workload did not complete: report remains passed:false,cancelled:true; expected cancellation behaviour verified.",
+      "cancelled": true,
+      "expected_cancellation_verified": true
+    },
+    {
+      "id": "ryzen-playing-rotation-01",
+      "scenario": "Native dedicated active Escalation to Terminal Control and back",
+      "passed": false,
+      "checks": 41,
+      "failed_steps": [
+        "Native server loads rotated Terminal Control"
+      ],
+      "input_sha256": {
+        "scenario": "f0ad680018c1f0d63661af4aeeb1f20211abcc42bf57c9e0ff849d11e8b696bd",
+        "gameAssembly": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a",
+        "bridge": "aa01f25ec40c6d57d87a8fdad6a7d73a2655efdc907a690acaae1665b5820424"
+      },
+      "loaded_server_plugins": [
+        {
+          "guid": "clankagent.notestpilot.bridge",
+          "version": "0.1.0"
+        }
+      ],
+      "observations": [
+        {
+          "name": "Both clients steer, taxi and attempt takeoff for three minutes",
+          "passed": true,
+          "requested_seconds": 180,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1063,
+          "units_max": 1079,
+          "registered_aircraft_min": 9,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 179.393201,
+              "cpu_cores": 0.6498574045735435,
+              "updates_per_second": 59.96882791561314,
+              "fixed_steps_per_second": 60.002273999224755,
+              "resident_peak_bytes": 1131757568,
+              "frames": 10758,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5915,
+                4839,
+                2,
+                2,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 179.39012400000001,
+              "cpu_cores": 0.5517583565525602,
+              "updates_per_second": 59.96985653457712,
+              "fixed_steps_per_second": 59.997728748991776,
+              "resident_peak_bytes": 1137905664,
+              "frames": 10758,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5890,
+                4860,
+                7,
+                1,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 179.3908115,
+              "cpu_cores": 0.5593374552519932,
+              "updates_per_second": 59.95290344065364,
+              "fixed_steps_per_second": 59.99749881280848,
+              "resident_peak_bytes": 1134936064,
+              "frames": 10755,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5939,
+                4804,
+                10,
+                2,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 180.40263548499934,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.42183419214143236
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.10531996912860993
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.09218268876888333
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.02455618227577589
+              },
+              {
+                "name": "Loading.Preload",
+                "main_thread": false,
+                "cpu_cores": 0.0020509678198729303
+              }
+            ],
+            "guest_cpu_steal_percent": 0.2847173761339846,
+            "guest_cpu_busy_percent": 44.311235170969994,
+            "guest_min_available_memory_bytes": 4494053376,
+            "guest_max_swap_used_bytes": 438272,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 3.6607342139129306,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 6.762650649310743e-05,
+              "memory_full_stall_percent": 6.152903459618791e-05,
+              "io_some_stall_percent": 0.10882047231306874,
+              "io_full_stall_percent": 0.05712333399285006
+            }
+          }
+        },
+        {
+          "name": "Both native clients fly and fire rockets for thirty seconds",
+          "passed": true,
+          "requested_seconds": 30,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1065,
+          "units_max": 1098,
+          "registered_aircraft_min": 10,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 29.769743999999974,
+              "cpu_cores": 0.7497545158601301,
+              "updates_per_second": 59.96020657752386,
+              "fixed_steps_per_second": 59.99379772966813,
+              "resident_peak_bytes": 1137631232,
+              "frames": 1785,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                938,
+                847,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 29.76611299999999,
+              "cpu_cores": 0.6537635599246701,
+              "updates_per_second": 59.967520784457164,
+              "fixed_steps_per_second": 60.00111603419636,
+              "resident_peak_bytes": 1141710848,
+              "frames": 1785,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                970,
+                815,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 29.758865999999983,
+              "cpu_cores": 0.6384651888280961,
+              "updates_per_second": 59.94852088785913,
+              "fixed_steps_per_second": 60.01572774984104,
+              "resident_peak_bytes": 1139990528,
+              "frames": 1784,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                967,
+                817,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 30.0657835410002,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.48892788641127083
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.12106785758755277
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.10776369741309635
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.02727352835763552
+              },
+              {
+                "name": "IPC:CSteamEngin",
+                "main_thread": false,
+                "cpu_cores": 0.001330416017445635
+              }
+            ],
+            "guest_cpu_steal_percent": 0.3432973289793184,
+            "guest_cpu_busy_percent": 51.31876412961568,
+            "guest_min_available_memory_bytes": 4477751296,
+            "guest_max_swap_used_bytes": 438272,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 5.538235841182426,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.0,
+              "memory_full_stall_percent": 0.0,
+              "io_some_stall_percent": 0.05694845762676039,
+              "io_full_stall_percent": 0.029445432506115508
+            }
+          }
+        }
+      ],
+      "limits": [
+        "Server and headless dedicated-build UDP clients share four vCPUs and 8 GiB.",
+        "Baseline includes BepInEx and NOTestPilot, not a loader-free stock server.",
+        "Frame intervals are Unity Update wall times, not retail network latency.",
+        "External thread windows approximate the bridge window using nearest CPU-counter samples."
+      ],
+      "scope": "Two native clients flew/fired rockets, then Escalation->Terminal Control rotation failed41checks on original Turret.ChooseTarget/Turret_OnTargetDisabled during server unit destruction. Clients also logged StatusDisplay cleanup exceptions. Return rotation was not reached; no suppression or retail claim."
+    },
+    {
+      "id": "ryzen-parts-startup-01",
+      "scenario": "Native dedicated startup and two-client flight and rockets",
+      "passed": false,
+      "checks": 28,
+      "failed_steps": [
+        "Both clients steer, taxi and attempt takeoff for three minutes"
+      ],
+      "input_sha256": {
+        "scenario": "01eb0f55e4afdb0ab300f6d25498004cdb5994f0345cb847d65f3827e5644a84",
+        "gameAssembly": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a",
+        "bridge": "7017827c39caecc1045e73f9b2c968e289ccfe4aa8d9daf42b3fbdf2201ff130"
+      },
+      "loaded_server_plugins": [
+        {
+          "guid": "clankagent.notestpilot.bridge",
+          "version": "0.1.0"
+        }
+      ],
+      "observations": [
+        {
+          "name": "Both clients steer, taxi and attempt takeoff for three minutes",
+          "passed": false,
+          "requested_seconds": null,
+          "partial_window_derived_from_samples": true,
+          "units_min": 1058,
+          "units_max": 1091,
+          "registered_aircraft_min": 8,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 171.6832614,
+              "cpu_cores": 0.6551599677381246,
+              "updates_per_second": 59.9476030224109,
+              "fixed_steps_per_second": 59.99420045966112,
+              "resident_peak_bytes": 1163452416,
+              "frames": 10292,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5533,
+                4751,
+                6,
+                2,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 171.69567,
+              "cpu_cores": 0.5411318759523754,
+              "updates_per_second": 59.93744629669461,
+              "fixed_steps_per_second": 60.00151314241064,
+              "resident_peak_bytes": 1149423616,
+              "frames": 10291,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5920,
+                4354,
+                13,
+                4,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 171.7014308,
+              "cpu_cores": 0.5638275671258995,
+              "updates_per_second": 59.91796312975163,
+              "fixed_steps_per_second": 59.99950001581466,
+              "resident_peak_bytes": 1142300672,
+              "frames": 10288,
+              "frames_over_50ms": 2,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5633,
+                4642,
+                10,
+                1,
+                2,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 170.41154361000008,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.4287268247930635
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.10527455840114369
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.08937187984667885
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.024646217685886485
+              },
+              {
+                "name": "Loading.Preload",
+                "main_thread": false,
+                "cpu_cores": 0.001995170003143192
+              }
+            ],
+            "guest_cpu_steal_percent": 0.370649300787076,
+            "guest_cpu_busy_percent": 44.192914839262244,
+            "guest_min_available_memory_bytes": 4332376064,
+            "guest_max_swap_used_bytes": 761856,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 3.8342449470169417,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.0027891303014528205,
+              "memory_full_stall_percent": 0.002299726835975932,
+              "io_some_stall_percent": 0.09547181872393576,
+              "io_full_stall_percent": 0.05390890667022223
+            }
+          }
+        }
+      ],
+      "limits": [
+        "Server and headless dedicated-build UDP clients share four vCPUs and 8 GiB.",
+        "Baseline includes BepInEx and NOTestPilot, not a loader-free stock server.",
+        "Frame intervals are Unity Update wall times, not retail network latency.",
+        "External thread windows approximate the bridge window using nearest CPU-counter samples."
+      ],
+      "scope": "Two-client baseline failed after171.799sec of180sec taxi/takeoff/flight. One aircraft suffered impact damage at705m, then own-part collisions, detachment and pilot death. Read-only joint/body diagnostics emitted successfully; the initial contact remains unresolved. No performance mod was loaded; this is a failed flight test, not a diagnosis pass."
+    },
+    {
+      "id": "ryzen-first-contact-startup-01",
+      "scenario": "Native dedicated startup and two-client flight and rockets",
+      "passed": true,
+      "checks": 37,
+      "failed_steps": [],
+      "input_sha256": {
+        "scenario": "01eb0f55e4afdb0ab300f6d25498004cdb5994f0345cb847d65f3827e5644a84",
+        "gameAssembly": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a",
+        "bridge": "33f096df9704a25ca1da18384aa92eba2c80b464f8e0f2eb21d69abda47cae9d"
+      },
+      "loaded_server_plugins": [
+        {
+          "guid": "clankagent.notestpilot.bridge",
+          "version": "0.1.0"
+        }
+      ],
+      "observations": [
+        {
+          "name": "Both clients steer, taxi and attempt takeoff for three minutes",
+          "passed": true,
+          "requested_seconds": 180,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1063,
+          "units_max": 1080,
+          "registered_aircraft_min": 9,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 179.5015241,
+              "cpu_cores": 0.6321951892552202,
+              "updates_per_second": 59.943780722472425,
+              "fixed_steps_per_second": 59.99949055585762,
+              "resident_peak_bytes": 1132298240,
+              "frames": 10760,
+              "frames_over_50ms": 1,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5889,
+                4865,
+                2,
+                3,
+                1,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 179.4917321,
+              "cpu_cores": 0.5406934284077812,
+              "updates_per_second": 59.958193472689764,
+              "fixed_steps_per_second": 60.00276377075532,
+              "resident_peak_bytes": 1137766400,
+              "frames": 10762,
+              "frames_over_50ms": 1,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                6152,
+                4600,
+                8,
+                1,
+                1,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 179.487705,
+              "cpu_cores": 0.5408727021162815,
+              "updates_per_second": 59.96511014500965,
+              "fixed_steps_per_second": 59.99853861856443,
+              "resident_peak_bytes": 1134899200,
+              "frames": 10763,
+              "frames_over_50ms": 1,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5957,
+                4797,
+                7,
+                1,
+                1,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 175.378775004001,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.4108821035975195
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.10337624948963405
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.0876388833235342
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.024347302003350103
+              },
+              {
+                "name": "Loading.Preload",
+                "main_thread": false,
+                "cpu_cores": 0.0014825055084007087
+              }
+            ],
+            "guest_cpu_steal_percent": 0.3557748863098398,
+            "guest_cpu_busy_percent": 43.081756495043535,
+            "guest_min_available_memory_bytes": 4413911040,
+            "guest_max_swap_used_bytes": 761856,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 3.1689872391189917,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.0007161641994428039,
+              "memory_full_stall_percent": 0.0007155940050164959,
+              "io_some_stall_percent": 0.1280012361785961,
+              "io_full_stall_percent": 0.06796204386607264
+            }
+          }
+        },
+        {
+          "name": "Both native clients fly and fire rockets for thirty seconds",
+          "passed": true,
+          "requested_seconds": 30,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1065,
+          "units_max": 1095,
+          "registered_aircraft_min": 9,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 28.99607800000001,
+              "cpu_cores": 0.7680349045826129,
+              "updates_per_second": 59.93914073482625,
+              "fixed_steps_per_second": 60.008115580320876,
+              "resident_peak_bytes": 1145430016,
+              "frames": 1738,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                900,
+                838,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 29.007567999999992,
+              "cpu_cores": 0.6808568026109597,
+              "updates_per_second": 59.84645110544946,
+              "fixed_steps_per_second": 59.98434615407953,
+              "resident_peak_bytes": 1152425984,
+              "frames": 1736,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                910,
+                823,
+                2,
+                1,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 29.013046000000003,
+              "cpu_cores": 0.641780252924839,
+              "updates_per_second": 59.93855315984402,
+              "fixed_steps_per_second": 60.007487666065806,
+              "resident_peak_bytes": 1148682240,
+              "frames": 1739,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                929,
+                808,
+                2,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 25.05243501899895,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.5121258668177423
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.11895051310341952
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.10777395482524597
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.027542232899785066
+              },
+              {
+                "name": "IPC:CSteamEngin",
+                "main_thread": false,
+                "cpu_cores": 0.0015966511825962362
+              }
+            ],
+            "guest_cpu_steal_percent": 0.351264552388599,
+            "guest_cpu_busy_percent": 52.87033319951827,
+            "guest_min_available_memory_bytes": 4365410304,
+            "guest_max_swap_used_bytes": 761856,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 6.388768192737357,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.0,
+              "memory_full_stall_percent": 0.0,
+              "io_some_stall_percent": 0.10513948037396206,
+              "io_full_stall_percent": 0.036663102780366046
+            }
+          }
+        }
+      ],
+      "limits": [
+        "Server and headless dedicated-build UDP clients share four vCPUs and 8 GiB.",
+        "Baseline includes BepInEx and NOTestPilot, not a loader-free stock server.",
+        "Frame intervals are Unity Update wall times, not retail network latency.",
+        "External thread windows approximate the bridge window using nearest CPU-counter samples."
+      ],
+      "scope": "New read-only first-contact trace loaded on the exact build. Two native clients completed startup,180sec taxi/takeoff/flight and30sec ordinary rocket firing;37checks passed. No above-ground contact occurred, so retaining the first such event remains unexercised. Repeat still running; prior physical failures retained."
     }
   ],
   "runtime": {
@@ -3901,16 +4986,18 @@
     "death_respawn": "parked ejection/recovery and native airborne ejection/replacement/second flight passed for both clients; deliberate combat death/respawn unverified",
     "steam_authentication": "not tested",
     "retail_clients": "not tested",
-    "dedicated_rotation": "tested and failed during ship particle-effect cleanup on unloading Terminal Control",
+    "dedicated_rotation": "Older ship particle cleanup failure and new occupied Escalation->Terminal Control Turret cleanup failure are retained; no reliable full rotation pass.",
     "long_multiplayer_soak": "Strict survival tests failed: old physical collision; new three-sortie repeat traced missile fragment damage to a pilot before own-part collisions and descent. No attacker identified.",
-    "noperf_comparison": "Spatial-only native startup/flight/rockets passed37 with actual patch activation verified. Matched repeated whole-server comparisons remain unverified.",
+    "noperf_comparison": "First revised four-pilot baseline passed50. Matched Spatial attempt failed after557.992sec airborne with impact/self-part collision and descent; cause uncertain, repeat pair not completed. No whole-server gain established.",
     "native_dedicated_startup": "passed; waits for players, first join loads stock Escalation, both matching clients join",
     "server_mod_manifest": "Runtime Spatial-only server loading passed37checks; loaded-plugin GUID and actual patch log verified. Clients remained bridge-only.",
-    "latest_runner_report_guards": "43 Linux tooling tests pass,42 Windows tests pass with one POSIX signal test skipped. Explicit cancelled state, incomplete observation evidence and interrupted cleanup reports tested. Real signal cancellation verified during Python lab preparation before any game launch; live game stop verification pending.",
+    "latest_runner_report_guards": "43Linux/CI tooling tests pass,42Windows pass with one POSIX signal test skipped. Live remote game SIGTERM verified: incomplete samples retained, cancelled result, own processes stopped and logs archived. Cancelled workload is not a full game pass.",
     "scenario_generation": "One-to-four-player generator uses0.5sec bursts every20sec and rejects exhausted/untouched ammunition. Four-player600sec generated flight/firing workload passed. Longer generated durations remain unverified and can exhaust ammunition without resupply.",
     "gun_bursts": "Passed54checks: both actors fired three1sec bursts, server ammunition decreased, then stayed unchanged while steering remained leased.",
     "occupied_reconnect": "Failed in native-flight-reconnect.json: RadarWarning.Update exception on first disconnect, even through normal quit-path semantics.",
-    "four_player_flight": "Revised0.5sec-burst fixture passed50 checks:180sec taxi/takeoff and600sec airborne, original aircraft retained, ammunition328/316/320/322. Earlier exhausted-ammunition failure retained."
+    "four_player_flight": "Revised0.5sec-burst fixture passed50 checks:180sec taxi/takeoff and600sec airborne, original aircraft retained, ammunition328/316/320/322. Earlier exhausted-ammunition failure retained.",
+    "playing_rotation": "Escalation->Terminal Control with occupied airborne clients failed on server Turret.ChooseTarget during unit cleanup. Return rotation was not reached. Original older ship-cleanup failure also retained.",
+    "flight_diagnostics": "Read-only part/body IDs, joint existence and detachment events emitted during a failed real baseline flight. The initial contact remains unresolved. New bounded first-airborne-contact trace loaded and passed one37check short flight; no airborne contact occurred to exercise retention. Repeat pending."
   },
   "limitations": [
     "Server and clients share one VM",
@@ -3938,7 +5025,7 @@
     ],
     "scope": "thread CPU sample, not production capacity estimate or mod benefit"
   },
-  "project_state": "Experimental: native multi-sortie flight, brief gun bursts and deliberate airborne replacement verified; revised four-pilot ten-minute flight/firing baseline passed. Spatial-only startup/flight/rockets verified. Occupied reconnects fail during client warning-display cleanup; strict survival can fail from combat damage. Repeated sustained combat and whole-server mod benefit remain unverified.",
+  "project_state": "Experimental: four-pilot ten-minute flight/firing baseline passed once. Its matched Spatial run failed; no whole-server benefit established. Short startup/flight repeats can still fail from impact and breakup. Occupied reconnect and mission rotation cleanup failures remain. Live cancellation saves partial results and stops its own processes.",
   "multicore_samples": [
     {
       "cpu_model": "AMD Ryzen 5 PRO 3600",
