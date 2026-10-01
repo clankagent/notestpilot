@@ -31,13 +31,13 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Gun firing | Both clients consumed their 1,000-round gun ammunition; server confirmed |
 | Select and fire rockets | Passed on the native dedicated server; both clients' rocket ammunition went from 8 to 0 |
 | Brief gun bursts while flight continues | Passed 54 checks: three bursts per client, server ammunition decreases, then stays unchanged between bursts |
-| Four-player ten-minute flight | Revised burst script passed50 checks: all four stayed airborne, fired and retained their aircraft. Earlier empty-ammunition failure preserved |
+| Four-player ten-minute flight | Two independent baselines passed 50 checks each: all four stayed airborne, fired and retained their aircraft. Earlier failures preserved |
 | Fifteen-minute flight and firing | Failed after about ten minutes airborne: one pilot died from collision damage. Both stayed connected |
-| Dedicated-server mission rotation | Failed while unloading ship particle effects; retained as a failing regression |
+| Dedicated-server mission rotation | Failed during ship-effect cleanup and, in a separate occupied run, turret cleanup; both retained |
 | Steam authentication / retail clients | Not tested |
 | Long multiplayer sessions / performance-mod comparison | Not verified |
 
-The runner also has **43 automated tests** (all pass on Linux;42 pass on Windows
+The runner also has **43 automated tests** (all pass on Linux; 42 pass on Windows
 with the POSIX signal test skipped). These protect the testing tool;
 they do not count as game tests. See [the evidence summary](evidence/status.json).
 

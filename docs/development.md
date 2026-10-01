@@ -75,9 +75,9 @@ role `server`/`client`, valid TCP port and an approved assembly fingerprint. The
 runner supplies these only to its child processes and stops them in `finally`.
 
 A lab may be reused when its marker matches the source and game/bridge fingerprints
-match. Changed inputs require a new lab. Current scenarios verify one or two clients;
-the host currently has a four-connection cap. Do not infer larger-player coverage
-from the runner's configurable client count.
+match. Changed inputs require a new lab. Native dedicated-server scenarios have
+runtime passes with two and four clients. Four is the largest verified workload;
+the runner's configurable client count does not establish coverage beyond that.
 
 ## Extending coverage
 
