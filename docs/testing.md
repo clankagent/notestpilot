@@ -154,8 +154,11 @@ Snapshots keep at most eight scene events and sixteen missing lookup entries.
 
 Both clients also completed another two-sortie lifecycle run with these
 diagnostics: flight, rockets, airborne ejection, replacement and flight again
-(51 checks). Physics mode context was observed. The physical joint-break callback
-has not been exercised, so its installation is not proof of callback coverage.
+(51 checks). Physics mode context was observed. At that point the physical joint-break callback had not fired. A later failed
+profiling flight exercised that callback and first-airborne-contact retention: joint
+breaks at about 935 m preceded own-part contacts. Saved part hitpoints were already
+negative, so the initiating damage remains unresolved. Callback coverage is now
+observed; the failure remains a failure.
 
 
 The two-sortie lifecycle also passed a consecutive repeat (51 checks).
