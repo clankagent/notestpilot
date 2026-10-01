@@ -89,6 +89,35 @@ Native startup, scripted flight and rockets now have real runtime passes. Native
 mission rotation currently fails. Add sustained combat, airborne recovery,
 multi-client reconnects and long sessions before treating this as a complete suite.
 Reports now fingerprint the scenario, bridge and game assembly, and measure each
-process separately over observation windows. A mod-under-test input manifest,
-repeated alternating baseline/mod runs and broader activity are still needed for
+process separately over observation windows. Repeated alternating baseline/mod
+runs and broader activity are still needed for
 repeatable performance comparisons.
+
+## Add a server mod to a test
+
+`--server-mods /path/to/private-manifest.json` accepts explicitly listed plugin
+DLLs and plugin config files. Each file needs its SHA256. Paths are relative to
+the manifest unless absolute. For example:
+
+```json
+{
+  "version": 1,
+  "files": [{
+    "source": "MyMod.dll",
+    "destination": "BepInEx/plugins/MyMod/MyMod.dll",
+    "sha256": "<the file's SHA256>"
+  }]
+}
+```
+
+Use a separate lab for each variant. The runner copies these files only to the
+server, records their names/hashes, and refuses changed or unlisted test mods.
+It cannot replace the bridge or loader through this manifest. Client copies stay
+free of the server mod. Runtime snapshots also list loaded BepInEx plugins; file
+presence alone does not prove that a mod's patches activated.
+If a plugin rewrites a manifest-listed config while running, reuse is refused;
+start the next repeat in a fresh lab with the same original inputs.
+
+Manifest copying and contamination guards have tooling tests. A real modded
+game run and alternating baseline/mod comparison are still pending. No speedup
+or client compatibility claim follows from this feature alone.

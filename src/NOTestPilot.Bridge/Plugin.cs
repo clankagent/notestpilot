@@ -406,6 +406,8 @@ public sealed class Plugin : BaseUnityPlugin
             units = UnitRegistry.allUnits.Count, aircraft = UnitRegistry.allAircraft.Count,
             remotePlayers = UnitRegistry.playerLookup.Values.Count(p => p != null && !p.IsHostPlayer),
             playerNetIds = UnitRegistry.playerLookup.Values.Where(p => p != null).Select(p => p.NetId).ToArray(),
+            loadedPlugins = BepInEx.Bootstrap.Chainloader.PluginInfos.Values.OrderBy(p => p.Metadata.GUID, StringComparer.Ordinal)
+                .Select(p => new { guid = p.Metadata.GUID, name = p.Metadata.Name, version = p.Metadata.Version.ToString() }).ToArray(),
             localPlayerNetId = GameManager.GetLocalPlayer<Player>(out var localPlayer) ? (uint?)localPlayer.NetId : null,
             localPlayerOwnedCount = localPlayer != null ? localPlayer.OwnedAirframes.Count : 0,
             localPlayerAircraftNetId = localPlayer != null && localPlayer.Aircraft != null ? (uint?)localPlayer.Aircraft.NetId : null,

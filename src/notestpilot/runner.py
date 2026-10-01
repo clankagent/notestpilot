@@ -15,6 +15,8 @@ import time
 import uuid
 import xml.etree.ElementTree as ET
 
+from .inputs import apply_server_inputs, describe_server_inputs, load_server_inputs
+
 MAX_RESPONSE = 256 * 1024
 # Exact, documented rendering-only startup error from the headless build. Nothing
 # involving networking, Steam, assets, mission logic or exceptions is allowed.
@@ -365,7 +367,7 @@ def free_tcp_port():
         return sock.getsockname()[1]
 
 
-def prepare_lab(source: Path, lab: Path, clients=1):
+def prepare_lab(source: Path, lab: Path, clients=1, server_inputs=None):
     source, lab = source.resolve(), lab.resolve()
     if source == lab or source in lab.parents or lab in source.parents:
         raise ValueError("Game source and disposable lab must be separate directories")
@@ -380,6 +382,7 @@ def prepare_lab(source: Path, lab: Path, clients=1):
         raise ValueError("NOTestPilot bridge is not installed in the game input")
     lab.mkdir(parents=True, exist_ok=True)
     marker.write_text(str(source), encoding="utf-8")
+    server_was_present = (lab / "server").exists()
     for role in ["server", *client_names(clients)]:
         destination = lab / role
         if not destination.exists():
@@ -399,6 +402,7 @@ def prepare_lab(source: Path, lab: Path, clients=1):
             for relative in ("NuclearOptionServer_Data/Managed/Assembly-CSharp.dll", "BepInEx/plugins/NOTestPilot/NOTestPilot.Bridge.dll"):
                 if hashlib.sha256((source / relative).read_bytes()).digest() != hashlib.sha256((destination / relative).read_bytes()).digest():
                     raise ValueError("Lab input changed; choose a new disposable lab directory")
+    apply_server_inputs(lab, server_inputs or [], server_was_present)
     return lab
 
 
@@ -407,7 +411,8 @@ def run_lab(args):
     validate_scenario(scenario)
     if not args.execute:
         raise ValueError("Game launch is opt-in: inspect the scenario, then pass --execute in your remote lab")
-    lab = prepare_lab(Path(args.game), Path(args.lab), scenario.get("clients", 1))
+    server_inputs = load_server_inputs(Path(args.server_mods) if args.server_mods else None)
+    lab = prepare_lab(Path(args.game), Path(args.lab), scenario.get("clients", 1), server_inputs)
     directory = Path(args.output).resolve()
     report = {"scenario": scenario["name"], "passed": False, "steps": [], "mode": "real-process UDP lab", "startup": {}}
     report["inputSha256"] = {
@@ -415,6 +420,7 @@ def run_lab(args):
         "gameAssembly": hashlib.sha256((Path(args.game) / "NuclearOptionServer_Data/Managed/Assembly-CSharp.dll").read_bytes()).hexdigest(),
         "bridge": hashlib.sha256((Path(args.game) / "BepInEx/plugins/NOTestPilot/NOTestPilot.Bridge.dll").read_bytes()).hexdigest(),
     }
+    report["serverInputs"] = describe_server_inputs(server_inputs)
     processes, bridges = {}, {}
     token = secrets.token_hex(32)
     try:
@@ -483,6 +489,7 @@ def main():
     parser.add_argument("--game", required=True, help="Dedicated server with NOTestPilot bridge installed")
     parser.add_argument("--lab", required=True, help="New/marked disposable lab directory")
     parser.add_argument("--output", required=True, help="Private run artifacts directory")
+    parser.add_argument("--server-mods", help="Explicit SHA256 manifest of server-only test plugins/configs; requires its own lab")
     parser.add_argument("--execute", action="store_true", help="Explicitly launch disposable game processes in the remote lab")
     return run_lab(parser.parse_args())
 

@@ -8,17 +8,18 @@
     "linux_assembly_sha256": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a"
   },
   "runner_unit_tests": {
-    "passed": 30,
+    "passed": 33,
     "platforms": [
-      "Windows Python 3.12",
-      "Linux Python 3.14"
+      "Windows Python 3.12"
     ],
-    "scope": "test tooling, not game behaviour"
+    "scope": "test tooling, not game behaviour",
+    "previous_remote_linux_passed": 30
   },
   "bridge": {
     "linux_compile": "pass, zero warnings/errors",
     "main_thread_command_round_trip": "verified",
-    "mode": "dedicated-build headless UDP adapter"
+    "mode": "dedicated-build headless UDP adapter",
+    "latest_windows_compile": "pass, zero warnings/errors; new loaded-plugin metadata not yet runtime repeated"
   },
   "runs": [
     {
@@ -511,8 +512,8 @@
     {
       "id": "native-three-sorties-reconnect-01",
       "scenario": "native-three-sorties-reconnect.json",
-      "state": "running",
-      "scope": "planned three sorties, two airborne replacements, rocket/gun firing, sequential reconnects; no completed long-session verdict yet"
+      "state": "last verified running; current outcome unavailable",
+      "scope": "longer three-sortie/reconnect test launched independently and saved progress; remote host became unreachable before final result was retrieved"
     }
   ],
   "runtime": {
@@ -531,7 +532,8 @@
     "dedicated_rotation": "tested and failed during ship particle-effect cleanup on unloading Terminal Control",
     "long_multiplayer_soak": "failed after580.845sec of airborne observation: second pilot died from a physical collision at~935m terrain clearance; both clients connected",
     "noperf_comparison": "not tested",
-    "native_dedicated_startup": "passed; waits for players, first join loads stock Escalation, both matching clients join"
+    "native_dedicated_startup": "passed; waits for players, first join loads stock Escalation, both matching clients join",
+    "server_mod_manifest": "tooling tests pass: explicit SHA256 inputs, server-only copy, unchanged-variant reuse and contamination guards; remote game use pending"
   },
   "limitations": [
     "Server and clients share one VM",

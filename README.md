@@ -34,7 +34,7 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Steam authentication / retail clients | Not tested |
 | Long multiplayer sessions / performance-mod comparison | Not verified |
 
-The runner also has **30 automated tests**. These protect the testing tool;
+The runner also has **33 automated tests**. These protect the testing tool;
 they do not count as game tests. See [the evidence summary](evidence/status.json).
 
 ## How the player works
