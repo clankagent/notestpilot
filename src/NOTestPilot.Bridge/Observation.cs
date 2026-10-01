@@ -20,10 +20,16 @@ internal static class Observation
     private static readonly Process process = Process.GetCurrentProcess();
     private static readonly Dictionary<uint, float> lastDamage = new Dictionary<uint, float>();
     private static readonly Dictionary<uint, object> firstAirborneContacts = new Dictionary<uint, object>();
+    private static readonly Queue<object> sceneLoadEvents = new Queue<object>();
+    private static long mapTypeChecks;
 
     internal static void Install(Harmony harmony)
     {
-        foreach (var name in new[] { "StartEjectionSequence", "ReturnToInventory" })
+        harmony.Patch(AccessTools.Method(typeof(NuclearOption.SavedMission.Mission), "OnSceneLoaded"),
+            prefix: new HarmonyMethod(typeof(Observation), nameof(SceneLoadEvent)));
+        harmony.Patch(AccessTools.Method(typeof(NuclearOption.SceneLoading.MapLoader), "GetObjectType"),
+            prefix: new HarmonyMethod(typeof(Observation), nameof(MapTypeEvent)));
+        foreach (var name in new[] { "StartEjectionSequence", "ReturnToInventory", "SetComplexPhysics", "SetSimplePhysics" })
             harmony.Patch(AccessTools.Method(typeof(Aircraft), name),
                 prefix: new HarmonyMethod(typeof(Observation), nameof(AircraftEvent)));
         harmony.Patch(AccessTools.Method(typeof(Unit), "DisableUnit"),
@@ -36,6 +42,43 @@ internal static class Observation
             prefix: new HarmonyMethod(typeof(Observation), nameof(DetachEvent)));
         harmony.Patch(AccessTools.Method(typeof(AeroPart), "BreakAllJoints"),
             prefix: new HarmonyMethod(typeof(Observation), nameof(JointsEvent)));
+        harmony.Patch(AccessTools.Method(typeof(UnitPart), "OnJointBreak"),
+            prefix: new HarmonyMethod(typeof(Observation), nameof(JointBreakEvent)));
+    }
+
+    private static void SceneLoadEvent()
+    {
+        // Read the registry before the original mission handler. Never remove
+        // entries or replace the original handler, including when it will fail.
+        try
+        {
+            var missing = UnitRegistry.customIDLookup
+                .Where(p => p.Value == null || p.Value.Identity == null)
+                .Take(16).Select(p => new { key = p.Key, unitMissing = p.Value == null,
+                    identityMissing = p.Value != null && p.Value.Identity == null }).ToArray();
+            SceneEvent(new { action = "BeforeMissionSceneLoaded", seconds = Time.realtimeSinceStartup,
+                registeredUnits = UnitRegistry.allUnits.Count,
+                customEntries = UnitRegistry.customIDLookup.Count, missing });
+        }
+        catch (Exception error)
+        {
+            SceneEvent(new { action = "SceneDiagnosticFailed", error = error.GetType().FullName });
+        }
+    }
+
+    private static void MapTypeEvent(Mirage.NetworkIdentity identity)
+    {
+        mapTypeChecks++;
+        if (identity != null) return;
+        SceneEvent(new { action = "MissingMapIdentity", seconds = Time.realtimeSinceStartup,
+            managedNull = ReferenceEquals(identity, null) });
+        // The original GetObjectType still executes and reports its exception.
+    }
+
+    private static void SceneEvent(object snapshot)
+    {
+        sceneLoadEvents.Enqueue(snapshot);
+        while (sceneLoadEvents.Count > 8) sceneLoadEvents.Dequeue();
     }
 
     private static void AircraftEvent(Aircraft __instance, MethodBase __originalMethod)
@@ -62,6 +105,12 @@ internal static class Observation
     {
         if (__instance.parentUnit is Aircraft aircraft && aircraft.Player != null)
             Record(aircraft, "BreakAllJoints", PartSnapshot(__instance));
+    }
+
+    private static void JointBreakEvent(UnitPart __instance, float breakForce)
+    {
+        if (__instance.parentUnit is Aircraft aircraft && aircraft.Player != null)
+            Record(aircraft, "OnJointBreak", new { breakForce, part = PartSnapshot(__instance) });
     }
 
     private static object PartSnapshot(UnitPart part)
@@ -112,10 +161,12 @@ internal static class Observation
         var callers = new StackTrace(false).GetFrames()?.Skip(2).Take(8)
             .Select(f => f.GetMethod().DeclaringType?.FullName + "." + f.GetMethod().Name).ToArray();
         var position = aircraft.GlobalPosition();
+        var view = SceneSingleton<CameraStateManager>.i;
         var recorded = new { seq = ++sequence, seconds = Time.realtimeSinceStartup,
             action, aircraftNetId = aircraft.NetId, playerNetId = aircraft.Player.NetId,
             state = aircraft.unitState.ToString(), aircraft.disabled, aircraft.Ignition,
-            aircraft.speed, radarAltitude = aircraft.radarAlt,
+            aircraft.speed, radarAltitude = aircraft.radarAlt, aircraft.gForce, aircraft.simplePhysics,
+            cameraDistance = view != null ? (float?)Vector3.Distance(view.transform.position, aircraft.transform.position) : null,
             position = new[] { position.x, position.y, position.z },
             pilots = aircraft.pilots.Select(p => new { p.dead, p.ejected, state = p.GetCurrentState() }).ToArray(), callers, damage };
         events.Enqueue(recorded);
@@ -144,6 +195,7 @@ internal static class Observation
         return new {
         eventCount = sequence, events = events.ToArray(),
         firstAirborneContacts = firstAirborneContacts.Values.ToArray(),
+        mapTypeChecks, sceneLoadEvents = sceneLoadEvents.ToArray(),
         // Cumulative samples include loading/menu time. Runner uses window deltas.
         frames, fixedSteps, frameBuckets = frameBuckets.ToArray(), maximumFrameMs,
         realtimeSeconds = Time.realtimeSinceStartup,

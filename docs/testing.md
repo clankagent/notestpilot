@@ -143,3 +143,16 @@ the same scene-loading exception previously recorded in a candidate run.
 The error therefore also occurs without the performance plugin. Its cause and
 applicability to retail clients remain unresolved. Failed runs are retained,
 and one successful pair does not waive them or establish long-session stability.
+
+
+Read-only loading diagnostics caught a destroyed aircraft entry in a failing
+client's mission lookup immediately before the original loader accessed a
+destroyed network identity. The bridge records that state; it does not remove
+objects or replace the loader. The original exception still fails the run.
+The exact lifetime sequence and retail-client applicability remain unverified.
+Snapshots keep at most eight scene events and sixteen missing lookup entries.
+
+Both clients also completed another two-sortie lifecycle run with these
+diagnostics: flight, rockets, airborne ejection, replacement and flight again
+(51 checks). Physics mode context was observed. The physical joint-break callback
+has not been exercised, so its installation is not proof of callback coverage.

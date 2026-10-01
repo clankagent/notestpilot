@@ -1,5 +1,5 @@
 {
-  "checkpoint": "2026-10-01 20:00 UTC: three four-pilot baselines and one matched Spatial flight passed; mission loading failed in both variants",
+  "checkpoint": "2026-10-01: matched four-pilot pair completed; loading failure narrowed to a destroyed client registry entry; another two-sortie lifecycle passed",
   "game": {
     "version": "0.34.1",
     "steam_build": 24724541,
@@ -27,7 +27,8 @@
     "main_thread_command_round_trip": "verified",
     "mode": "dedicated-build headless UDP adapter",
     "latest_windows_compile": "pass, zero warnings/errors (compilation only)",
-    "latest_linux_compile": "pass, zero warnings/errors against the current real assembly; loaded-plugin metadata observed in native game repeat"
+    "latest_linux_compile": "pass, zero warnings/errors against the current real assembly; loaded-plugin metadata observed in native game repeat",
+    "diagnostic_bridge_sha256": "4f4f2e99cae1430151d5ef6d9e649edfb67e86e9f2a8cf78d2b38a30aefed799"
   },
   "runs": [
     {
@@ -6223,6 +6224,413 @@
         "External thread windows approximate the bridge window using nearest CPU-counter samples."
       ],
       "scope": "Failed15checks during fourth-client Escalation loading: same MapLoader.GetObjectType/Unit.ObjectType/Mission.OnSceneLoaded NullReferenceException seen in Spatial01. Server had only the test bridge, no performance plugin. This loading failure occurs in both variants; root cause and adapter/retail applicability remain unresolved. No flight measured."
+    },
+    {
+      "id": "ryzen-first-contact-four-baseline-04",
+      "scenario": "Native Escalation: 4 pilots, 600s airborne",
+      "passed": false,
+      "checks": 15,
+      "failed_steps": [
+        "client4: joins stock Escalation"
+      ],
+      "input_sha256": {
+        "scenario": "efccebbdb3a26dbfccbdab560ac05c6d5e5ff47de311b28c69a6f402d86e5017",
+        "gameAssembly": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a",
+        "bridge": "33f096df9704a25ca1da18384aa92eba2c80b464f8e0f2eb21d69abda47cae9d"
+      },
+      "loaded_server_plugins": [
+        {
+          "guid": "clankagent.notestpilot.bridge",
+          "version": "0.1.0"
+        }
+      ],
+      "observations": [],
+      "limits": [
+        "Server and headless dedicated-build UDP clients share four vCPUs and 8 GiB.",
+        "Baseline includes BepInEx and NOTestPilot, not a loader-free stock server.",
+        "Frame intervals are Unity Update wall times, not retail network latency.",
+        "External thread windows approximate the bridge window using nearest CPU-counter samples."
+      ],
+      "scope": "Failed at the second-client Escalation mission load with the original scene-loading NullReferenceException. No performance plugin loaded and no flight reached. This is a retained setup failure, not a successful comparison."
+    },
+    {
+      "id": "ryzen-scene-four-baseline-01",
+      "scenario": "Native Escalation: 4 pilots, 600s airborne",
+      "passed": false,
+      "checks": 15,
+      "failed_steps": [
+        "client4: joins stock Escalation"
+      ],
+      "input_sha256": {
+        "scenario": "efccebbdb3a26dbfccbdab560ac05c6d5e5ff47de311b28c69a6f402d86e5017",
+        "gameAssembly": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a",
+        "bridge": "4f4f2e99cae1430151d5ef6d9e649edfb67e86e9f2a8cf78d2b38a30aefed799"
+      },
+      "loaded_server_plugins": [
+        {
+          "guid": "clankagent.notestpilot.bridge",
+          "version": "0.1.0"
+        }
+      ],
+      "observations": [],
+      "limits": [
+        "Server and headless dedicated-build UDP clients share four vCPUs and 8 GiB.",
+        "Baseline includes BepInEx and NOTestPilot, not a loader-free stock server.",
+        "Frame intervals are Unity Update wall times, not retail network latency.",
+        "External thread windows approximate the bridge window using nearest CPU-counter samples."
+      ],
+      "scope": "New read-only scene diagnostics reproduced the fourth-client load failure. Before the original mission handler, the custom-ID registry held one Unity-destroyed aircraft; the loader then received a destroyed, non-managed-null NetworkIdentity and raised its original exception. Other peers had no missing registry entry at their load. No objects were pruned and the run remains failed. Exact initiating lifetime sequence and retail-client applicability remain unverified."
+    },
+    {
+      "id": "ryzen-scene-two-sorties-01",
+      "scenario": "Native dedicated two-client airborne ejection, replacement and second sortie",
+      "passed": true,
+      "checks": 51,
+      "failed_steps": [],
+      "input_sha256": {
+        "scenario": "0fdfec27123c720eefc7986aa941af3c8cce980ae08b37dbb3b17de9c721151a",
+        "gameAssembly": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a",
+        "bridge": "4f4f2e99cae1430151d5ef6d9e649edfb67e86e9f2a8cf78d2b38a30aefed799"
+      },
+      "loaded_server_plugins": [
+        {
+          "guid": "clankagent.notestpilot.bridge",
+          "version": "0.1.0"
+        }
+      ],
+      "observations": [
+        {
+          "name": "Both clients steer, taxi and attempt takeoff for three minutes",
+          "passed": true,
+          "requested_seconds": 180,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1061,
+          "units_max": 1082,
+          "registered_aircraft_min": 8,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 179.911651,
+              "cpu_cores": 0.671663004193097,
+              "updates_per_second": 59.96832300760777,
+              "fixed_steps_per_second": 60.00167270990137,
+              "resident_peak_bytes": 1138020352,
+              "frames": 10789,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5771,
+                5013,
+                5,
+                0,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 179.9060161,
+              "cpu_cores": 0.5566239649503305,
+              "updates_per_second": 59.97020129667582,
+              "fixed_steps_per_second": 59.997993585718675,
+              "resident_peak_bytes": 1142870016,
+              "frames": 10789,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                6159,
+                4620,
+                10,
+                0,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 179.9033072,
+              "cpu_cores": 0.5643031336113202,
+              "updates_per_second": 59.9766628414711,
+              "fixed_steps_per_second": 59.99889700749203,
+              "resident_peak_bytes": 1156521984,
+              "frames": 10790,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5946,
+                4837,
+                7,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 180.40603119400112,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.4385662689675693
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.10903183152922258
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.09356671663514371
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.024777442142126325
+              },
+              {
+                "name": "Loading.Preload",
+                "main_thread": false,
+                "cpu_cores": 0.00177377661867571
+              }
+            ],
+            "guest_cpu_steal_percent": 0.2884615384615385,
+            "guest_cpu_busy_percent": 45.277313266443706,
+            "guest_min_available_memory_bytes": 4470370304,
+            "guest_max_swap_used_bytes": 22794240,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 3.8633575351508305,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.0,
+              "memory_full_stall_percent": 0.0,
+              "io_some_stall_percent": 0.10734729804667398,
+              "io_full_stall_percent": 0.06310709195612842
+            }
+          }
+        },
+        {
+          "name": "Both native clients fly and fire rockets for thirty seconds",
+          "passed": true,
+          "requested_seconds": 30,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1064,
+          "units_max": 1087,
+          "registered_aircraft_min": 10,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 28.98019500000001,
+              "cpu_cores": 0.7587940660854757,
+              "updates_per_second": 59.83396592051915,
+              "fixed_steps_per_second": 60.00649754082053,
+              "resident_peak_bytes": 1141035008,
+              "frames": 1734,
+              "frames_over_50ms": 1,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                888,
+                843,
+                2,
+                0,
+                1,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 28.978868000000006,
+              "cpu_cores": 0.6487485984614718,
+              "updates_per_second": 59.9057216451657,
+              "fixed_steps_per_second": 60.00924535768615,
+              "resident_peak_bytes": 1146306560,
+              "frames": 1736,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                946,
+                789,
+                0,
+                1,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 28.97706599999998,
+              "cpu_cores": 0.653275248777775,
+              "updates_per_second": 59.943957059006635,
+              "fixed_steps_per_second": 60.01297715924729,
+              "resident_peak_bytes": 1158586368,
+              "frames": 1737,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                927,
+                808,
+                2,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 30.07666915399932,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.49407066733066307
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.11936162151528121
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.10938711275355853
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.02726365728204196
+              },
+              {
+                "name": "IPC:CSteamEngin",
+                "main_thread": false,
+                "cpu_cores": 0.0009974508761722673
+              }
+            ],
+            "guest_cpu_steal_percent": 0.4436631508454713,
+            "guest_cpu_busy_percent": 51.63234555499749,
+            "guest_min_available_memory_bytes": 4455731200,
+            "guest_max_swap_used_bytes": 22794240,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 6.260896079809446,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.0,
+              "memory_full_stall_percent": 0.0,
+              "io_some_stall_percent": 0.08231629597424325,
+              "io_full_stall_percent": 0.03285603186111446
+            }
+          }
+        },
+        {
+          "name": "Second sortie: Both clients steer, taxi and attempt takeoff for three minutes",
+          "passed": true,
+          "requested_seconds": 180,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1048,
+          "units_max": 1081,
+          "registered_aircraft_min": 9,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 179.11113900000004,
+              "cpu_cores": 0.739540827776211,
+              "updates_per_second": 59.95718669401124,
+              "fixed_steps_per_second": 59.99626857378199,
+              "resident_peak_bytes": 1159520256,
+              "frames": 10739,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5673,
+                5064,
+                2,
+                0,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 179.11326599999998,
+              "cpu_cores": 0.6187704711944675,
+              "updates_per_second": 59.950891633007245,
+              "fixed_steps_per_second": 60.0011391674361,
+              "resident_peak_bytes": 1167638528,
+              "frames": 10738,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5929,
+                4801,
+                7,
+                1,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 179.11244200000002,
+              "cpu_cores": 0.6245238954421714,
+              "updates_per_second": 59.96233360494297,
+              "fixed_steps_per_second": 60.001415200402434,
+              "resident_peak_bytes": 1180119040,
+              "frames": 10740,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5818,
+                4916,
+                6,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 175.39923732100033,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.4795915950652108
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.1198978987663027
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.10695599528558435
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.02730912672803566
+              },
+              {
+                "name": "IPC:CSteamEngin",
+                "main_thread": false,
+                "cpu_cores": 0.0011402558132791506
+              }
+            ],
+            "guest_cpu_steal_percent": 0.3702162464664438,
+            "guest_cpu_busy_percent": 49.801259883195335,
+            "guest_min_available_memory_bytes": 4370456576,
+            "guest_max_swap_used_bytes": 22794240,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 5.417654686040231,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.0,
+              "memory_full_stall_percent": 0.0,
+              "io_some_stall_percent": 0.11202956352676992,
+              "io_full_stall_percent": 0.05189076155070759
+            }
+          }
+        }
+      ],
+      "limits": [
+        "Server and headless dedicated-build UDP clients share four vCPUs and 8 GiB.",
+        "Baseline includes BepInEx and NOTestPilot, not a loader-free stock server.",
+        "Frame intervals are Unity Update wall times, not retail network latency.",
+        "External thread windows approximate the bridge window using nearest CPU-counter samples."
+      ],
+      "scope": "With the new read-only diagnostics, both clients completed flight, ordinary rockets, airborne ejection, normal replacement requests and a second flight. All51checks passed with unchanged player identities and new aircraft. Complex/simple physics event context emitted; physical joint-break callback was not exercised. This is one additional lifecycle pass, not a completed reconnect or long combat test."
     }
   ],
   "runtime": {
@@ -6249,7 +6657,8 @@
     "occupied_reconnect": "Failed in native-flight-reconnect.json: RadarWarning.Update exception on first disconnect, even through normal quit-path semantics.",
     "four_player_flight": "Three independent revised0.5sec-burst baselines passed50checks each; one matched Spatial passed50checks.180sec takeoff and600sec airborne, original airframes retained and ammunition remaining. Earlier failures retained; not prolonged combat or a capacity recommendation.",
     "playing_rotation": "Escalation->Terminal Control with occupied airborne clients failed on server Turret.ChooseTarget during unit cleanup. Return rotation was not reached. Original older ship-cleanup failure also retained.",
-    "flight_diagnostics": "Read-only part/body IDs, joint existence and detachment diagnostics emitted on a failed real baseline. Bounded first-airborne-contact trace loaded; two37check short repeats and one50check four-pilot baseline passed. No airborne contact occurred to exercise retention; initiating contact in older failed runs remains unresolved."
+    "flight_diagnostics": "Read-only damage/part/body/joint and complex/simple-physics events emitted in real runs. Scene diagnostics caught a destroyed aircraft registry entry immediately before the original loader error; the run still fails. Another full two-sortie flight/rocket/ejection/replacement pass completed51checks. Physical joint-break callback and earlier initiating airborne-contact retention remain unexercised.",
+    "late_join_loading": "Mission-load NullReferenceException retained in both Spatial and baseline attempts. Read-only trace caught a Unity-destroyed aircraft in the client custom-ID registry immediately before the original loader accessed a destroyed NetworkIdentity. No game objects were removed, exceptions waived or original handlers replaced. A focused delayed-join reproduction is prepared but not yet verified."
   },
   "limitations": [
     "Server and clients share one VM",
