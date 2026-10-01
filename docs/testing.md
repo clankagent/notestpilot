@@ -129,3 +129,17 @@ Linux signal tooling test verifies preparation without launching a game. A
 separate remote game check interrupted a 180-second observation after 10.616 seconds,
 retained 11 samples and archived logs, and verified all its game processes stopped. A cancelled run
 is never equivalent to completing the requested workload.
+
+
+The latest four-pilot sequence completed one matched baseline/Spatial pair: each
+passed all 50 checks through 3 minutes of takeoff and 10 minutes of flight with
+gun bursts. Game, script and test-bridge hashes matched, and the server's Spatial
+patch activation was verified. Average flight CPU was 0.757 baseline versus
+0.761 Spatial cores. That small difference is within the variation of passing
+baselines (0.757–0.771); no whole-server gain is established.
+
+The following baseline failed while its fourth client loaded Escalation, with
+the same scene-loading exception previously recorded in a candidate run.
+The error therefore also occurs without the performance plugin. Its cause and
+applicability to retail clients remain unresolved. Failed runs are retained,
+and one successful pair does not waive them or establish long-session stability.
