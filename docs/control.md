@@ -67,6 +67,14 @@ Pitch/roll/yaw range from −1 to +1. Throttle/brake range from 0 to 1. Leases l
 0.1–60 seconds and target one owned aircraft. Omitted controls are zero: every
 command supplies a complete set. Long scripts must renew leases deliberately.
 
+Optional `fireSeconds` limits a firing burst while the longer control or flight
+lease continues. It requires `fire: true` and must be between 0.1 seconds and the
+lease duration. Omitting it retains continuous firing for the lease. Status
+reports `fireRequested` and `fireSecondsRemaining`; these describe the requested
+trigger, not proof that a weapon fired. Verify ammunition on the server. The
+native two-client burst test passed three one-second bursts, with server checks
+that ammunition decreased and then stayed unchanged while flight continued.
+
 Expiry/release clears the supplied controls and returns to normal input sampling.
 If the aircraft disappears, the override stops applying. Lease status reports the
 aircraft ID, remaining time and how many times the pilot applied the values.

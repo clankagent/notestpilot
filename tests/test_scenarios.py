@@ -36,6 +36,16 @@ class WorkloadTests(unittest.TestCase):
         for seconds in (0, 3601, True):
             with self.assertRaises(ValueError): flight_workload(seconds=seconds)
 
+    def test_dry_firing_and_no_firing_cannot_pass_weapon_activity(self):
+        scenario = flight_workload(players=1, seconds=600)
+        ammunition = [a for a in scenario["steps"][-1]["expect"] if a["path"].endswith("ammo")]
+        def valid(ammo):
+            state = {"players": [{"weapons": [{"ammo": ammo}]}]}
+            return all(matches_with_peers(state, a, {}) for a in ammunition)
+        self.assertTrue(valid(500))
+        for ammo in (0, 1000, None):
+            self.assertFalse(valid(ammo))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -263,9 +263,15 @@ public sealed class Plugin : BaseUnityPlugin
                 return new { accepted = true };
             }
             case "disconnect":
+            {
                 RequireRole("client");
-                await NetworkManagerNuclearOption.i.StopAsync(false);
+                // Follow the normal quit button's resume/disconnect-reason path.
+                // Await completion so the runner can inspect unloading errors.
+                if (SceneSingleton<GameplayUI>.i != null)
+                    SceneSingleton<GameplayUI>.i.ResumeGame();
+                await NetworkManagerNuclearOption.i.StopAsync(true);
                 return Snapshot();
+            }
             case "faction":
             {
                 var player = LocalPlayer();

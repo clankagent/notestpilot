@@ -14,6 +14,7 @@ internal static class ControlLease
     private static float until;
     private static float pitch, roll, yaw, throttle, brake;
     private static bool fire;
+    private static float fireUntil;
     private static FlightPlan flight;
     private static float customAxisBeforeFlight;
     private static bool skipNextFilter;
@@ -32,12 +33,14 @@ internal static class ControlLease
         float newThrottle = Number(args, "throttle", 0, 0, 1);
         float newBrake = Number(args, "brake", 0, 0, 1);
         bool newFire = (bool?)args["fire"] ?? false;
+        float fireDuration = FireDuration(args, newFire, duration);
         Release(); // A new aircraft must not leave the previous lease's controls behind.
         pitch = newPitch; roll = newRoll; yaw = newYaw;
         throttle = newThrottle; brake = newBrake;
         fire = newFire;
         aircraft = player.Aircraft;
         until = Time.realtimeSinceStartup + duration;
+        fireUntil = Time.realtimeSinceStartup + fireDuration;
         applications = 0;
         return new { accepted = true, seconds = duration, aircraftNetId = aircraft.NetId };
     }
@@ -55,6 +58,7 @@ internal static class ControlLease
         if (player.Aircraft == null) throw new InvalidOperationException("Player has no aircraft");
         float duration = Number(args, "seconds", 60, 0.1f, 60);
         bool newFire = (bool?)args["fire"] ?? false;
+        float fireDuration = FireDuration(args, newFire, duration);
         // Renewal keeps the route and taxi phase instead of restarting the script.
         var next = ReferenceEquals(aircraft, player.Aircraft) && flight != null ? flight : new FlightPlan(player.Aircraft);
         float restoreAxis = ReferenceEquals(aircraft, player.Aircraft) && flight != null
@@ -65,8 +69,18 @@ internal static class ControlLease
         customAxisBeforeFlight = restoreAxis;
         fire = newFire;
         until = Time.realtimeSinceStartup + duration;
-        return new { accepted = true, seconds = duration, aircraftNetId = aircraft.NetId };
+        fireUntil = Time.realtimeSinceStartup + fireDuration;
+        return new { accepted = true, seconds = duration, fireSeconds = fireDuration, aircraftNetId = aircraft.NetId };
     }
+
+    private static float FireDuration(JObject args, bool requested, float leaseSeconds)
+    {
+        if (!requested && args["fireSeconds"] != null)
+            throw new ArgumentException("fireSeconds requires fire:true");
+        return requested ? Number(args, "fireSeconds", leaseSeconds, 0.1f, leaseSeconds) : 0;
+    }
+
+    private static bool FireRequested => fire && Time.realtimeSinceStartup < fireUntil;
 
     internal static bool BeforeControls(PilotPlayerState __instance, System.Reflection.MethodBase __originalMethod)
     {
@@ -83,7 +97,7 @@ internal static class ControlLease
                 flight.Apply();
                 skipNextFilter = flight.Filtered;
                 filteredAt = Time.fixedTime;
-                if (fire && flight.Airborne) pilot.Fire();
+                if (FireRequested && flight.Airborne) pilot.Fire();
                 applications++;
             }
             return false;
@@ -91,7 +105,7 @@ internal static class ControlLease
         var inputs = aircraft.GetInputs();
         inputs.pitch = pitch; inputs.roll = roll; inputs.yaw = yaw;
         inputs.throttle = throttle; inputs.brake = brake;
-        if (fire) pilot.Fire(); // Original safety, ammunition and firing cadence apply.
+        if (FireRequested) pilot.Fire(); // Original safety, ammunition and firing cadence apply.
         applications++;
         return false;
     }
@@ -116,6 +130,8 @@ internal static class ControlLease
         active = aircraft != null && Time.realtimeSinceStartup < until,
         aircraftNetId = aircraft != null ? (uint?)aircraft.NetId : null,
         secondsRemaining = Math.Max(0, until - Time.realtimeSinceStartup), applications,
+        fireRequested = aircraft != null && FireRequested,
+        fireSecondsRemaining = Math.Max(0, fireUntil - Time.realtimeSinceStartup),
         flight = flight?.Snapshot(), duplicateFiltersSkipped
     };
 
@@ -130,6 +146,7 @@ internal static class ControlLease
         aircraft = null;
         until = 0;
         fire = false;
+        fireUntil = 0;
         flight = null;
         skipNextFilter = false;
     }

@@ -27,14 +27,16 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Damage → pilot death → ejection / recovery | Observed in a failed movement test; both players stayed connected |
 | Parked ejection → recovery → respawn | Passed for both clients; original player IDs retained |
 | Airborne ejection → replacement → second flight | Passed for both clients on the native dedicated server: new aircraft, same players, both airborne again |
+| Three sorties → six minutes of gun firing → reconnects | Flight, replacement and firing checks passed; the second client's disconnect failed with a missile-warning display exception |
 | Gun firing | Both clients consumed their 1,000-round gun ammunition; server confirmed |
 | Select and fire rockets | Passed on the native dedicated server; both clients' rocket ammunition went from 8 to 0 |
+| Brief gun bursts while flight continues | Passed 54 checks: three bursts per client, server ammunition decreases, then stays unchanged between bursts |
 | Fifteen-minute flight and firing | Failed after about ten minutes airborne: one pilot died from collision damage. Both stayed connected |
 | Dedicated-server mission rotation | Failed while unloading ship particle effects; retained as a failing regression |
 | Steam authentication / retail clients | Not tested |
 | Long multiplayer sessions / performance-mod comparison | Not verified |
 
-The runner also has **38 automated tests**. These protect the testing tool;
+The runner also has **39 automated tests**. These protect the testing tool;
 they do not count as game tests. See [the evidence summary](evidence/status.json).
 
 ## How the player works

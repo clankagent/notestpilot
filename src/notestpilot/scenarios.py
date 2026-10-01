@@ -85,7 +85,8 @@ def flight_workload(players=2, seconds=600, fire=True):
         steps.append({"name": name, "target": "server", "observe": {
             "seconds": duration, "expect": expectations, "motion": movement,
             "actions": [{"target": actor, "command": "fly",
-                         "args": {"seconds": 45, "fire": firing}, "everySeconds": 20}
+                         "args": {"seconds": 45, "fire": firing,
+                                  **({"fireSeconds": 0.5} if firing else {})}, "everySeconds": 20}
                         for actor in actors]}})
 
     observation("Every pilot taxis, takes off and climbs", 180, alive)
@@ -105,6 +106,7 @@ def flight_workload(players=2, seconds=600, fire=True):
                 "capture": "spawned", "path": f"players.{i}.aircraftNetId"}}])
         if fire:
             final.append({"path": f"players.{i}.weapons.0.ammo", "atMost": 999})
+            final.append({"path": f"players.{i}.weapons.0.ammo", "atLeast": 1})
     check("server", "Server confirms original aircraft and weapon activity", final)
     scenario = {"name": f"Native Escalation: {players} pilots, {seconds}s airborne",
                 "clients": players, "steps": steps}

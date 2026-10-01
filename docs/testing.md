@@ -17,7 +17,10 @@ aircraft network IDs across processes so the test follows the correct player.
 | `native-startup-flight.json` | Native waiting server, player-triggered Escalation loading, two-client flight, weapon cycling and rockets | Passed 37 checks; three-minute flight plus 30 seconds of firing |
 | `native-dedicated-flight.json` | Native Terminal Control startup and time-limit rotation to Escalation | Failed during ship particle-effect cleanup; subsequent flight steps were not reached |
 | `native-two-sorties.json` | Airborne ejection, normal reserve replacement, changed aircraft IDs with original player IDs, second takeoff | Passed 51 checks; both replacement aircraft finished airborne |
-| `native-three-sorties-reconnect.json` | Three sorties, airborne replacement, rockets, six minutes of gun firing, sequential reconnects | Final result unavailable after loss of the remote lab; not a passed long session |
+| `native-three-sorties-reconnect.json` | Three sorties, airborne replacement, rockets, six minutes of gun firing, sequential reconnects | Repeat passed flight/replacement/firing and the first reconnect, then failed while the second client disconnected: missile-warning display exception |
+| `native-flight-reconnect.json` | Occupied-aircraft disconnect and reconnect after native flight/rockets | Failed on first disconnect in radar-warning display cleanup |
+| `native-gun-bursts.json` | Three brief gun bursts per client; trigger expires while flight continues; ammunition stops decreasing | Passed 54 checks on the native server |
+| `native-playing-rotation.json` | Fly/fire in Escalation, rotate to Terminal Control and back, verify both peers | Scenario prepared; runtime unverified |
 
 The `host` command starts UDP multiplayer hosting. The separate `dedicated`
 command uses the original dedicated-server manager and its player-triggered
@@ -25,6 +28,21 @@ mission loading. Both modes remain hidden; retail Steam joining/listing is not
 tested. The native tests revealed an actual rotation failure: unloading Terminal
 Control calls `ShipPropulsion.DisablePropulsion`, then throws inside
 `ParticleSystem.Stop`. The suite keeps this failure rather than ignoring it.
+
+The three-sortie repeat caught a separate `ThreatItem.AnimateItem` exception
+while the second client unloaded its mission. This is a client-side failure in
+the tested headless setup; retail reproduction is unverified. The disconnect
+command now resumes the gameplay UI and sets the disconnect reason as the normal
+Quit button does. A separate occupied-flight reconnect repeat still failed in
+`RadarWarning.Update` while unloading. The quit-path alignment did not resolve
+warning-display cleanup. Both failures remain recorded.
+
+Another three-sortie repeat failed after roughly 143 seconds of its final
+six-minute flight window. The diagnostics trace missile blast/fragment damage to
+a pilot, then collisions between parts of that aircraft and loss of altitude.
+This establishes combat damage before the descent; the attacker is unidentified.
+The strict survival test failed. It does not establish a server crash or a
+performance-mod regression, and the earlier collision failure remains separate.
 
 ## Failure handling
 

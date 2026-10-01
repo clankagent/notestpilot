@@ -1,0 +1,971 @@
+{
+  "name": "Native two-client flight with independently expiring gun bursts",
+  "clients": 2,
+  "steps": [
+    {
+      "name": "Start hidden native dedicated manager",
+      "target": "server",
+      "command": "dedicated",
+      "args": {
+        "missions": [
+          "Escalation"
+        ],
+        "port": 17777
+      }
+    },
+    {
+      "name": "Native server listens while waiting for players",
+      "target": "server",
+      "timeout": 90,
+      "expect": [
+        {
+          "path": "serverActive",
+          "equals": true
+        },
+        {
+          "path": "dedicated.running",
+          "equals": true
+        },
+        {
+          "path": "dedicated.hidden",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "First client joins native waiting server",
+      "target": "client1",
+      "command": "connect",
+      "args": {
+        "port": 17777
+      }
+    },
+    {
+      "name": "First player triggers native mission loading",
+      "target": "client1",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerNetId",
+          "notNull": true
+        },
+        {
+          "path": "mission",
+          "equals": "Escalation"
+        },
+        {
+          "path": "missionRunning",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "Second client joins native server",
+      "target": "client2",
+      "command": "connect",
+      "args": {
+        "port": 17777
+      }
+    },
+    {
+      "name": "Second native client loads the mission",
+      "target": "client2",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerNetId",
+          "notNull": true
+        },
+        {
+          "path": "mission",
+          "equals": "Escalation"
+        },
+        {
+          "path": "missionRunning",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "Native server sees both players",
+      "target": "server",
+      "expect": [
+        {
+          "path": "remotePlayers",
+          "equals": 2
+        }
+      ]
+    },
+    {
+      "name": "Native server runs large Escalation",
+      "target": "server",
+      "expect": [
+        {
+          "path": "dedicated.currentMission",
+          "equals": "Escalation"
+        },
+        {
+          "path": "units",
+          "atLeast": 800
+        },
+        {
+          "path": "missionRunning",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "Server sees both matching player identities",
+      "target": "server",
+      "expect": [
+        {
+          "path": "remotePlayers",
+          "equals": 2
+        },
+        {
+          "path": "players.0.netId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerNetId"
+          }
+        },
+        {
+          "path": "players.1.netId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerNetId"
+          }
+        }
+      ]
+    },
+    {
+      "name": "First player chooses Primeva",
+      "target": "client1",
+      "command": "faction",
+      "args": {
+        "name": "Primeva"
+      }
+    },
+    {
+      "name": "Second player chooses Boscali",
+      "target": "client2",
+      "command": "faction",
+      "args": {
+        "name": "Boscali"
+      }
+    },
+    {
+      "name": "Server confirms both faction decisions",
+      "target": "server",
+      "expect": [
+        {
+          "path": "players.0.faction",
+          "equals": "Primeva"
+        },
+        {
+          "path": "players.1.faction",
+          "equals": "Boscali"
+        }
+      ]
+    },
+    {
+      "target": "client1",
+      "name": "First player reserves an aircraft",
+      "command": "reserve"
+    },
+    {
+      "target": "client2",
+      "name": "Second player reserves an aircraft",
+      "command": "reserve"
+    },
+    {
+      "target": "client1",
+      "expect": [
+        {
+          "atLeast": 1,
+          "path": "localPlayerOwnedCount"
+        }
+      ],
+      "name": "First player receives an owned airframe"
+    },
+    {
+      "target": "client2",
+      "expect": [
+        {
+          "atLeast": 1,
+          "path": "localPlayerOwnedCount"
+        }
+      ],
+      "name": "Second player receives an owned airframe"
+    },
+    {
+      "target": "client1",
+      "name": "First player requests spawning",
+      "command": "spawn",
+      "args": {
+        "airbase": "Sandrift Airbase"
+      }
+    },
+    {
+      "target": "client2",
+      "name": "Second player requests spawning",
+      "command": "spawn",
+      "args": {
+        "airbase": "Maris Airport"
+      }
+    },
+    {
+      "timeout": 120,
+      "target": "client1",
+      "expect": [
+        {
+          "notNull": true,
+          "path": "localPlayerAircraftNetId"
+        }
+      ],
+      "name": "First client receives its aircraft"
+    },
+    {
+      "timeout": 120,
+      "target": "client2",
+      "expect": [
+        {
+          "notNull": true,
+          "path": "localPlayerAircraftNetId"
+        }
+      ],
+      "name": "Second client receives its aircraft"
+    },
+    {
+      "target": "server",
+      "expect": [
+        {
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.0.aircraftNetId"
+        },
+        {
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.1.aircraftNetId"
+        }
+      ],
+      "name": "Server matches both client aircraft identities"
+    },
+    {
+      "target": "client1",
+      "name": "First player starts its engine",
+      "command": "engine",
+      "args": {
+        "on": true
+      }
+    },
+    {
+      "target": "client2",
+      "name": "Second player starts its engine",
+      "command": "engine",
+      "args": {
+        "on": true
+      }
+    },
+    {
+      "name": "Inspect aircraft and standard loadouts",
+      "target": "client1",
+      "command": "catalog"
+    },
+    {
+      "name": "Both clients steer, taxi and attempt takeoff for three minutes",
+      "target": "server",
+      "observe": {
+        "seconds": 180,
+        "expect": [
+          {
+            "equals": 2,
+            "path": "remotePlayers"
+          },
+          {
+            "notNull": true,
+            "path": "players.0.aircraftNetId"
+          },
+          {
+            "notNull": true,
+            "path": "players.1.aircraftNetId"
+          },
+          {
+            "equals": false,
+            "path": "players.0.disabled"
+          },
+          {
+            "equals": false,
+            "path": "players.1.disabled"
+          }
+        ],
+        "motion": [
+          {
+            "minimumMetres": 100,
+            "path": "players.0"
+          },
+          {
+            "minimumMetres": 100,
+            "path": "players.1"
+          }
+        ],
+        "actions": [
+          {
+            "command": "fly",
+            "target": "client1",
+            "args": {
+              "seconds": 45
+            },
+            "everySeconds": 20
+          },
+          {
+            "command": "fly",
+            "target": "client2",
+            "args": {
+              "seconds": 45
+            },
+            "everySeconds": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "Server confirms both aircraft are airborne",
+      "target": "server",
+      "timeout": 10,
+      "expect": [
+        {
+          "atLeast": 80,
+          "path": "players.0.radarAltitude"
+        },
+        {
+          "atLeast": 80,
+          "path": "players.1.radarAltitude"
+        }
+      ]
+    },
+    {
+      "name": "Both guns start with full ammunition",
+      "target": "server",
+      "capture": "initialAmmo",
+      "expect": [
+        {
+          "path": "players.0.weapons.0.ammo",
+          "equals": 1000
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "equals": 1000
+        }
+      ]
+    },
+    {
+      "name": "client1 requests gun burst 1",
+      "target": "client1",
+      "command": "fly",
+      "args": {
+        "seconds": 45,
+        "fire": true,
+        "fireSeconds": 1
+      }
+    },
+    {
+      "name": "client2 requests gun burst 1",
+      "target": "client2",
+      "command": "fly",
+      "args": {
+        "seconds": 45,
+        "fire": true,
+        "fireSeconds": 1
+      }
+    },
+    {
+      "name": "client1 trigger expires while flight continues 1",
+      "target": "client1",
+      "timeout": 5,
+      "expect": [
+        {
+          "path": "controlLease.active",
+          "equals": true
+        },
+        {
+          "path": "controlLease.fireRequested",
+          "equals": false
+        },
+        {
+          "path": "controlLease.fireSecondsRemaining",
+          "equals": 0
+        }
+      ]
+    },
+    {
+      "name": "client2 trigger expires while flight continues 1",
+      "target": "client2",
+      "timeout": 5,
+      "expect": [
+        {
+          "path": "controlLease.active",
+          "equals": true
+        },
+        {
+          "path": "controlLease.fireRequested",
+          "equals": false
+        },
+        {
+          "path": "controlLease.fireSecondsRemaining",
+          "equals": 0
+        }
+      ]
+    },
+    {
+      "name": "Gun replication settles 1",
+      "target": "server",
+      "observe": {
+        "seconds": 2,
+        "expect": [
+          {
+            "path": "remotePlayers",
+            "equals": 2
+          },
+          {
+            "path": "mission",
+            "equals": "Escalation"
+          },
+          {
+            "path": "missionRunning",
+            "equals": true
+          },
+          {
+            "path": "players.0.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.1.disabled",
+            "equals": false
+          },
+          {
+            "atLeast": 80,
+            "path": "players.0.radarAltitude"
+          },
+          {
+            "atLeast": 80,
+            "path": "players.1.radarAltitude"
+          }
+        ],
+        "motion": [
+          {
+            "path": "players.0",
+            "minimumMetres": 1
+          },
+          {
+            "path": "players.1",
+            "minimumMetres": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "Server confirms ammunition decreased in burst 1",
+      "target": "server",
+      "capture": "burst1Ammo",
+      "expect": [
+        {
+          "path": "players.0.weapons.0.ammo",
+          "notEqualsSaved": {
+            "capture": "initialAmmo",
+            "path": "players.0.weapons.0.ammo"
+          }
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "notEqualsSaved": {
+            "capture": "initialAmmo",
+            "path": "players.1.weapons.0.ammo"
+          }
+        },
+        {
+          "path": "players.0.weapons.0.ammo",
+          "atLeast": 1
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "atLeast": 1
+        }
+      ]
+    },
+    {
+      "name": "Continue flight without a trigger after burst 1",
+      "target": "server",
+      "observe": {
+        "seconds": 6,
+        "expect": [
+          {
+            "path": "remotePlayers",
+            "equals": 2
+          },
+          {
+            "path": "mission",
+            "equals": "Escalation"
+          },
+          {
+            "path": "missionRunning",
+            "equals": true
+          },
+          {
+            "path": "players.0.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.1.disabled",
+            "equals": false
+          },
+          {
+            "atLeast": 80,
+            "path": "players.0.radarAltitude"
+          },
+          {
+            "atLeast": 80,
+            "path": "players.1.radarAltitude"
+          }
+        ],
+        "motion": [
+          {
+            "path": "players.0",
+            "minimumMetres": 1
+          },
+          {
+            "path": "players.1",
+            "minimumMetres": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "Server confirms firing stayed stopped 1",
+      "target": "server",
+      "expect": [
+        {
+          "path": "players.0.weapons.0.ammo",
+          "equalsSaved": {
+            "capture": "burst1Ammo",
+            "path": "players.0.weapons.0.ammo"
+          }
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "equalsSaved": {
+            "capture": "burst1Ammo",
+            "path": "players.1.weapons.0.ammo"
+          }
+        }
+      ]
+    },
+    {
+      "name": "client1 requests gun burst 2",
+      "target": "client1",
+      "command": "fly",
+      "args": {
+        "seconds": 45,
+        "fire": true,
+        "fireSeconds": 1
+      }
+    },
+    {
+      "name": "client2 requests gun burst 2",
+      "target": "client2",
+      "command": "fly",
+      "args": {
+        "seconds": 45,
+        "fire": true,
+        "fireSeconds": 1
+      }
+    },
+    {
+      "name": "client1 trigger expires while flight continues 2",
+      "target": "client1",
+      "timeout": 5,
+      "expect": [
+        {
+          "path": "controlLease.active",
+          "equals": true
+        },
+        {
+          "path": "controlLease.fireRequested",
+          "equals": false
+        },
+        {
+          "path": "controlLease.fireSecondsRemaining",
+          "equals": 0
+        }
+      ]
+    },
+    {
+      "name": "client2 trigger expires while flight continues 2",
+      "target": "client2",
+      "timeout": 5,
+      "expect": [
+        {
+          "path": "controlLease.active",
+          "equals": true
+        },
+        {
+          "path": "controlLease.fireRequested",
+          "equals": false
+        },
+        {
+          "path": "controlLease.fireSecondsRemaining",
+          "equals": 0
+        }
+      ]
+    },
+    {
+      "name": "Gun replication settles 2",
+      "target": "server",
+      "observe": {
+        "seconds": 2,
+        "expect": [
+          {
+            "path": "remotePlayers",
+            "equals": 2
+          },
+          {
+            "path": "mission",
+            "equals": "Escalation"
+          },
+          {
+            "path": "missionRunning",
+            "equals": true
+          },
+          {
+            "path": "players.0.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.1.disabled",
+            "equals": false
+          },
+          {
+            "atLeast": 80,
+            "path": "players.0.radarAltitude"
+          },
+          {
+            "atLeast": 80,
+            "path": "players.1.radarAltitude"
+          }
+        ],
+        "motion": [
+          {
+            "path": "players.0",
+            "minimumMetres": 1
+          },
+          {
+            "path": "players.1",
+            "minimumMetres": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "Server confirms ammunition decreased in burst 2",
+      "target": "server",
+      "capture": "burst2Ammo",
+      "expect": [
+        {
+          "path": "players.0.weapons.0.ammo",
+          "notEqualsSaved": {
+            "capture": "burst1Ammo",
+            "path": "players.0.weapons.0.ammo"
+          }
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "notEqualsSaved": {
+            "capture": "burst1Ammo",
+            "path": "players.1.weapons.0.ammo"
+          }
+        },
+        {
+          "path": "players.0.weapons.0.ammo",
+          "atLeast": 1
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "atLeast": 1
+        }
+      ]
+    },
+    {
+      "name": "Continue flight without a trigger after burst 2",
+      "target": "server",
+      "observe": {
+        "seconds": 6,
+        "expect": [
+          {
+            "path": "remotePlayers",
+            "equals": 2
+          },
+          {
+            "path": "mission",
+            "equals": "Escalation"
+          },
+          {
+            "path": "missionRunning",
+            "equals": true
+          },
+          {
+            "path": "players.0.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.1.disabled",
+            "equals": false
+          },
+          {
+            "atLeast": 80,
+            "path": "players.0.radarAltitude"
+          },
+          {
+            "atLeast": 80,
+            "path": "players.1.radarAltitude"
+          }
+        ],
+        "motion": [
+          {
+            "path": "players.0",
+            "minimumMetres": 1
+          },
+          {
+            "path": "players.1",
+            "minimumMetres": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "Server confirms firing stayed stopped 2",
+      "target": "server",
+      "expect": [
+        {
+          "path": "players.0.weapons.0.ammo",
+          "equalsSaved": {
+            "capture": "burst2Ammo",
+            "path": "players.0.weapons.0.ammo"
+          }
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "equalsSaved": {
+            "capture": "burst2Ammo",
+            "path": "players.1.weapons.0.ammo"
+          }
+        }
+      ]
+    },
+    {
+      "name": "client1 requests gun burst 3",
+      "target": "client1",
+      "command": "fly",
+      "args": {
+        "seconds": 45,
+        "fire": true,
+        "fireSeconds": 1
+      }
+    },
+    {
+      "name": "client2 requests gun burst 3",
+      "target": "client2",
+      "command": "fly",
+      "args": {
+        "seconds": 45,
+        "fire": true,
+        "fireSeconds": 1
+      }
+    },
+    {
+      "name": "client1 trigger expires while flight continues 3",
+      "target": "client1",
+      "timeout": 5,
+      "expect": [
+        {
+          "path": "controlLease.active",
+          "equals": true
+        },
+        {
+          "path": "controlLease.fireRequested",
+          "equals": false
+        },
+        {
+          "path": "controlLease.fireSecondsRemaining",
+          "equals": 0
+        }
+      ]
+    },
+    {
+      "name": "client2 trigger expires while flight continues 3",
+      "target": "client2",
+      "timeout": 5,
+      "expect": [
+        {
+          "path": "controlLease.active",
+          "equals": true
+        },
+        {
+          "path": "controlLease.fireRequested",
+          "equals": false
+        },
+        {
+          "path": "controlLease.fireSecondsRemaining",
+          "equals": 0
+        }
+      ]
+    },
+    {
+      "name": "Gun replication settles 3",
+      "target": "server",
+      "observe": {
+        "seconds": 2,
+        "expect": [
+          {
+            "path": "remotePlayers",
+            "equals": 2
+          },
+          {
+            "path": "mission",
+            "equals": "Escalation"
+          },
+          {
+            "path": "missionRunning",
+            "equals": true
+          },
+          {
+            "path": "players.0.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.1.disabled",
+            "equals": false
+          },
+          {
+            "atLeast": 80,
+            "path": "players.0.radarAltitude"
+          },
+          {
+            "atLeast": 80,
+            "path": "players.1.radarAltitude"
+          }
+        ],
+        "motion": [
+          {
+            "path": "players.0",
+            "minimumMetres": 1
+          },
+          {
+            "path": "players.1",
+            "minimumMetres": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "Server confirms ammunition decreased in burst 3",
+      "target": "server",
+      "capture": "burst3Ammo",
+      "expect": [
+        {
+          "path": "players.0.weapons.0.ammo",
+          "notEqualsSaved": {
+            "capture": "burst2Ammo",
+            "path": "players.0.weapons.0.ammo"
+          }
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "notEqualsSaved": {
+            "capture": "burst2Ammo",
+            "path": "players.1.weapons.0.ammo"
+          }
+        },
+        {
+          "path": "players.0.weapons.0.ammo",
+          "atLeast": 1
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "atLeast": 1
+        }
+      ]
+    },
+    {
+      "name": "Continue flight without a trigger after burst 3",
+      "target": "server",
+      "observe": {
+        "seconds": 6,
+        "expect": [
+          {
+            "path": "remotePlayers",
+            "equals": 2
+          },
+          {
+            "path": "mission",
+            "equals": "Escalation"
+          },
+          {
+            "path": "missionRunning",
+            "equals": true
+          },
+          {
+            "path": "players.0.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.1.disabled",
+            "equals": false
+          },
+          {
+            "atLeast": 80,
+            "path": "players.0.radarAltitude"
+          },
+          {
+            "atLeast": 80,
+            "path": "players.1.radarAltitude"
+          }
+        ],
+        "motion": [
+          {
+            "path": "players.0",
+            "minimumMetres": 1
+          },
+          {
+            "path": "players.1",
+            "minimumMetres": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "Server confirms firing stayed stopped 3",
+      "target": "server",
+      "expect": [
+        {
+          "path": "players.0.weapons.0.ammo",
+          "equalsSaved": {
+            "capture": "burst3Ammo",
+            "path": "players.0.weapons.0.ammo"
+          }
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "equalsSaved": {
+            "capture": "burst3Ammo",
+            "path": "players.1.weapons.0.ammo"
+          }
+        }
+      ]
+    }
+  ]
+}
