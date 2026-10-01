@@ -119,3 +119,12 @@ These are separate process measurements on a shared lab VM, not a production
 capacity estimate. Native Escalation's three-minute window averaged 58.9 server
 updates/s and 104.7% of one CPU core; the failed longer flight window averaged
 54.7 updates/s and 115.7% of one core. No performance mods were loaded for either.
+
+
+CLI runs handle Linux SIGTERM and Ctrl+C as cancellation. Interrupted observations
+retain the completed samples and are marked incomplete. Reports retain earlier
+passed steps and include a failed cancellation step, with overall passed:false
+and progress state cancelled. The runner closes its own child processes. A real
+Linux signal test verifies this during preparation before any game launches;
+live game cancellation still needs its separate runtime check. A cancelled run
+is never equivalent to completing the requested workload.

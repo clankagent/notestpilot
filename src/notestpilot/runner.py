@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import secrets
 import shutil
+import signal
 import socket
 import subprocess
 import sys
@@ -28,6 +29,10 @@ class TestFailure(RuntimeError):
     def __init__(self, message, evidence=None):
         super().__init__(message)
         self.evidence = evidence
+
+
+class TestCancelled(TestFailure):
+    """An interrupted run is incomplete, never a successful observation."""
 
 
 class Bridge:
@@ -227,57 +232,64 @@ def observe(bridge, bridges, specification, on_sample=None):
     actions = specification.get("actions", [])
     next_actions = [started] * len(actions)
     action_records = []
-    while time.monotonic() < deadline:
-        for index, action in enumerate(actions):
-            now = time.monotonic()
-            if now >= next_actions[index]:
-                result = bridges[action["target"]].call(action["command"], action.get("args"))
-                if result.get("accepted") is False:
-                    raise TestFailure("Repeated player action rejected", {"samples": samples, "actions": action_records})
-                action_records.append({"seconds": now - started, "target": action["target"],
-                                       "command": action["command"], "result": result})
-                next_actions[index] = now + action.get("everySeconds", 20)
-        states = {name: peer.status() for name, peer in bridges.items()}
-        selected = next(state for name, state in states.items() if bridges[name] is bridge)
-        # Retain the failing sample too, so a dropped aircraft is diagnosable.
-        samples.append(states)
-        if on_sample is not None:
-            on_sample({"seconds": time.monotonic() - started, "states": states})
-        if not all(matches(selected, assertion) for assertion in specification["expect"]):
-            raise TestFailure("State changed during sustained observation", {"samples": samples, "motion": tracked, "actions": action_records})
-        for name, state in states.items():
-            counters = state.get("observation")
-            if counters is not None:
-                if name not in first_observation:
-                    first_observation[name] = counters
-                telemetry[name] = window_telemetry(first_observation[name], counters)
-                if "residentBytes" in counters:
-                    # The peak belongs to this observation, not startup/menu time.
-                    peak_resident[name] = max(peak_resident.get(name, 0), counters["residentBytes"])
-                    telemetry[name]["peakResidentBytes"] = peak_resident[name]
+    try:
+        while time.monotonic() < deadline:
+            for index, action in enumerate(actions):
+                now = time.monotonic()
+                if now >= next_actions[index]:
+                    result = bridges[action["target"]].call(action["command"], action.get("args"))
+                    if result.get("accepted") is False:
+                        raise TestFailure("Repeated player action rejected", {"samples": samples, "actions": action_records})
+                    action_records.append({"seconds": now - started, "target": action["target"],
+                                           "command": action["command"], "result": result})
+                    next_actions[index] = now + action.get("everySeconds", 20)
+            states = {name: peer.status() for name, peer in bridges.items()}
+            selected = next(state for name, state in states.items() if bridges[name] is bridge)
+            # Retain the failing sample too, so a dropped aircraft is diagnosable.
+            samples.append(states)
+            if on_sample is not None:
+                on_sample({"seconds": time.monotonic() - started, "states": states})
+            if not all(matches(selected, assertion) for assertion in specification["expect"]):
+                raise TestFailure("State changed during sustained observation", {"samples": samples, "motion": tracked, "actions": action_records})
+            for name, state in states.items():
+                counters = state.get("observation")
+                if counters is not None:
+                    if name not in first_observation:
+                        first_observation[name] = counters
+                    telemetry[name] = window_telemetry(first_observation[name], counters)
+                    if "residentBytes" in counters:
+                        # The peak belongs to this observation, not startup/menu time.
+                        peak_resident[name] = max(peak_resident.get(name, 0), counters["residentBytes"])
+                        telemetry[name]["peakResidentBytes"] = peak_resident[name]
+            for tracking in specification.get("motion", []):
+                path = tracking["path"]
+                try:
+                    player = value_at(selected, path)
+                    identity, position = player["aircraftNetId"], player["position"]
+                    if identity is None or not isinstance(position, list) or len(position) != 3 or not all(isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) for v in position):
+                        raise ValueError("Missing/invalid aircraft position")
+                except (KeyError, IndexError, TypeError, ValueError) as error:
+                    raise TestFailure(f"Cannot track motion at {path}: {error}", {"samples": samples, "motion": tracked}) from error
+                if path not in tracked:
+                    tracked[path] = {"aircraftNetId": identity, "initial": position, "maximumMetres": 0}
+                track = tracked[path]
+                if identity != track["aircraftNetId"]:
+                    raise TestFailure("Tracked aircraft changed during motion observation", {"samples": samples, "motion": tracked})
+                track["maximumMetres"] = max(track["maximumMetres"], math.dist(track["initial"], position))
+            time.sleep(1)
         for tracking in specification.get("motion", []):
-            path = tracking["path"]
-            try:
-                player = value_at(selected, path)
-                identity, position = player["aircraftNetId"], player["position"]
-                if identity is None or not isinstance(position, list) or len(position) != 3 or not all(isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) for v in position):
-                    raise ValueError("Missing/invalid aircraft position")
-            except (KeyError, IndexError, TypeError, ValueError) as error:
-                raise TestFailure(f"Cannot track motion at {path}: {error}", {"samples": samples, "motion": tracked}) from error
-            if path not in tracked:
-                tracked[path] = {"aircraftNetId": identity, "initial": position, "maximumMetres": 0}
-            track = tracked[path]
-            if identity != track["aircraftNetId"]:
-                raise TestFailure("Tracked aircraft changed during motion observation", {"samples": samples, "motion": tracked})
-            track["maximumMetres"] = max(track["maximumMetres"], math.dist(track["initial"], position))
-        time.sleep(1)
-    for tracking in specification.get("motion", []):
-        distance = tracked.get(tracking["path"], {}).get("maximumMetres", 0)
-        if distance < tracking["minimumMetres"]:
-            raise TestFailure(f"Aircraft at {tracking['path']} moved only {distance:.2f}m; required {tracking['minimumMetres']}m", {"samples": samples, "motion": tracked})
-    return {"samples": samples, "seconds": specification["seconds"], "motion": tracked,
-            "telemetry": telemetry, "actions": action_records,
-            "activity": "aircraft movement observed; not a flight/combat soak" if tracked else "observation only; not evidence of playing"}
+            distance = tracked.get(tracking["path"], {}).get("maximumMetres", 0)
+            if distance < tracking["minimumMetres"]:
+                raise TestFailure(f"Aircraft at {tracking['path']} moved only {distance:.2f}m; required {tracking['minimumMetres']}m", {"samples": samples, "motion": tracked})
+        return {"samples": samples, "seconds": specification["seconds"], "motion": tracked,
+                "telemetry": telemetry, "actions": action_records,
+                "activity": "aircraft movement observed; not a flight/combat soak" if tracked else "observation only; not evidence of playing"}
+    except (TestCancelled, KeyboardInterrupt) as error:
+        raise TestCancelled(str(error) or "Cancelled by keyboard interrupt", {
+            "samples": samples, "seconds": specification["seconds"],
+            "completedSeconds": time.monotonic() - started, "incomplete": True,
+            "telemetry": telemetry, "motion": tracked, "actions": action_records}) from error
+
 
 
 def window_telemetry(first, last):
@@ -327,8 +339,12 @@ def run_steps(scenario, bridges, report, output_dir=None):
                 record["capture"] = step["capture"]
             record["passed"] = True
             print(f"PASS {record['name']}", flush=True)
-        except Exception as error:
+        except (Exception, KeyboardInterrupt) as error:
+            if isinstance(error, KeyboardInterrupt):
+                error = TestCancelled("Cancelled by keyboard interrupt")
             record.update(passed=False, error=str(error))
+            if isinstance(error, TestCancelled):
+                record["cancelled"] = True
             if isinstance(error, TestFailure) and error.evidence is not None:
                 record["result"] = error.evidence
             record["failureSnapshots"] = {}
@@ -337,7 +353,7 @@ def run_steps(scenario, bridges, report, output_dir=None):
                     record["failureSnapshots"][name] = peer.call("status", timeout=5)
                 except Exception as snapshot_error:
                     record["failureSnapshots"][name] = {"unavailable": str(snapshot_error)}
-            raise
+            raise error
         finally:
             record["seconds"] = round(time.monotonic() - start, 3)
             report["steps"].append(record)
@@ -363,6 +379,32 @@ def write_report(directory: Path, report: dict):
             ET.SubElement(case, "failure", message=step.get("error", "failed")).text = step.get("error")
     ET.ElementTree(suite).write(directory / "junit.tmp", encoding="utf-8", xml_declaration=True)
     (directory / "junit.tmp").replace(directory / "junit.xml")
+
+
+def finish_lab(directory, report, processes):
+    # A first stop can arrive during teardown or an atomic report write too.
+    # Retry after recording it; CLI stop signals are raised only once.
+    while True:
+        try:
+            for process in processes.values():
+                if process.poll() is None:
+                    process.terminate()
+                    try:
+                        process.wait(timeout=8)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.wait(timeout=8)
+            write_report(directory, report)
+            checkpoint(directory, {"runId": report["runId"], "scenario": report["scenario"],
+                "state": "passed" if report["passed"] else ("cancelled" if report.get("cancelled") else "failed"),
+                "completedSteps": len(report["steps"]), "error": report.get("error")})
+            return bool(report.get("cancelled"))
+        except (TestCancelled, KeyboardInterrupt) as error:
+            report.update(passed=False, cancelled=True)
+            reason = str(error) or "Cancelled by keyboard interrupt during cleanup"
+            report["error"] = reason if not report.get("error") else report["error"] + "; " + reason
+            report["steps"].append({"name": "lab cleanup interrupted", "target": "lab",
+                "passed": False, "cancelled": True, "error": reason, "seconds": 0})
 
 
 def free_tcp_port():
@@ -426,6 +468,7 @@ def run_lab(args):
               "scenario": scenario["name"], "passed": False, "steps": [],
               "mode": "real-process UDP lab", "startup": {}}
     processes, bridges = {}, {}
+    result_code = 1
     token = secrets.token_hex(32)
     try:
         checkpoint(directory, {"runId": report["runId"], "scenario": scenario["name"], "state": "preparing"})
@@ -475,25 +518,18 @@ def run_lab(args):
                                     "seconds": round(time.monotonic() - start, 3)})
         run_steps(scenario, bridges, report, directory)
         report["passed"] = True
-        return 0
-    except Exception as error:
-        report["error"] = str(error)
+        result_code = 0
+    except (Exception, KeyboardInterrupt) as error:
+        report["cancelled"] = isinstance(error, (TestCancelled, KeyboardInterrupt))
+        report["error"] = str(error) or "Cancelled by keyboard interrupt"
         if not report["steps"] or report["steps"][-1]["passed"]:
-            report["steps"].append({"name": "lab setup", "target": "lab", "passed": False, "error": str(error), "seconds": 0})
-        print("FAIL " + str(error), file=sys.stderr)
-        return 1
+            report["steps"].append({"name": "lab setup", "target": "lab", "passed": False, "error": report["error"], "seconds": 0})
+        print("FAIL " + report["error"], file=sys.stderr)
+        result_code = 1
     finally:
-        for process in processes.values():
-            if process.poll() is None:
-                process.terminate()
-                try:
-                    process.wait(timeout=8)
-                except subprocess.TimeoutExpired:
-                    process.kill()
-                    process.wait(timeout=8)
-        write_report(directory, report)
-        checkpoint(directory, {"runId": report["runId"], "scenario": scenario["name"], "state": "passed" if report["passed"] else "failed",
-                               "completedSteps": len(report["steps"]), "error": report.get("error")})
+        if finish_lab(directory, report, processes):
+            result_code = 1
+    return result_code
 
 
 def main():
@@ -504,7 +540,21 @@ def main():
     parser.add_argument("--output", required=True, help="Private run artifacts directory")
     parser.add_argument("--server-mods", help="Explicit SHA256 manifest of server-only test plugins/configs; requires its own lab")
     parser.add_argument("--execute", action="store_true", help="Explicitly launch disposable game processes in the remote lab")
-    return run_lab(parser.parse_args())
+    args = parser.parse_args()
+    previous = {kind: signal.getsignal(kind) for kind in (signal.SIGINT, signal.SIGTERM)}
+    stopping = False
+    def cancel(signum, frame):
+        nonlocal stopping
+        if not stopping:
+            stopping = True
+            raise TestCancelled("Cancelled by " + signal.Signals(signum).name)
+    try:
+        for kind in previous:
+            signal.signal(kind, cancel)
+        return run_lab(args)
+    finally:
+        for kind, handler in previous.items():
+            signal.signal(kind, handler)
 
 
 if __name__ == "__main__":

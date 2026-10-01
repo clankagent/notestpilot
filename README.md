@@ -31,13 +31,14 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Gun firing | Both clients consumed their 1,000-round gun ammunition; server confirmed |
 | Select and fire rockets | Passed on the native dedicated server; both clients' rocket ammunition went from 8 to 0 |
 | Brief gun bursts while flight continues | Passed 54 checks: three bursts per client, server ammunition decreases, then stays unchanged between bursts |
-| Four-player ten-minute flight | Airborne observation completed; the final ammunition check failed because the script emptied the guns |
+| Four-player ten-minute flight | Revised burst script passed50 checks: all four stayed airborne, fired and retained their aircraft. Earlier empty-ammunition failure preserved |
 | Fifteen-minute flight and firing | Failed after about ten minutes airborne: one pilot died from collision damage. Both stayed connected |
 | Dedicated-server mission rotation | Failed while unloading ship particle effects; retained as a failing regression |
 | Steam authentication / retail clients | Not tested |
 | Long multiplayer sessions / performance-mod comparison | Not verified |
 
-The runner also has **39 automated tests**. These protect the testing tool;
+The runner also has **43 automated tests** (all pass on Linux;42 pass on Windows
+with the POSIX signal test skipped). These protect the testing tool;
 they do not count as game tests. See [the evidence summary](evidence/status.json).
 
 ## How the player works
@@ -86,7 +87,8 @@ See [commands and protocol](docs/control.md).
 
 The workload generator also lets you choose one through four pilots and how long
 they should stay airborne, producing the commands and checks for every player.
-See [the generator example](docs/control.md#a-longer-action-script). Four-pilot ten-minute flight was observed, but its final ammunition check failed.
+See [the generator example](docs/control.md#a-longer-action-script). The revised four-pilot ten-minute flight/firing script passed. Its earlier
+empty-ammunition failure remains recorded.
 Longer play, combat recovery and reliable repeated scenarios still need validation.
 
 ## Run a test
