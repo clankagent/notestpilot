@@ -31,6 +31,7 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Gun firing | Both clients consumed their 1,000-round gun ammunition; server confirmed |
 | Select and fire rockets | Passed on the native dedicated server; both clients' rocket ammunition went from 8 to 0 |
 | Brief gun bursts while flight continues | Passed 54 checks: three bursts per client, server ammunition decreases, then stays unchanged between bursts |
+| Four-player ten-minute flight | Airborne observation completed; the final ammunition check failed because the script emptied the guns |
 | Fifteen-minute flight and firing | Failed after about ten minutes airborne: one pilot died from collision damage. Both stayed connected |
 | Dedicated-server mission rotation | Failed while unloading ship particle effects; retained as a failing regression |
 | Steam authentication / retail clients | Not tested |
@@ -85,8 +86,8 @@ See [commands and protocol](docs/control.md).
 
 The workload generator also lets you choose one through four pilots and how long
 they should stay airborne, producing the commands and checks for every player.
-See [the generator example](docs/control.md#a-longer-action-script). More-than-two
-player flight workloads are experimental and still need runtime validation.
+See [the generator example](docs/control.md#a-longer-action-script). Four-pilot ten-minute flight was observed, but its final ammunition check failed.
+Longer play, combat recovery and reliable repeated scenarios still need validation.
 
 ## Run a test
 
