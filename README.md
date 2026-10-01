@@ -27,6 +27,7 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Damage → pilot death → ejection / recovery | Observed in a failed movement test; both players stayed connected |
 | Parked ejection → recovery → respawn | Passed for both clients; original player IDs retained |
 | Airborne ejection → replacement → second flight | Passed for both clients on the native dedicated server: new aircraft, same players, both airborne again |
+| Repeated two-sortie lifecycle | Two consecutive passes, 51 checks each: flight, rockets, airborne ejection, replacement and flight again |
 | Three sorties → six minutes of gun firing → reconnects | Flight, replacement and firing checks passed; the second client's disconnect failed with a missile-warning display exception |
 | Gun firing | Both clients consumed their 1,000-round gun ammunition; server confirmed |
 | Select and fire rockets | Passed on the native dedicated server; both clients' rocket ammunition went from 8 to 0 |
@@ -41,6 +42,11 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 The runner also has **43 automated tests** (all pass on Linux; 42 pass on Windows
 with the POSIX signal test skipped). These protect the testing tool;
 they do not count as game tests. See [the evidence summary](evidence/status.json).
+
+The [interactive resource report](https://clankagent.github.io/noperf/resource-report.html)
+shows what the newer Ryzen lab used, with separate server/client charts and a
+step-by-step explanation of shared CPU use. It explains why these measurements
+are not yet a production-capacity recommendation.
 
 ## How the player works
 

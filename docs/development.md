@@ -57,7 +57,8 @@ separate inspection, build approval and runtime tests.
   --execute
 ```
 
-No local game runs are permitted on this project's Windows agent workspace.
+Runtime verification uses an isolated Linux lab. Windows compilation and runner
+tests do not establish game behaviour.
 
 The runner copies clean inputs, excluding other plugins and existing game/BepInEx
 configs. It preserves the Mono runtime configuration. Each copy has its own control
@@ -116,8 +117,13 @@ It cannot replace the bridge or loader through this manifest. Client copies stay
 free of the server mod. Runtime snapshots also list loaded BepInEx plugins; file
 presence alone does not prove that a mod's patches activated.
 If a plugin rewrites a manifest-listed config while running, reuse is refused;
-start the next repeat in a fresh lab with the same original inputs.
+start the next repeat in a fresh lab with reviewed inputs. BepInEx can normalize
+comments and line endings even when every setting value is unchanged. Generate
+the configuration in a disposable Linux startup, review the values, then use
+those exact bytes in a fresh manifest/lab for repeats. Do not rewrite an old
+fingerprint marker to bypass the guard.
 
-Manifest copying and contamination guards have tooling tests. A real modded
-game run and alternating baseline/mod comparison are still pending. No speedup
-or client compatibility claim follows from this feature alone.
+Manifest copying and contamination guards have tooling tests. A completed
+four-client baseline/Spatial pair also verified the actual server patch while
+both workloads passed. It showed no clear whole-server gain. This does not
+establish retail-client compatibility; see [the testing scope](testing.md).
