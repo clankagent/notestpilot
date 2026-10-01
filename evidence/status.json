@@ -8,12 +8,13 @@
     "linux_assembly_sha256": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a"
   },
   "runner_unit_tests": {
-    "passed": 33,
+    "passed": 35,
     "platforms": [
       "Windows Python 3.12"
     ],
     "scope": "test tooling, not game behaviour",
-    "previous_remote_linux_passed": 30
+    "previous_remote_linux_passed": 30,
+    "latest_ci_passed_before_pause_checkpoint": 33
   },
   "bridge": {
     "linux_compile": "pass, zero warnings/errors",
@@ -512,8 +513,8 @@
     {
       "id": "native-three-sorties-reconnect-01",
       "scenario": "native-three-sorties-reconnect.json",
-      "state": "last verified running; current outcome unavailable",
-      "scope": "longer three-sortie/reconnect test launched independently and saved progress; remote host became unreachable before final result was retrieved"
+      "state": "unknown; paused before final result could be retrieved",
+      "scope": "longer three-sortie/reconnect test was launched remotely; final outcome unavailable; do not count as passed"
     }
   ],
   "runtime": {
@@ -533,7 +534,8 @@
     "long_multiplayer_soak": "failed after580.845sec of airborne observation: second pilot died from a physical collision at~935m terrain clearance; both clients connected",
     "noperf_comparison": "not tested",
     "native_dedicated_startup": "passed; waits for players, first join loads stock Escalation, both matching clients join",
-    "server_mod_manifest": "tooling tests pass: explicit SHA256 inputs, server-only copy, unchanged-variant reuse and contamination guards; remote game use pending"
+    "server_mod_manifest": "tooling tests pass: explicit SHA256 inputs, server-only copy, unchanged-variant reuse and contamination guards; remote game use pending",
+    "latest_runner_report_guards": "35 tooling tests pass; fresh output directories, run correlation and atomic final reports; no new game run"
   },
   "limitations": [
     "Server and clients share one VM",
@@ -545,7 +547,7 @@
   ],
   "constraints": {
     "windows_game_runs": "prohibited",
-    "remote_lab": "replacement supplied and tested",
+    "remote_lab": "unavailable; may be reset; user will authorize resumption when it returns",
     "production_deployment": "none"
   },
   "multicore_sample": {
@@ -560,5 +562,6 @@
       13.94
     ],
     "scope": "thread CPU sample, not production capacity estimate or mod benefit"
-  }
+  },
+  "project_state": "paused at user request; waiting for replacement remote lab"
 }

@@ -10,6 +10,10 @@ An early working prototype, independent of [NOPerf](https://github.com/clankagen
 It uses the dedicated-server build's client code over direct UDP. It does not yet
 replace testing with retail Steam clients and people playing a long session.
 
+Development is paused while the remote lab is unavailable. Completed passes below
+are preserved; the final outcome of the longer three-sortie/reconnect run was not
+retrieved. Nothing is being substituted with local game runs.
+
 ## What works today
 
 Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
@@ -34,7 +38,7 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Steam authentication / retail clients | Not tested |
 | Long multiplayer sessions / performance-mod comparison | Not verified |
 
-The runner also has **33 automated tests**. These protect the testing tool;
+The runner also has **35 automated tests**. These protect the testing tool;
 they do not count as game tests. See [the evidence summary](evidence/status.json).
 
 ## How the player works

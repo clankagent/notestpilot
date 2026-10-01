@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import hashlib
 import json
 import math
@@ -299,7 +300,7 @@ def run_steps(scenario, bridges, report, output_dir=None):
         record = {"name": step.get("name", f"Step {index + 1}"), "target": step["target"]}
         start = time.monotonic()
         if output_dir is not None:
-            checkpoint(output_dir, {"scenario": scenario["name"], "step": record["name"],
+            checkpoint(output_dir, {"runId": report.get("runId"), "scenario": scenario["name"], "step": record["name"],
                                     "completedSteps": len(report["steps"]), "state": "running"})
         try:
             bridge = bridges[step["target"]]
@@ -316,8 +317,8 @@ def run_steps(scenario, bridges, report, output_dir=None):
                 def sample(evidence):
                     if output_dir is not None:
                         with (output_dir / "timeline.ndjson").open("a", encoding="utf-8") as stream:
-                            stream.write(json.dumps({"step": record["name"], **evidence}, allow_nan=False) + "\n")
-                        checkpoint(output_dir, {"scenario": scenario["name"], "step": record["name"],
+                            stream.write(json.dumps({"runId": report.get("runId"), "step": record["name"], **evidence}, allow_nan=False) + "\n")
+                        checkpoint(output_dir, {"runId": report.get("runId"), "scenario": scenario["name"], "step": record["name"],
                             "completedSteps": len(report["steps"]), "state": "running", **evidence})
                 record["result"] = observe(bridge, bridges, step["observe"], sample if output_dir is not None else None)
             if "capture" in step:
@@ -351,14 +352,17 @@ def checkpoint(directory, status):
 
 def write_report(directory: Path, report: dict):
     directory.mkdir(parents=True, exist_ok=True)
-    (directory / "result.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+    temporary = directory / "result.tmp"
+    temporary.write_text(json.dumps(report, indent=2, allow_nan=False), encoding="utf-8")
+    temporary.replace(directory / "result.json")
     suite = ET.Element("testsuite", name=report["scenario"], tests=str(len(report["steps"])),
                        failures=str(sum(not s["passed"] for s in report["steps"])))
     for step in report["steps"]:
         case = ET.SubElement(suite, "testcase", name=step["name"], classname="NOTestPilot", time=str(step["seconds"]))
         if not step["passed"]:
             ET.SubElement(case, "failure", message=step.get("error", "failed")).text = step.get("error")
-    ET.ElementTree(suite).write(directory / "junit.xml", encoding="utf-8", xml_declaration=True)
+    ET.ElementTree(suite).write(directory / "junit.tmp", encoding="utf-8", xml_declaration=True)
+    (directory / "junit.tmp").replace(directory / "junit.xml")
 
 
 def free_tcp_port():
@@ -411,19 +415,28 @@ def run_lab(args):
     validate_scenario(scenario)
     if not args.execute:
         raise ValueError("Game launch is opt-in: inspect the scenario, then pass --execute in your remote lab")
-    server_inputs = load_server_inputs(Path(args.server_mods) if args.server_mods else None)
-    lab = prepare_lab(Path(args.game), Path(args.lab), scenario.get("clients", 1), server_inputs)
     directory = Path(args.output).resolve()
-    report = {"scenario": scenario["name"], "passed": False, "steps": [], "mode": "real-process UDP lab", "startup": {}}
-    report["inputSha256"] = {
-        "scenario": hashlib.sha256(Path(args.scenario).read_bytes()).hexdigest(),
-        "gameAssembly": hashlib.sha256((Path(args.game) / "NuclearOptionServer_Data/Managed/Assembly-CSharp.dll").read_bytes()).hexdigest(),
-        "bridge": hashlib.sha256((Path(args.game) / "BepInEx/plugins/NOTestPilot/NOTestPilot.Bridge.dll").read_bytes()).hexdigest(),
-    }
-    report["serverInputs"] = describe_server_inputs(server_inputs)
+    # Claim a fresh output directory atomically. Never append a new attempt to
+    # an old timeline or leave an old passing result visible during a new run.
+    try:
+        directory.mkdir(parents=True, exist_ok=False)
+    except FileExistsError as error:
+        raise ValueError("Results directory already exists; choose a new output for every run") from error
+    report = {"runId": uuid.uuid4().hex, "startedAtUtc": datetime.now(timezone.utc).isoformat(),
+              "scenario": scenario["name"], "passed": False, "steps": [],
+              "mode": "real-process UDP lab", "startup": {}}
     processes, bridges = {}, {}
     token = secrets.token_hex(32)
     try:
+        checkpoint(directory, {"runId": report["runId"], "scenario": scenario["name"], "state": "preparing"})
+        server_inputs = load_server_inputs(Path(args.server_mods) if args.server_mods else None)
+        lab = prepare_lab(Path(args.game), Path(args.lab), scenario.get("clients", 1), server_inputs)
+        report["inputSha256"] = {
+            "scenario": hashlib.sha256(Path(args.scenario).read_bytes()).hexdigest(),
+            "gameAssembly": hashlib.sha256((Path(args.game) / "NuclearOptionServer_Data/Managed/Assembly-CSharp.dll").read_bytes()).hexdigest(),
+            "bridge": hashlib.sha256((Path(args.game) / "BepInEx/plugins/NOTestPilot/NOTestPilot.Bridge.dll").read_bytes()).hexdigest(),
+        }
+        report["serverInputs"] = describe_server_inputs(server_inputs)
         for index, name in enumerate(["server", *client_names(scenario.get("clients", 1))]):
             role = "server" if name == "server" else "client"
             folder = lab / name
@@ -479,7 +492,7 @@ def run_lab(args):
                     process.kill()
                     process.wait(timeout=8)
         write_report(directory, report)
-        checkpoint(directory, {"scenario": scenario["name"], "state": "passed" if report["passed"] else "failed",
+        checkpoint(directory, {"runId": report["runId"], "scenario": scenario["name"], "state": "passed" if report["passed"] else "failed",
                                "completedSteps": len(report["steps"]), "error": report.get("error")})
 
 

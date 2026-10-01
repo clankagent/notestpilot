@@ -16,3 +16,5 @@ __pycache__/
 # Private workspace instructions and checkpoints
 AGENTS.md
 WORKLOG.md
+RESUME-PRIVATE.md
+checkpoints/

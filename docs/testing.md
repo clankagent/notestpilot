@@ -17,7 +17,7 @@ aircraft network IDs across processes so the test follows the correct player.
 | `native-startup-flight.json` | Native waiting server, player-triggered Escalation loading, two-client flight, weapon cycling and rockets | Passed 37 checks; three-minute flight plus 30 seconds of firing |
 | `native-dedicated-flight.json` | Native Terminal Control startup and time-limit rotation to Escalation | Failed during ship particle-effect cleanup; subsequent flight steps were not reached |
 | `native-two-sorties.json` | Airborne ejection, normal reserve replacement, changed aircraft IDs with original player IDs, second takeoff | Passed 51 checks; both replacement aircraft finished airborne |
-| `native-three-sorties-reconnect.json` | Three sorties, airborne replacement, rockets, six minutes of gun firing, sequential reconnects | Runtime verification in progress; not a passed long session |
+| `native-three-sorties-reconnect.json` | Three sorties, airborne replacement, rockets, six minutes of gun firing, sequential reconnects | Final result unavailable after loss of the remote lab; not a passed long session |
 
 The `host` command starts UDP multiplayer hosting. The separate `dedicated`
 command uses the original dedicated-server manager and its player-triggered
@@ -50,6 +50,10 @@ sample and attempt a snapshot from every peer, so a lost aircraft can be separat
 from a lost connection. The JSON includes per-step states,
 startup build fingerprints, errors and observation samples. Logs stay beside each
 disposable game copy. Keep raw reports/logs private; publish reviewed summaries.
+Use a new output directory for every attempt. The runner refuses an existing
+directory so an old passing report cannot masquerade as a new result. New reports,
+progress and timeline entries share a run ID. Final JSON/XML files are replaced
+atomically; even a setup failure gets a failed report without launching a game.
 
 The input guard recognizes two exact 0.34.1 dedicated-server assembly fingerprints.
 Updating the game requires reviewing the touched APIs and verifying the new build.

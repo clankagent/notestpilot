@@ -4,9 +4,10 @@ import socket
 import tempfile
 import threading
 import unittest
+from types import SimpleNamespace
 import xml.etree.ElementTree as ET
 from unittest.mock import patch
-from notestpilot.runner import Bridge, TestFailure, matches, matches_with_peers, observe, prepare_lab, run_steps, validate_scenario, wait_for, window_telemetry, write_report
+from notestpilot.runner import Bridge, TestFailure, matches, matches_with_peers, observe, prepare_lab, run_lab, run_steps, validate_scenario, wait_for, window_telemetry, write_report
 
 
 def reply_once(handler):
@@ -30,6 +31,43 @@ def reply_once(handler):
 
 
 class RunnerTests(unittest.TestCase):
+    def test_results_cannot_overwrite_or_mix_with_an_older_run(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            scenario = root / "scenario.json"
+            scenario.write_text(json.dumps({"name": "fixture", "steps": [{"target": "server", "command": "host"}]}), encoding="utf-8")
+            output = root / "results"
+            output.mkdir()
+            old_result = output / "result.json"
+            old_result.write_text('{"passed":true}', encoding="utf-8")
+            args = SimpleNamespace(scenario=str(scenario), execute=True, output=str(output),
+                                   game=str(root / "missing-game"), lab=str(root / "lab"), server_mods=None)
+            with patch("notestpilot.runner.prepare_lab") as prepare, patch("notestpilot.runner.subprocess.Popen") as launch:
+                with self.assertRaisesRegex(ValueError, "new output"):
+                    run_lab(args)
+                prepare.assert_not_called()
+                launch.assert_not_called()
+            self.assertEqual('{"passed":true}', old_result.read_text(encoding="utf-8"))
+
+    def test_setup_failure_saves_correlated_failed_reports_without_launching_games(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            scenario = root / "scenario.json"
+            scenario.write_text(json.dumps({"name": "fixture", "steps": [{"target": "server", "command": "host"}]}), encoding="utf-8")
+            args = SimpleNamespace(scenario=str(scenario), execute=True, output=str(root / "results"),
+                                   game=str(root / "missing-game"), lab=str(root / "lab"), server_mods=None)
+            with patch("notestpilot.runner.subprocess.Popen") as launch:
+                self.assertEqual(1, run_lab(args))
+                launch.assert_not_called()
+            output = Path(args.output)
+            result = json.loads((output / "result.json").read_text(encoding="utf-8"))
+            progress = json.loads((output / "progress.json").read_text(encoding="utf-8"))
+            self.assertFalse(result["passed"])
+            self.assertEqual("failed", progress["state"])
+            self.assertEqual(result["runId"], progress["runId"])
+            self.assertEqual("1", ET.parse(output / "junit.xml").getroot().get("failures"))
+            self.assertFalse((output / "result.tmp").exists())
+
     def test_rejoin_matches_the_clients_identity_without_assuming_player_order(self):
         class Peer:
             identity = 42
