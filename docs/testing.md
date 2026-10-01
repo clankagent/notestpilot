@@ -67,6 +67,18 @@ without reducing physics/AI cadence. Measure server and clients separately. Repe
 baseline and mod runs in alternating order with the same scripts and mission inputs.
 Combat diverges over time; one run per variant is insufficient.
 
+Run server variants one at a time, with multiple clients active inside each run.
+Two variants running together would compete for the same resources. Use the same
+scenario goals and checks; the flight driver should respond to the state in its
+own session rather than blindly replaying another session's control inputs.
+Re-establish both variants on each new machine. Historical CPU times and speedup
+ratios do not establish the new machine's capacity.
+
+The current baseline retains BepInEx and the same NOTestPilot bridge used by the
+candidate server. It measures the effect of adding the candidate mod to that
+instrumented environment. A genuinely stock server without either loader or
+bridge is a different comparison and is not implemented by the current runner.
+
 Retail clients, Steam authentication, deliberate target engagement and long-session
 stability remain unverified coverage. Mission rotation was exercised and failed.
 

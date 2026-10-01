@@ -1,5 +1,5 @@
 {
-  "checkpoint": "2026-10-01: native dedicated two-client flight, rockets, airborne replacement and second sortie",
+  "checkpoint": "2026-10-01: repeated native dedicated two-client flight and rockets on a Ryzen lab",
   "game": {
     "version": "0.34.1",
     "steam_build": 24724541,
@@ -10,17 +10,21 @@
   "runner_unit_tests": {
     "passed": 35,
     "platforms": [
-      "Windows Python 3.12"
+      "Windows Python 3.12",
+      "Linux Python 3.14",
+      "CI Ubuntu Python 3.11 and 3.14"
     ],
     "scope": "test tooling, not game behaviour",
     "previous_remote_linux_passed": 30,
-    "latest_ci_passed_before_pause_checkpoint": 33
+    "latest_ci_passed_before_pause_checkpoint": 35,
+    "latest_remote_linux_passed": 35
   },
   "bridge": {
     "linux_compile": "pass, zero warnings/errors",
     "main_thread_command_round_trip": "verified",
     "mode": "dedicated-build headless UDP adapter",
-    "latest_windows_compile": "pass, zero warnings/errors; new loaded-plugin metadata not yet runtime repeated"
+    "latest_windows_compile": "pass, zero warnings/errors (compilation only)",
+    "latest_linux_compile": "pass, zero warnings/errors against the current real assembly; loaded-plugin metadata observed in native game repeat"
   },
   "runs": [
     {
@@ -515,6 +519,195 @@
       "scenario": "native-three-sorties-reconnect.json",
       "state": "unknown; paused before final result could be retrieved",
       "scope": "longer three-sortie/reconnect test was launched remotely; final outcome unavailable; do not count as passed"
+    },
+    {
+      "id": "ryzen-startup-01",
+      "scenario": "native-startup-flight.json",
+      "junit_cases": 37,
+      "failures": 0,
+      "mission": "Escalation",
+      "variant": "no performance plugins; BepInEx and NOTestPilot bridge present",
+      "hardware": {
+        "cpu_model": "AMD Ryzen 5 PRO 3600",
+        "guest_vcpus": 4,
+        "guest_memory_gib": 8,
+        "server_and_clients_share_guest": true
+      },
+      "observations": [
+        {
+          "name": "Both clients steer, taxi and attempt takeoff for three minutes",
+          "requested_seconds": 180,
+          "observed_units_min": 1056,
+          "observed_units_max": 1085,
+          "telemetry": {
+            "server": {
+              "seconds": 179.02459,
+              "cpuSeconds": 112.63,
+              "cpuPercentOneCore": 62.91314506012833,
+              "frames": 10730,
+              "framesPerSecond": 59.935900425745984,
+              "fixedSteps": 10742,
+              "frameBucketBoundsMs": [
+                16.7,
+                25,
+                33.4,
+                50,
+                100,
+                null
+              ],
+              "frameBucketCounts": [
+                5851,
+                4868,
+                9,
+                2,
+                0,
+                0
+              ],
+              "gameSeconds": 179.0258847,
+              "peakResidentBytes": 1136340992
+            },
+            "client1": {
+              "seconds": 179.0147532,
+              "cpuSeconds": 96.52,
+              "cpuPercentOneCore": 53.91734383599396,
+              "frames": 10727,
+              "framesPerSecond": 59.92243548784783,
+              "fixedSteps": 10741,
+              "frameBucketBoundsMs": [
+                16.7,
+                25,
+                33.4,
+                50,
+                100,
+                null
+              ],
+              "frameBucketCounts": [
+                5957,
+                4756,
+                11,
+                2,
+                1,
+                0
+              ],
+              "gameSeconds": 179.0153737,
+              "peakResidentBytes": 1140318208
+            },
+            "client2": {
+              "seconds": 179.02348669999998,
+              "cpuSeconds": 96.63999999999999,
+              "cpuPercentOneCore": 53.98174383786035,
+              "frames": 10730,
+              "framesPerSecond": 59.936269803419044,
+              "fixedSteps": 10742,
+              "frameBucketBoundsMs": [
+                16.7,
+                25,
+                33.4,
+                50,
+                100,
+                null
+              ],
+              "frameBucketCounts": [
+                5953,
+                4762,
+                12,
+                2,
+                1,
+                0
+              ],
+              "gameSeconds": 179.023695,
+              "peakResidentBytes": 1140912128
+            }
+          }
+        },
+        {
+          "name": "Both native clients fly and fire rockets for thirty seconds",
+          "requested_seconds": 30,
+          "observed_units_min": 1049,
+          "observed_units_max": 1081,
+          "telemetry": {
+            "server": {
+              "seconds": 29.76871700000001,
+              "cpuSeconds": 23.230000000000018,
+              "cpuPercentOneCore": 78.0349384892873,
+              "frames": 1784,
+              "framesPerSecond": 59.9286828518676,
+              "fixedSteps": 1786,
+              "frameBucketBoundsMs": [
+                16.7,
+                25,
+                33.4,
+                50,
+                100,
+                null
+              ],
+              "frameBucketCounts": [
+                924,
+                860,
+                0,
+                0,
+                0,
+                0
+              ],
+              "gameSeconds": 29.768586,
+              "peakResidentBytes": 1146908672
+            },
+            "client1": {
+              "seconds": 29.772568000000007,
+              "cpuSeconds": 20.10000000000001,
+              "cpuPercentOneCore": 67.5118115441033,
+              "frames": 1784,
+              "framesPerSecond": 59.92093124113444,
+              "fixedSteps": 1786,
+              "frameBucketBoundsMs": [
+                16.7,
+                25,
+                33.4,
+                50,
+                100,
+                null
+              ],
+              "frameBucketCounts": [
+                946,
+                837,
+                1,
+                0,
+                0,
+                0
+              ],
+              "gameSeconds": 29.774057999999997,
+              "peakResidentBytes": 1150648320
+            },
+            "client2": {
+              "seconds": 29.778982999999982,
+              "cpuSeconds": 20.019999999999982,
+              "cpuPercentOneCore": 67.22862228035119,
+              "frames": 1784,
+              "framesPerSecond": 59.9080230510223,
+              "fixedSteps": 1787,
+              "frameBucketBoundsMs": [
+                16.7,
+                25,
+                33.4,
+                50,
+                100,
+                null
+              ],
+              "frameBucketCounts": [
+                942,
+                840,
+                2,
+                0,
+                0,
+                0
+              ],
+              "gameSeconds": 29.781768999999997,
+              "peakResidentBytes": 1151504384
+            }
+          }
+        }
+      ],
+      "scope": "One new-machine repeat: native startup, two-client three-minute taxi/takeoff/flight and thirty seconds of rockets. Not capacity, long-session stability or mod benefit."
     }
   ],
   "runtime": {
@@ -535,7 +728,7 @@
     "noperf_comparison": "not tested",
     "native_dedicated_startup": "passed; waits for players, first join loads stock Escalation, both matching clients join",
     "server_mod_manifest": "tooling tests pass: explicit SHA256 inputs, server-only copy, unchanged-variant reuse and contamination guards; remote game use pending",
-    "latest_runner_report_guards": "35 tooling tests pass; fresh output directories, run correlation and atomic final reports; no new game run"
+    "latest_runner_report_guards": "35 tooling tests pass; fresh run-ID-correlated JSON, JUnit, progress and timeline outputs verified in native game repeat"
   },
   "limitations": [
     "Server and clients share one VM",
@@ -547,7 +740,7 @@
   ],
   "constraints": {
     "windows_game_runs": "prohibited",
-    "remote_lab": "unavailable; may be reset; user will authorize resumption when it returns",
+    "remote_lab": "Disposable Linux guest only; game execution on Windows prohibited",
     "production_deployment": "none"
   },
   "multicore_sample": {
@@ -563,5 +756,20 @@
     ],
     "scope": "thread CPU sample, not production capacity estimate or mod benefit"
   },
-  "project_state": "paused at user request; waiting for replacement remote lab"
+  "project_state": "Experimental: short native flight and weapon actions verified; sustained multiplayer and performance comparisons still need validation",
+  "multicore_samples": [
+    {
+      "cpu_model": "AMD Ryzen 5 PRO 3600",
+      "lab_vcpus": 4,
+      "window_seconds": 115.25341393600002,
+      "workload": "two-client stock Escalation taxi/takeoff/flight; external approximate mid-flight window",
+      "server_cpu_percent_one_core": 63.2085397838657,
+      "main_thread_percent_one_core": 41.17014705208549,
+      "two_job_workers_percent_one_core": [
+        10.307720695021615,
+        8.693885636710151
+      ],
+      "scope": "Thread CPU distribution only; not a production capacity estimate or mod benefit"
+    }
+  ]
 }

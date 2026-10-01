@@ -10,10 +10,6 @@ An early working prototype, independent of [NOPerf](https://github.com/clankagen
 It uses the dedicated-server build's client code over direct UDP. It does not yet
 replace testing with retail Steam clients and people playing a long session.
 
-Development is paused while the remote lab is unavailable. Completed passes below
-are preserved; the final outcome of the longer three-sortie/reconnect run was not
-retrieved. Nothing is being substituted with local game runs.
-
 ## What works today
 
 Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
@@ -120,6 +116,13 @@ needed before capacity or speedup claims.
 
 Clients and server currently share the lab VM. Combined resource use must not be
 presented as the server's production requirement.
+
+For mod comparisons, run the same scenarios separately with and without the mod.
+The flight controller responds to each aircraft's state; matching tasks and
+outcomes are more useful than replaying identical inputs. Repeat in alternating
+order. Both variants currently need the test bridge on the server, so the baseline
+is **without the performance mod**, rather than a completely stock installation.
+A server with no BepInEx or bridge needs a separate launch and observation path.
 
 The headless clients need a small UDP adapter because this build normally tries
 retail Steam callbacks even for UDP. The server's normal UDP password, build and
