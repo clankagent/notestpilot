@@ -22,14 +22,19 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Reserve and spawn two aircraft | Passed; server aircraft IDs match the owning clients |
 | Start engines and hold controls | Passed; the server receives distinct throttle values |
 | Two owned aircraft move in Escalation | One pass (178 m / 44 m); repeat lost the second aircraft — fixture needs work |
-| Two-client taxi → takeoff → flight circuits | Three-minute script passed once; both finished airborne. Repeatability and long flight still being tested |
+| Two-client taxi → takeoff → flight circuits | Passed in a UDP host and again through the native dedicated-server manager; three minutes per script |
+| Native dedicated-server startup | Passed: hidden server waits for players; the first join loads stock Escalation; both clients join |
 | Damage → pilot death → ejection / recovery | Observed in a failed movement test; both players stayed connected |
 | Parked ejection → recovery → respawn | Passed for both clients; original player IDs retained |
-| Fifteen-minute flight and firing | Running; no result claimed yet |
-| Steam authentication, retail clients, dedicated-server rotation | Not verified |
+| Airborne ejection → replacement → second flight | Passed for both clients on the native dedicated server: new aircraft, same players, both airborne again |
+| Gun firing | Both clients consumed their 1,000-round gun ammunition; server confirmed |
+| Select and fire rockets | Passed on the native dedicated server; both clients' rocket ammunition went from 8 to 0 |
+| Fifteen-minute flight and firing | Failed after about ten minutes airborne: one pilot died from collision damage. Both stayed connected |
+| Dedicated-server mission rotation | Failed while unloading ship particle effects; retained as a failing regression |
+| Steam authentication / retail clients | Not tested |
 | Long multiplayer sessions / performance-mod comparison | Not verified |
 
-The runner also has **26 automated tests**. These protect the testing tool;
+The runner also has **30 automated tests**. These protect the testing tool;
 they do not count as game tests. See [the evidence summary](evidence/status.json).
 
 ## How the player works
@@ -82,7 +87,7 @@ Use a separate Linux lab with clean game inputs and the bridge installed.
 [Setup instructions](docs/development.md) cover that first step.
 
 ```sh
-uv run notestpilot scenarios/two-player-aircraft.json \
+uv run notestpilot scenarios/native-startup-flight.json \
   --game /path/to/clean-game-input \
   --lab /path/to/disposable-lab \
   --output /path/to/private-results \
@@ -115,7 +120,9 @@ presented as the server's production requirement.
 The headless clients need a small UDP adapter because this build normally tries
 retail Steam callbacks even for UDP. The server's normal UDP password, build and
 join checks remain in use. No Steam identities are fabricated. Steam login and
-unmodded retail-client compatibility remain separate tests.
+unmodded retail-client compatibility remain separate tests. A scene-owned camera
+also supplies the empty waiting scene's view dependency; it renders nothing and
+leaves the original network update running.
 
 - [How commands reach the game](docs/control.md)
 - [What passes and failures mean](docs/testing.md)

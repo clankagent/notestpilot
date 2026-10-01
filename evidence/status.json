@@ -1,5 +1,5 @@
 {
-  "checkpoint": "2026-10-01: two clients taxi, take off and fly circuits in Escalation",
+  "checkpoint": "2026-10-01: native dedicated two-client flight, rockets, airborne replacement and second sortie",
   "game": {
     "version": "0.34.1",
     "steam_build": 24724541,
@@ -8,7 +8,7 @@
     "linux_assembly_sha256": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a"
   },
   "runner_unit_tests": {
-    "passed": 26,
+    "passed": 30,
     "platforms": [
       "Windows Python 3.12",
       "Linux Python 3.14"
@@ -201,6 +201,318 @@
       "junit_cases": 30,
       "failures": 0,
       "scope": "both clients eject parked aircraft, server returns inventory, both respawn with original player IDs; not airborne combat death"
+    },
+    {
+      "id": "two-flight-soak-01",
+      "scenario": "two-player-flight-soak.json",
+      "junit_cases": 28,
+      "failures": 1,
+      "airborne_observation_seconds_before_failure": 580.845,
+      "scope": "two clients remained airborne and fired guns; second aircraft disabled by pilot collision damage; not a passed fifteen-minute soak",
+      "gun_ammo_before": [
+        1000,
+        1000
+      ],
+      "gun_ammo_at_failure": [
+        0,
+        0
+      ],
+      "collision_other_object": "not identified; instrumentation being extended",
+      "process_telemetry": {
+        "server": {
+          "seconds": 580.7094,
+          "cpuSeconds": 672.1199999999999,
+          "cpuPercentOneCore": 115.74119516577481,
+          "frames": 31765,
+          "framesPerSecond": 54.70033720824909,
+          "fixedSteps": 34842,
+          "frameBucketBoundsMs": [
+            16.7,
+            25,
+            33.4,
+            50,
+            100,
+            null
+          ],
+          "frameBucketCounts": [
+            11069,
+            18190,
+            2288,
+            201,
+            16,
+            1
+          ],
+          "gameSeconds": 580.7031999999999
+        },
+        "client1": {
+          "seconds": 580.7207490000001,
+          "cpuSeconds": 595.39,
+          "cpuPercentOneCore": 102.52604216833312,
+          "frames": 33507,
+          "framesPerSecond": 57.69898881295181,
+          "fixedSteps": 34844,
+          "frameBucketBoundsMs": [
+            16.7,
+            25,
+            33.4,
+            50,
+            100,
+            null
+          ],
+          "frameBucketCounts": [
+            13996,
+            18987,
+            448,
+            67,
+            9,
+            0
+          ],
+          "gameSeconds": 580.736933
+        },
+        "client2": {
+          "seconds": 580.70546,
+          "cpuSeconds": 589.3499999999999,
+          "cpuPercentOneCore": 101.48862729825201,
+          "frames": 33715,
+          "framesPerSecond": 58.05869295597806,
+          "fixedSteps": 34843,
+          "frameBucketBoundsMs": [
+            16.7,
+            25,
+            33.4,
+            50,
+            100,
+            null
+          ],
+          "frameBucketCounts": [
+            14360,
+            18952,
+            326,
+            73,
+            4,
+            0
+          ],
+          "gameSeconds": 580.719162
+        }
+      }
+    },
+    {
+      "id": "native-dedicated-02",
+      "scenario": "native-dedicated-flight.json",
+      "failures": 1,
+      "scope": "headless empty waiting scene lacks Camera.main; dedicated-build test-client fixture subsequently supplies scene-owned zero-culling camera"
+    },
+    {
+      "id": "native-dedicated-03",
+      "scenario": "native-dedicated-flight.json",
+      "failures": 1,
+      "scope": "Terminal Control starts and clients join; rotation fails while ShipPropulsion.DisablePropulsion calls ParticleSystem.Stop; original ship/particle logic untouched"
+    },
+    {
+      "id": "native-startup-02",
+      "scenario": "native-startup-flight.json",
+      "junit_cases": 37,
+      "failures": 0,
+      "scope": "native hidden waiting server, player-triggered stock Escalation loading, two clients taxi/takeoff/circuit, ordinary rocket cycling/firing",
+      "script_seconds": 180,
+      "rocket_firing_seconds": 30,
+      "rocket_ammo_before": [
+        8,
+        8
+      ],
+      "rocket_ammo_after": [
+        0,
+        0
+      ],
+      "process_telemetry": {
+        "server": {
+          "seconds": 179.5816,
+          "cpuSeconds": 188.09999999999997,
+          "cpuPercentOneCore": 104.7434703778115,
+          "frames": 10571,
+          "framesPerSecond": 58.8646052825011,
+          "fixedSteps": 10775,
+          "frameBucketBoundsMs": [
+            16.7,
+            25,
+            33.4,
+            50,
+            100,
+            null
+          ],
+          "frameBucketCounts": [
+            4954,
+            5479,
+            124,
+            14,
+            0,
+            0
+          ],
+          "gameSeconds": 179.58043,
+          "peakResidentBytes": 1157038080
+        },
+        "client1": {
+          "seconds": 179.57058700000002,
+          "cpuSeconds": 158.42,
+          "cpuPercentOneCore": 88.2215749509133,
+          "frames": 10671,
+          "framesPerSecond": 59.42509950140108,
+          "fixedSteps": 10774,
+          "frameBucketBoundsMs": [
+            16.7,
+            25,
+            33.4,
+            50,
+            100,
+            null
+          ],
+          "frameBucketCounts": [
+            5206,
+            5425,
+            26,
+            14,
+            0,
+            0
+          ],
+          "gameSeconds": 179.57798559999998,
+          "peakResidentBytes": 1169702912
+        },
+        "client2": {
+          "seconds": 179.5633675,
+          "cpuSeconds": 158.40999999999997,
+          "cpuPercentOneCore": 88.21955291075724,
+          "frames": 10672,
+          "framesPerSecond": 59.433057803396345,
+          "fixedSteps": 10774,
+          "frameBucketBoundsMs": [
+            16.7,
+            25,
+            33.4,
+            50,
+            100,
+            null
+          ],
+          "frameBucketCounts": [
+            5154,
+            5480,
+            27,
+            11,
+            0,
+            0
+          ],
+          "gameSeconds": 179.5651458,
+          "peakResidentBytes": 1177100288
+        }
+      }
+    },
+    {
+      "id": "native-two-sorties-01",
+      "scenario": "native-two-sorties.json",
+      "junit_cases": 51,
+      "failures": 0,
+      "scope": "both clients fly and fire rockets, eject airborne, request normal reserve replacements, respawn and complete second taxi/takeoff/flight; original player IDs retained",
+      "aircraft_ids_before": [
+        1093,
+        1094
+      ],
+      "aircraft_ids_after": [
+        1251,
+        1252
+      ],
+      "player_ids_before": [
+        1091,
+        1092
+      ],
+      "player_ids_after": [
+        1091,
+        1092
+      ],
+      "second_sortie_process_telemetry": {
+        "server": {
+          "seconds": 179.11019900000002,
+          "cpuSeconds": 200.72999999999996,
+          "cpuPercentOneCore": 112.0706699678224,
+          "frames": 10271,
+          "framesPerSecond": 57.344584827355355,
+          "fixedSteps": 10747,
+          "frameBucketBoundsMs": [
+            16.7,
+            25,
+            33.4,
+            50,
+            100,
+            null
+          ],
+          "frameBucketCounts": [
+            4486,
+            5428,
+            314,
+            39,
+            4,
+            0
+          ],
+          "gameSeconds": 179.122619,
+          "peakResidentBytes": 1195782144
+        },
+        "client1": {
+          "seconds": 179.113171,
+          "cpuSeconds": 170.83999999999997,
+          "cpuPercentOneCore": 95.38103705394171,
+          "frames": 10564,
+          "framesPerSecond": 58.97947058287523,
+          "fixedSteps": 10747,
+          "frameBucketBoundsMs": [
+            16.7,
+            25,
+            33.4,
+            50,
+            100,
+            null
+          ],
+          "frameBucketCounts": [
+            4942,
+            5546,
+            62,
+            14,
+            0,
+            0
+          ],
+          "gameSeconds": 179.11169500000003,
+          "peakResidentBytes": 1216757760
+        },
+        "client2": {
+          "seconds": 179.11314399999998,
+          "cpuSeconds": 171.14,
+          "cpuPercentOneCore": 95.54854332745117,
+          "frames": 10538,
+          "framesPerSecond": 58.83431983082158,
+          "fixedSteps": 10747,
+          "frameBucketBoundsMs": [
+            16.7,
+            25,
+            33.4,
+            50,
+            100,
+            null
+          ],
+          "frameBucketCounts": [
+            4842,
+            5609,
+            70,
+            16,
+            1,
+            0
+          ],
+          "gameSeconds": 179.12678499999998,
+          "peakResidentBytes": 1200459776
+        }
+      }
+    },
+    {
+      "id": "native-three-sorties-reconnect-01",
+      "scenario": "native-three-sorties-reconnect.json",
+      "state": "running",
+      "scope": "planned three sorties, two airborne replacements, rocket/gun firing, sequential reconnects; no completed long-session verdict yet"
     }
   ],
   "runtime": {
@@ -212,21 +524,22 @@
     "aircraft_movement": "observed in one pass; repeat failed when second player lost aircraft; fixture not yet repeatable",
     "purchase": "unverified",
     "lease_expiry": "passed; client lease expires and server throttle/brakes clear without another command",
-    "flight_combat": "two-client taxi/takeoff/circuit passed three-minute script once; deliberate firing and sustained combat unverified",
-    "death_respawn": "parked ejection, inventory recovery and respawn passed for two independent clients; airborne death/respawn still unverified",
+    "flight_combat": "three-minute flight passed on UDP host and native dedicated manager; both guns and rockets consumed through normal firing; deliberate target hits unverified",
+    "death_respawn": "parked ejection/recovery and native airborne ejection/replacement/second flight passed for both clients; deliberate combat death/respawn unverified",
     "steam_authentication": "not tested",
     "retail_clients": "not tested",
-    "dedicated_rotation": "not tested",
-    "long_multiplayer_soak": "fifteen-minute two-client flight/firing test running; no result claimed",
-    "noperf_comparison": "not tested"
+    "dedicated_rotation": "tested and failed during ship particle-effect cleanup on unloading Terminal Control",
+    "long_multiplayer_soak": "failed after580.845sec of airborne observation: second pilot died from a physical collision at~935m terrain clearance; both clients connected",
+    "noperf_comparison": "not tested",
+    "native_dedicated_startup": "passed; waits for players, first join loads stock Escalation, both matching clients join"
   },
   "limitations": [
     "Server and clients share one VM",
-    "UDP host probe, not native dedicated-server manager lifecycle",
     "Input driver bypasses keyboard/UI and input-level pilot-strength gates",
     "One exact headless texture upload Error is recorded but allowed",
     "Source and bridge are experimental and exact-build guarded",
-    "Flight driver is a simple experimental circuit controller, not human input or combat AI; one short flight pass does not establish repeatability"
+    "Flight driver is a simple experimental circuit controller, not human input or combat AI; one short flight pass does not establish repeatability",
+    "Dedicated-build headless clients need a zero-culling scene-owned camera in empty waiting scene; original network visual update still runs"
   ],
   "constraints": {
     "windows_game_runs": "prohibited",

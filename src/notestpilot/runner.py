@@ -100,20 +100,39 @@ def matches(data, assertion):
     raise ValueError("Assertion needs equals, atLeast, atMost or notNull")
 
 
-def matches_with_peers(data, assertion, bridges):
-    if "equalsFrom" not in assertion:
+def matches_with_peers(data, assertion, bridges, captures=None):
+    saved = next((key for key in ("equalsSaved", "notEqualsSaved") if key in assertion), None)
+    if saved:
+        reference = assertion[saved]
+        try:
+            expected = value_at((captures or {})[reference["capture"]], reference["path"])
+            actual = value_at(data, assertion["path"])
+        except (KeyError, IndexError, TypeError, ValueError):
+            return False
+        # Missing identities cannot prove a respawn or stable player identity.
+        if expected is None or actual is None:
+            return False
+        return actual == expected if saved == "equalsSaved" else actual != expected
+    peer_operator = next((key for key in ("equalsFrom", "containsFrom") if key in assertion), None)
+    if peer_operator is None:
         return matches(data, assertion)
-    reference = assertion["equalsFrom"]
+    reference = assertion[peer_operator]
     try:
         expected = value_at(bridges[reference["target"]].status(), reference["path"])
     except (KeyError, IndexError, TypeError, ValueError):
         return False
     if expected is None:  # Two absent identities must never count as a matched player.
         return False
+    if peer_operator == "containsFrom":
+        try:
+            actual = value_at(data, assertion["path"])
+        except (KeyError, IndexError, TypeError, ValueError):
+            return False
+        return isinstance(actual, list) and expected in actual
     return matches(data, {"path": assertion["path"], "equals": expected})
 
 
-def wait_for(bridge: Bridge, assertions: list, timeout: float, bridges=None):
+def wait_for(bridge: Bridge, assertions: list, timeout: float, bridges=None, captures=None):
     deadline = time.monotonic() + timeout
     latest = None
     while time.monotonic() < deadline:
@@ -123,7 +142,7 @@ def wait_for(bridge: Bridge, assertions: list, timeout: float, bridges=None):
         except (ConnectionRefusedError, TimeoutError, ConnectionResetError, OSError) as error:
             latest = {"connectionError": str(error)}
         else:
-            if all(matches_with_peers(latest, assertion, bridges or {}) for assertion in assertions):
+            if all(matches_with_peers(latest, assertion, bridges or {}, captures) for assertion in assertions):
                 return latest
         time.sleep(0.2)
     raise TestFailure(f"Timed out after {timeout:g}s waiting for {assertions}; last state: {latest}")
@@ -136,7 +155,8 @@ def validate_scenario(data):
     if isinstance(count, bool) or not isinstance(count, int) or not 1 <= count <= 16:
         raise ValueError("Scenario clients must be between 1 and 16")
     targets = {"server", *client_names(count)}
-    allowed = {"status", "catalog", "host", "connect", "disconnect", "faction", "purchase", "reserve", "spawn", "controls", "release-controls", "engine", "eject", "gear", "next-weapon", "fly"}
+    captures = set()
+    allowed = {"status", "catalog", "host", "dedicated", "rotate", "connect", "disconnect", "faction", "purchase", "reserve", "spawn", "controls", "release-controls", "engine", "eject", "gear", "next-weapon", "fly"}
     for step in data["steps"]:
         if step.get("target") not in targets:
             raise ValueError("Step target does not name a configured server/client")
@@ -148,12 +168,18 @@ def validate_scenario(data):
             if not step["expect"]:
                 raise ValueError("An expectation must contain assertions")
             for assertion in step["expect"]:
-                if not isinstance(assertion.get("path"), str) or sum(k in assertion for k in ("equals", "atLeast", "atMost", "notNull", "equalsFrom")) != 1:
+                if not isinstance(assertion.get("path"), str) or sum(k in assertion for k in ("equals", "atLeast", "atMost", "notNull", "equalsFrom", "containsFrom", "equalsSaved", "notEqualsSaved")) != 1:
                     raise ValueError("Invalid assertion")
-                if "equalsFrom" in assertion:
-                    reference = assertion["equalsFrom"]
-                    if not isinstance(reference, dict) or reference.get("target") not in targets or not isinstance(reference.get("path"), str):
-                        raise ValueError("Invalid peer reference")
+                for key in ("equalsFrom", "containsFrom"):
+                    if key in assertion:
+                        reference = assertion[key]
+                        if not isinstance(reference, dict) or reference.get("target") not in targets or not isinstance(reference.get("path"), str):
+                            raise ValueError("Invalid peer reference")
+                for key in ("equalsSaved", "notEqualsSaved"):
+                    if key in assertion:
+                        reference = assertion[key]
+                        if not isinstance(reference, dict) or reference.get("capture") not in captures or not isinstance(reference.get("path"), str):
+                            raise ValueError("Saved assertion requires an earlier named capture")
         if "observe" in step:
             observe = step["observe"]
             if not isinstance(observe, dict) or not 0 < observe.get("seconds", 0) <= 10800:
@@ -176,6 +202,11 @@ def validate_scenario(data):
         timeout = step.get("timeout", 60)
         if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not 0 < timeout <= 180:
             raise ValueError("Timeout must be between 0 and 180 seconds")
+        if "capture" in step:
+            name = step["capture"]
+            if "expect" not in step or not isinstance(name, str) or not name or name in captures:
+                raise ValueError("Capture needs a unique name on an expectation step")
+            captures.add(name)
 
 
 def client_names(count):
@@ -189,6 +220,7 @@ def observe(bridge, bridges, specification, on_sample=None):
     tracked = {}
     first_observation = {}
     telemetry = {}
+    peak_resident = {}
     actions = specification.get("actions", [])
     next_actions = [started] * len(actions)
     action_records = []
@@ -216,6 +248,10 @@ def observe(bridge, bridges, specification, on_sample=None):
                 if name not in first_observation:
                     first_observation[name] = counters
                 telemetry[name] = window_telemetry(first_observation[name], counters)
+                if "residentBytes" in counters:
+                    # The peak belongs to this observation, not startup/menu time.
+                    peak_resident[name] = max(peak_resident.get(name, 0), counters["residentBytes"])
+                    telemetry[name]["peakResidentBytes"] = peak_resident[name]
         for tracking in specification.get("motion", []):
             path = tracking["path"]
             try:
@@ -256,6 +292,7 @@ def window_telemetry(first, last):
 
 def run_steps(scenario, bridges, report, output_dir=None):
     validate_scenario(scenario)
+    captures = {}
     for index, step in enumerate(scenario["steps"]):
         record = {"name": step.get("name", f"Step {index + 1}"), "target": step["target"]}
         start = time.monotonic()
@@ -272,7 +309,7 @@ def run_steps(scenario, bridges, report, output_dir=None):
                 if "errorCount" in record["result"]:
                     bridge.status()  # Also reject game errors during a command returning a snapshot.
             elif "expect" in step:
-                record["result"] = wait_for(bridge, step["expect"], step.get("timeout", 60), bridges)
+                record["result"] = wait_for(bridge, step["expect"], step.get("timeout", 60), bridges, captures)
             else:
                 def sample(evidence):
                     if output_dir is not None:
@@ -281,6 +318,10 @@ def run_steps(scenario, bridges, report, output_dir=None):
                         checkpoint(output_dir, {"scenario": scenario["name"], "step": record["name"],
                             "completedSteps": len(report["steps"]), "state": "running", **evidence})
                 record["result"] = observe(bridge, bridges, step["observe"], sample if output_dir is not None else None)
+            if "capture" in step:
+                # Keep a value snapshot, independent of later mutable fixture state.
+                captures[step["capture"]] = json.loads(json.dumps(record["result"], allow_nan=False))
+                record["capture"] = step["capture"]
             record["passed"] = True
             print(f"PASS {record['name']}", flush=True)
         except Exception as error:

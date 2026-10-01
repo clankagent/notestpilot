@@ -29,6 +29,8 @@ internal static class Observation
             prefix: new HarmonyMethod(typeof(Observation), nameof(UnitEvent)));
         harmony.Patch(AccessTools.Method(typeof(Unit), "Damage"),
             prefix: new HarmonyMethod(typeof(Observation), nameof(DamageEvent)));
+        harmony.Patch(AccessTools.Method(typeof(AeroPart), "OnCollisionEnter"),
+            prefix: new HarmonyMethod(typeof(Observation), nameof(CollisionEvent)));
     }
 
     private static void AircraftEvent(Aircraft __instance, MethodBase __originalMethod)
@@ -46,6 +48,22 @@ internal static class Observation
         Record(aircraft, "Damage", new { partIndex = index,
             pierce = damageInfo.pierceDamage.Decompress(), blast = damageInfo.blastDamage.Decompress(),
             fire = damageInfo.fireDamage.Decompress(), impact = damageInfo.impactDamage.Decompress() });
+    }
+
+    private static void CollisionEvent(AeroPart __instance, Collision collision)
+    {
+        if (!(__instance.parentUnit is Aircraft aircraft) || aircraft.Player == null || !aircraft.LocalSim) return;
+        // Discard gentle wheel/ground contacts; record hard contacts without
+        // changing the original collision or damage calculation.
+        if (collision.impulse.magnitude < 1000 || collision.relativeVelocity.sqrMagnitude < 25) return;
+        var collider = collision.collider;
+        var part = collider != null ? collider.GetComponentInParent<UnitPart>() : null;
+        var other = part != null ? part.parentUnit : collider?.GetComponentInParent<Unit>();
+        Record(aircraft, "Collision", new {
+            collider = collider?.name, otherUnitNetId = other != null ? (uint?)other.NetId : null,
+            otherUnitType = other?.definition?.jsonKey, otherPart = part?.name,
+            impulse = collision.impulse.magnitude, relativeSpeed = collision.relativeVelocity.magnitude
+        });
     }
 
     private static void Record(Aircraft aircraft, string action, object damage = null)
@@ -79,12 +97,17 @@ internal static class Observation
     }
 
     internal static void FixedStep() => fixedSteps++;
-    internal static object Snapshot() => new {
+    internal static object Snapshot()
+    {
+        process.Refresh();
+        return new {
         eventCount = sequence, events = events.ToArray(),
         // Cumulative samples include loading/menu time. Runner uses window deltas.
         frames, fixedSteps, frameBuckets = frameBuckets.ToArray(), maximumFrameMs,
         realtimeSeconds = Time.realtimeSinceStartup,
         gameSeconds = Time.time, fixedDeltaSeconds = Time.fixedDeltaTime, timeScale = Time.timeScale,
-        processCpuSeconds = process.TotalProcessorTime.TotalSeconds
-    };
+        processCpuSeconds = process.TotalProcessorTime.TotalSeconds,
+        residentBytes = process.WorkingSet64
+        };
+    }
 }

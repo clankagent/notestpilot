@@ -35,6 +35,8 @@ checks the join. This does not test Steam authentication or retail-client compat
 |---|---|---|
 | `status` | Either | Read mission, IDs, aircraft, controls and game errors |
 | `host` | Server | `mission`, `port`, optional `password`; UDP multiplayer host |
+| `dedicated` | Server | `missions` array, `port`, optional `password`; original dedicated manager, hidden UDP server |
+| `rotate` | Server | Expire the native mission's time limit through the normal admin operation; currently exposes a stock cleanup failure |
 | `connect` | Client | `port`, optional `password`; join loopback host |
 | `disconnect` | Client | Normal game network stop |
 | `faction` | Client | `name`; request faction selection |
@@ -46,9 +48,9 @@ checks the join. This does not test Steam authentication or retail-client compat
 | `release-controls` | Client | End input override |
 | `fly` | Client | `seconds`, optional `fire`; experimental taxi, takeoff, climb and square circuit |
 | `catalog` | Either | Aircraft keys, compatible hardpoints and available standard loadouts |
-| `eject` | Client | Normal ejection; parked recovery/respawn passed for two clients |
+| `eject` | Client | Normal ejection; parked recovery and airborne replacement/second flight passed for two clients |
 | `gear` | Client | `down`; normal gear operation |
-| `next-weapon` | Client | Cycle the normal weapon selection; runtime test pending |
+| `next-weapon` | Client | Cycle normal weapon selection; rocket selection and firing passed for two clients |
 
 Default reserve selection is deterministic: eligible rank, then aircraft key.
 Default spawn chooses an owned airframe and a friendly compatible base. Game
@@ -90,7 +92,16 @@ input limitations. Flight and combat need their own runtime scenarios.
 ```
 
 Snapshots sort players by player index. Included scenarios join in a known order.
-A selector by network ID will be needed for arbitrary concurrent join patterns.
+The UDP host appears in this list, so its clients start at `players.1`. A native
+dedicated server has no playable host entry: its clients start at `players.0`.
+For reconnects, use `playerNetIds` with a `containsFrom` reference to the client's
+`localPlayerNetId`. This checks the actual rejoined player without assuming its
+position in the sorted list. Selecting an arbitrary aircraft by ID remains future work.
+
+Respawn tests save a server snapshot with `"capture": "before"` on an expectation
+step. Later `equalsSaved` checks require the same player ID, while `notEqualsSaved`
+requires a different, non-null aircraft ID. A disappearing aircraft cannot satisfy
+the replacement check. The test also matches the new aircraft to its owning client.
 
 ## Python control
 
@@ -129,7 +140,7 @@ An observation can renew a flight lease while checking the server every second:
 
 The included soak scenario renews both clients and additionally requires both owned
 aircraft to stay alive, moving and at least 80 metres above terrain. This is a
-**running test, not a passed soak**. Firing calls the game's normal weapon method;
+**failed test, not a passed soak**. Firing calls the game's normal weapon method;
 weapon safety, ammunition and firing cadence still apply.
 
 `fly` uses client-local taxi pathfinding and the game's steering helpers. It does

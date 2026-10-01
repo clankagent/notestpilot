@@ -1,0 +1,680 @@
+{
+  "name": "Native dedicated two-client airborne ejection, replacement and second sortie",
+  "clients": 2,
+  "steps": [
+    {
+      "name": "Start hidden native dedicated manager",
+      "target": "server",
+      "command": "dedicated",
+      "args": {
+        "missions": [
+          "Escalation"
+        ],
+        "port": 17777
+      }
+    },
+    {
+      "name": "Native server listens while waiting for players",
+      "target": "server",
+      "timeout": 90,
+      "expect": [
+        {
+          "path": "serverActive",
+          "equals": true
+        },
+        {
+          "path": "dedicated.running",
+          "equals": true
+        },
+        {
+          "path": "dedicated.hidden",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "First client joins native waiting server",
+      "target": "client1",
+      "command": "connect",
+      "args": {
+        "port": 17777
+      }
+    },
+    {
+      "name": "First player triggers native mission loading",
+      "target": "client1",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerNetId",
+          "notNull": true
+        },
+        {
+          "path": "mission",
+          "equals": "Escalation"
+        },
+        {
+          "path": "missionRunning",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "Second client joins native server",
+      "target": "client2",
+      "command": "connect",
+      "args": {
+        "port": 17777
+      }
+    },
+    {
+      "name": "Second native client loads the mission",
+      "target": "client2",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerNetId",
+          "notNull": true
+        },
+        {
+          "path": "mission",
+          "equals": "Escalation"
+        },
+        {
+          "path": "missionRunning",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "Native server sees both players",
+      "target": "server",
+      "expect": [
+        {
+          "path": "remotePlayers",
+          "equals": 2
+        }
+      ]
+    },
+    {
+      "name": "Native server runs large Escalation",
+      "target": "server",
+      "expect": [
+        {
+          "path": "dedicated.currentMission",
+          "equals": "Escalation"
+        },
+        {
+          "path": "units",
+          "atLeast": 800
+        },
+        {
+          "path": "missionRunning",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "Server sees both matching player identities",
+      "target": "server",
+      "expect": [
+        {
+          "path": "remotePlayers",
+          "equals": 2
+        },
+        {
+          "path": "players.0.netId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerNetId"
+          }
+        },
+        {
+          "path": "players.1.netId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerNetId"
+          }
+        }
+      ]
+    },
+    {
+      "name": "First player chooses Primeva",
+      "target": "client1",
+      "command": "faction",
+      "args": {
+        "name": "Primeva"
+      }
+    },
+    {
+      "name": "Second player chooses Boscali",
+      "target": "client2",
+      "command": "faction",
+      "args": {
+        "name": "Boscali"
+      }
+    },
+    {
+      "name": "Server confirms both faction decisions",
+      "target": "server",
+      "expect": [
+        {
+          "path": "players.0.faction",
+          "equals": "Primeva"
+        },
+        {
+          "path": "players.1.faction",
+          "equals": "Boscali"
+        }
+      ]
+    },
+    {
+      "target": "client1",
+      "name": "First player reserves an aircraft",
+      "command": "reserve"
+    },
+    {
+      "target": "client2",
+      "name": "Second player reserves an aircraft",
+      "command": "reserve"
+    },
+    {
+      "target": "client1",
+      "expect": [
+        {
+          "atLeast": 1,
+          "path": "localPlayerOwnedCount"
+        }
+      ],
+      "name": "First player receives an owned airframe"
+    },
+    {
+      "target": "client2",
+      "expect": [
+        {
+          "atLeast": 1,
+          "path": "localPlayerOwnedCount"
+        }
+      ],
+      "name": "Second player receives an owned airframe"
+    },
+    {
+      "target": "client1",
+      "name": "First player requests spawning",
+      "command": "spawn",
+      "args": {
+        "airbase": "Sandrift Airbase"
+      }
+    },
+    {
+      "target": "client2",
+      "name": "Second player requests spawning",
+      "command": "spawn",
+      "args": {
+        "airbase": "Maris Airport"
+      }
+    },
+    {
+      "timeout": 120,
+      "target": "client1",
+      "expect": [
+        {
+          "notNull": true,
+          "path": "localPlayerAircraftNetId"
+        }
+      ],
+      "name": "First client receives its aircraft"
+    },
+    {
+      "timeout": 120,
+      "target": "client2",
+      "expect": [
+        {
+          "notNull": true,
+          "path": "localPlayerAircraftNetId"
+        }
+      ],
+      "name": "Second client receives its aircraft"
+    },
+    {
+      "target": "server",
+      "expect": [
+        {
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.0.aircraftNetId"
+        },
+        {
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.1.aircraftNetId"
+        }
+      ],
+      "name": "Server matches both client aircraft identities"
+    },
+    {
+      "target": "client1",
+      "name": "First player starts its engine",
+      "command": "engine",
+      "args": {
+        "on": true
+      }
+    },
+    {
+      "target": "client2",
+      "name": "Second player starts its engine",
+      "command": "engine",
+      "args": {
+        "on": true
+      }
+    },
+    {
+      "name": "Inspect aircraft and standard loadouts",
+      "target": "client1",
+      "command": "catalog"
+    },
+    {
+      "name": "Both clients steer, taxi and attempt takeoff for three minutes",
+      "target": "server",
+      "observe": {
+        "seconds": 180,
+        "expect": [
+          {
+            "equals": 2,
+            "path": "remotePlayers"
+          },
+          {
+            "notNull": true,
+            "path": "players.0.aircraftNetId"
+          },
+          {
+            "notNull": true,
+            "path": "players.1.aircraftNetId"
+          },
+          {
+            "equals": false,
+            "path": "players.0.disabled"
+          },
+          {
+            "equals": false,
+            "path": "players.1.disabled"
+          }
+        ],
+        "motion": [
+          {
+            "minimumMetres": 100,
+            "path": "players.0"
+          },
+          {
+            "minimumMetres": 100,
+            "path": "players.1"
+          }
+        ],
+        "actions": [
+          {
+            "command": "fly",
+            "target": "client1",
+            "args": {
+              "seconds": 45
+            },
+            "everySeconds": 20
+          },
+          {
+            "command": "fly",
+            "target": "client2",
+            "args": {
+              "seconds": 45
+            },
+            "everySeconds": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "Server confirms both aircraft are airborne",
+      "target": "server",
+      "timeout": 10,
+      "expect": [
+        {
+          "atLeast": 80,
+          "path": "players.0.radarAltitude"
+        },
+        {
+          "atLeast": 80,
+          "path": "players.1.radarAltitude"
+        }
+      ]
+    },
+    {
+      "name": "Client 1 selects next weapon normally",
+      "target": "client1",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Client 1 selects rocket station normally",
+      "target": "client1",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Client 1 confirms selected rocket station",
+      "target": "client1",
+      "expect": [
+        {
+          "path": "players.0.weapons.2.selected",
+          "equals": true
+        },
+        {
+          "path": "players.0.weapons.2.name",
+          "equals": "AGR-24 Kingpin"
+        }
+      ]
+    },
+    {
+      "name": "Client 2 selects next weapon normally",
+      "target": "client2",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Client 2 selects rocket station normally",
+      "target": "client2",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Client 2 confirms selected rocket station",
+      "target": "client2",
+      "expect": [
+        {
+          "path": "players.1.weapons.2.selected",
+          "equals": true
+        },
+        {
+          "path": "players.1.weapons.2.name",
+          "equals": "AGR-24 Kingpin"
+        }
+      ]
+    },
+    {
+      "name": "Both native clients fly and fire rockets for thirty seconds",
+      "target": "server",
+      "observe": {
+        "seconds": 30,
+        "expect": [
+          {
+            "path": "remotePlayers",
+            "equals": 2
+          },
+          {
+            "path": "players.0.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.1.disabled",
+            "equals": false
+          }
+        ],
+        "actions": [
+          {
+            "target": "client1",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true
+            },
+            "everySeconds": 20
+          },
+          {
+            "target": "client2",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true
+            },
+            "everySeconds": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "Native server confirms rockets consumed on both aircraft",
+      "target": "server",
+      "timeout": 10,
+      "expect": [
+        {
+          "path": "players.0.weapons.2.ammo",
+          "atMost": 7
+        },
+        {
+          "path": "players.1.weapons.2.ammo",
+          "atMost": 7
+        }
+      ],
+      "capture": "first-sortie"
+    },
+    {
+      "name": "Client 1 ejects during flight",
+      "target": "client1",
+      "command": "eject"
+    },
+    {
+      "name": "Client 2 ejects during flight",
+      "target": "client2",
+      "command": "eject"
+    },
+    {
+      "name": "Native server confirms both aircraft abandoned",
+      "target": "server",
+      "timeout": 60,
+      "expect": [
+        {
+          "path": "players.0.disabled",
+          "equals": true
+        },
+        {
+          "path": "players.1.disabled",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "Client 1 requests a normal reserve replacement",
+      "target": "client1",
+      "command": "reserve"
+    },
+    {
+      "name": "Client 1 receives replacement inventory",
+      "target": "client1",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerOwnedCount",
+          "atLeast": 1
+        }
+      ]
+    },
+    {
+      "name": "Client 2 requests a normal reserve replacement",
+      "target": "client2",
+      "command": "reserve"
+    },
+    {
+      "name": "Client 2 receives replacement inventory",
+      "target": "client2",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerOwnedCount",
+          "atLeast": 1
+        }
+      ]
+    },
+    {
+      "name": "Client 1 starts replacement spawn through normal request",
+      "target": "client1",
+      "command": "spawn",
+      "args": {
+        "airbase": "Sandrift Airbase"
+      }
+    },
+    {
+      "name": "Client 2 starts replacement spawn through normal request",
+      "target": "client2",
+      "command": "spawn",
+      "args": {
+        "airbase": "Maris Airport"
+      }
+    },
+    {
+      "name": "Native server confirms new airframes and unchanged player identities",
+      "target": "server",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "remotePlayers",
+          "equals": 2
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "notEqualsSaved": {
+            "capture": "first-sortie",
+            "path": "players.0.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.0.netId",
+          "equalsSaved": {
+            "capture": "first-sortie",
+            "path": "players.0.netId"
+          }
+        },
+        {
+          "path": "players.0.disabled",
+          "equals": false
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "notEqualsSaved": {
+            "capture": "first-sortie",
+            "path": "players.1.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.netId",
+          "equalsSaved": {
+            "capture": "first-sortie",
+            "path": "players.1.netId"
+          }
+        },
+        {
+          "path": "players.1.disabled",
+          "equals": false
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Client 1 starts replacement engine",
+      "target": "client1",
+      "command": "engine",
+      "args": {
+        "on": true
+      }
+    },
+    {
+      "name": "Client 2 starts replacement engine",
+      "target": "client2",
+      "command": "engine",
+      "args": {
+        "on": true
+      }
+    },
+    {
+      "name": "Second sortie: Both clients steer, taxi and attempt takeoff for three minutes",
+      "target": "server",
+      "observe": {
+        "seconds": 180,
+        "expect": [
+          {
+            "equals": 2,
+            "path": "remotePlayers"
+          },
+          {
+            "notNull": true,
+            "path": "players.0.aircraftNetId"
+          },
+          {
+            "notNull": true,
+            "path": "players.1.aircraftNetId"
+          },
+          {
+            "equals": false,
+            "path": "players.0.disabled"
+          },
+          {
+            "equals": false,
+            "path": "players.1.disabled"
+          }
+        ],
+        "motion": [
+          {
+            "minimumMetres": 100,
+            "path": "players.0"
+          },
+          {
+            "minimumMetres": 100,
+            "path": "players.1"
+          }
+        ],
+        "actions": [
+          {
+            "command": "fly",
+            "target": "client1",
+            "args": {
+              "seconds": 45
+            },
+            "everySeconds": 20
+          },
+          {
+            "command": "fly",
+            "target": "client2",
+            "args": {
+              "seconds": 45
+            },
+            "everySeconds": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "Second sortie: Server confirms both aircraft are airborne",
+      "target": "server",
+      "timeout": 10,
+      "expect": [
+        {
+          "atLeast": 80,
+          "path": "players.0.radarAltitude"
+        },
+        {
+          "atLeast": 80,
+          "path": "players.1.radarAltitude"
+        }
+      ]
+    }
+  ]
+}

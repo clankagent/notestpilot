@@ -205,7 +205,8 @@
           "path": "players.2.aircraftNetId"
         }
       ],
-      "name": "Server matches both client aircraft identities"
+      "name": "Server matches both client aircraft identities",
+      "capture": "before-ejection"
     },
     {
       "name": "Player 1 ejects normally",
@@ -316,6 +317,34 @@
           "equalsFrom": {
             "target": "client2",
             "path": "localPlayerNetId"
+          }
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "notEqualsSaved": {
+            "capture": "before-ejection",
+            "path": "players.1.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.netId",
+          "equalsSaved": {
+            "capture": "before-ejection",
+            "path": "players.1.netId"
+          }
+        },
+        {
+          "path": "players.2.aircraftNetId",
+          "notEqualsSaved": {
+            "capture": "before-ejection",
+            "path": "players.2.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.2.netId",
+          "equalsSaved": {
+            "capture": "before-ejection",
+            "path": "players.2.netId"
           }
         }
       ]

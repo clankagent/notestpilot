@@ -30,6 +30,59 @@ def reply_once(handler):
 
 
 class RunnerTests(unittest.TestCase):
+    def test_rejoin_matches_the_clients_identity_without_assuming_player_order(self):
+        class Peer:
+            identity = 42
+            def status(self): return {"id": self.identity}
+        peer = Peer()
+        assertion = {"path": "ids", "containsFrom": {"target": "client", "path": "id"}}
+        self.assertTrue(matches_with_peers({"ids": [43, 42]}, assertion, {"client": peer}))
+        for state in ({"ids": [43]}, {"ids": None}, {"ids": "42"}, {}):
+            self.assertFalse(matches_with_peers(state, assertion, {"client": peer}))
+        peer.identity = None
+        self.assertFalse(matches_with_peers({"ids": [None]}, assertion, {"client": peer}))
+        validate_scenario({"name": "rejoin", "steps": [{"target": "server", "expect": [assertion]}]})
+        with self.assertRaisesRegex(ValueError, "peer reference"):
+            validate_scenario({"name": "bad", "steps": [{"target": "server", "expect": [
+                {"path": "ids", "containsFrom": {"target": "unknown", "path": "id"}}]}]})
+
+    def test_respawn_requires_a_new_id_and_preserves_the_original_player(self):
+        captures = {"before": {"aircraft": 10, "player": 4}}
+        new_aircraft = {"path": "aircraft", "notEqualsSaved": {"capture": "before", "path": "aircraft"}}
+        same_player = {"path": "player", "equalsSaved": {"capture": "before", "path": "player"}}
+        self.assertTrue(matches_with_peers({"aircraft": 20}, new_aircraft, {}, captures))
+        self.assertTrue(matches_with_peers({"player": 4}, same_player, {}, captures))
+        for state in ({"aircraft": 10}, {"aircraft": None}, {}):
+            self.assertFalse(matches_with_peers(state, new_aircraft, {}, captures))
+        self.assertFalse(matches_with_peers({"player": 5}, same_player, {}, captures))
+        self.assertFalse(matches_with_peers({"aircraft": 20}, new_aircraft, {}, {}))
+
+    def test_saved_identity_checks_require_a_prior_capture(self):
+        step = {"target": "server", "expect": [{"path": "id", "notEqualsSaved": {"capture": "before", "path": "id"}}]}
+        with self.assertRaisesRegex(ValueError, "earlier"):
+            validate_scenario({"name": "bad", "steps": [step]})
+        first = {"target": "server", "capture": "before", "expect": [{"path": "id", "notNull": True}]}
+        validate_scenario({"name": "good", "steps": [first, step]})
+        with self.assertRaisesRegex(ValueError, "unique"):
+            validate_scenario({"name": "bad", "steps": [first, first]})
+
+    def test_run_freezes_captured_state_before_the_next_action(self):
+        class Peer:
+            state = {"aircraft": 10}
+            def status(self): return self.state
+            def call(self, *args, **kwargs):
+                self.state["aircraft"] = 20
+                return {"accepted": True}
+        scenario = {"name": "replacement", "steps": [
+            {"target": "server", "capture": "before", "timeout": 0.01,
+             "expect": [{"path": "aircraft", "equals": 10}]},
+            {"target": "server", "command": "status"},
+            {"target": "server", "timeout": 0.01, "expect": [
+                {"path": "aircraft", "notEqualsSaved": {"capture": "before", "path": "aircraft"}}]}]}
+        report = {"scenario": scenario["name"], "steps": []}
+        run_steps(scenario, {"server": Peer()}, report)
+        self.assertTrue(all(step["passed"] for step in report["steps"]))
+
     def test_ammunition_upper_bound_rejects_missing_and_non_numeric_state(self):
         assertion = {"path": "ammo", "atMost": 999}
         self.assertTrue(matches({"ammo": 998}, assertion))

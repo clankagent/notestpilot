@@ -85,8 +85,9 @@ Prefer commands that request normal game actions, followed by server assertions.
 Do not create players on the server, fabricate Steam identities, force ownership,
 teleport aircraft or suppress failures to get a green test.
 
-Add flight/combat, disconnect cleanup, death/respawn, long sessions and the native
-dedicated-server-manager lifecycle before treating this as a complete server suite.
+Native startup, scripted flight and rockets now have real runtime passes. Native
+mission rotation currently fails. Add sustained combat, airborne recovery,
+multi-client reconnects and long sessions before treating this as a complete suite.
 Reports now fingerprint the scenario, bridge and game assembly, and measure each
 process separately over observation windows. A mod-under-test input manifest,
 repeated alternating baseline/mod runs and broader activity are still needed for

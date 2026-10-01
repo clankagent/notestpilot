@@ -19,6 +19,7 @@ using UnityEngine;
 using Player = NuclearOption.Networking.Player;
 using SocketType = NuclearOption.Networking.SocketType;
 using NuclearOption.SavedMission;
+using NuclearOption.DedicatedServer;
 
 namespace NOTestPilot;
 
@@ -72,6 +73,8 @@ public sealed class Plugin : BaseUnityPlugin
             prefix: new HarmonyMethod(typeof(HeadlessUdpAdapter), nameof(HeadlessUdpAdapter.OnConnected)));
         harmony.Patch(AccessTools.Method(typeof(Player), nameof(Player.GetPlayerName)),
             prefix: new HarmonyMethod(typeof(HeadlessUdpAdapter), nameof(HeadlessUdpAdapter.DisplayName)));
+        harmony.Patch(AccessTools.Method(typeof(NuclearOption.NetworkTransforms.SendTransformBatcher), "VisualUpdate"),
+            prefix: new HarmonyMethod(typeof(HeadlessUdpAdapter), nameof(HeadlessUdpAdapter.BeforeVisualUpdate)));
         foreach (var method in new[] { "PlayerControls", "PlayerAxisControls" })
             harmony.Patch(AccessTools.Method(typeof(PilotPlayerState), method),
                 prefix: new HarmonyMethod(typeof(ControlLease), nameof(ControlLease.BeforeControls)));
@@ -199,6 +202,55 @@ public sealed class Plugin : BaseUnityPlugin
                     { UdpPort = port, MaxConnections = 4, Password = (string)args["password"] });
                 return Snapshot();
             }
+            case "dedicated":
+            {
+                RequireRole("server");
+                if (MainMenu.State != MainMenu.LoadingState.Loaded || NetworkManagerNuclearOption.i.Server.Active)
+                    throw new InvalidOperationException("Dedicated manager requires an idle loaded menu");
+                var missionNames = args["missions"] as JArray;
+                if (missionNames == null || missionNames.Count == 0 || missionNames.Count > 8)
+                    throw new ArgumentException("Specify one to eight built-in missions");
+                var missions = missionNames.Select(n => (string)n).ToArray();
+                // Resolve before starting networking; arbitrary Workshop IDs and
+                // filesystem paths are outside this initial native-manager test.
+                foreach (string name in missions)
+                {
+                    if (name != "Escalation" && name != "Terminal Control")
+                        throw new ArgumentException("Native probe currently supports Escalation and Terminal Control");
+                    CommandLineArgParser.LoadMission(name, false);
+                }
+                int port = (int?)args["port"] ?? 17777;
+                if (port < 1024 || port > 65535) throw new ArgumentException("Invalid UDP port");
+                var config = DedicatedServerConfig.CreateDefault();
+                config.Hidden = true;
+                config.ServerName = "NOTestPilot disposable native server";
+                config.MaxPlayers = 4;
+                config.Port = new Override<ushort> { IsOverride = true, Value = (ushort)port };
+                config.QueryPort = DedicatedServerManager.GetConfig().config.QueryPort;
+                config.Password = (string)args["password"];
+                config.MissionDirectory = null;
+                config.BanListPaths = config.ErrorKickImmuneListPaths = new string[0];
+                config.MissionRotation = missions.Select(name => new MissionOptions {
+                    Key = new MissionKeySaveable { Group = "BuiltIn", Name = name }, MaxTime = 7200
+                }).ToArray();
+                // The actual native manager owns startup, player-triggered map
+                // loading and rotation. Hidden stays true; transport is UDP.
+                CommandLineArgParser.SocketType = SocketType.UDP;
+                string path = Path.Combine(Environment.CurrentDirectory, "DedicatedServerConfig.json");
+                DedicatedServerConfig.Save(path, config, true);
+                DedicatedServerManager.Instance.Run(config, path);
+                return new { accepted = true };
+            }
+            case "rotate":
+            {
+                RequireRole("server");
+                if (!DedicatedServerManager.IsRunning || !MissionManager.IsRunning)
+                    throw new InvalidOperationException("No native dedicated mission running");
+                // Normal admin operation: expire this mission's time limit. It
+                // tests rotation without faking a gameplay victory or winner.
+                DedicatedServerManager.Instance.SetTimeRemaining(0);
+                return new { accepted = true };
+            }
             case "connect":
             {
                 RequireRole("client");
@@ -243,7 +295,9 @@ public sealed class Plugin : BaseUnityPlugin
             case "spawn":
             {
                 var player = LocalPlayer();
-                if (player.Aircraft != null) throw new InvalidOperationException("Player already has an aircraft");
+                var previousAircraft = player.Aircraft;
+                if (previousAircraft != null && !previousAircraft.disabled && previousAircraft.pilots.Any(p => !p.dead && !p.ejected))
+                    throw new InvalidOperationException("Eject or finish the current sortie before spawning another aircraft");
                 var definition = args["aircraft"] != null ? FindAircraft((string)args["aircraft"]) : player.OwnedAirframes
                     .Select(a => a.Definition).OrderBy(a => a.jsonKey, StringComparer.Ordinal).FirstOrDefault();
                 if (definition == null) throw new InvalidOperationException("Player owns no airframe");
@@ -335,16 +389,23 @@ public sealed class Plugin : BaseUnityPlugin
         bool menuReady = MainMenu.State == MainMenu.LoadingState.Loaded;
         // The singleton getter creates/logs an error if queried before menu preload.
         var network = menuReady ? NetworkManagerNuclearOption.i : null;
+        var native = network != null ? network.DedicatedServerManager : null;
         return new
         {
             protocol = 1, instance, role, assemblySha256 = build, gameVersion = Application.version,
             clientMode = "dedicated-build UDP adapter", steamAuthenticationTested = false,
+            headlessWaitingCamerasCreated = HeadlessUdpAdapter.WaitingCamerasCreated,
             menuReady,
             serverActive = network != null && network.Server.Active,
             clientActive = network != null && network.Client.Active,
             mission = MissionManager.CurrentMission?.Name, missionRunning = MissionManager.IsRunning,
+            gameState = GameManager.gameState.ToString(),
+            dedicated = new { running = DedicatedServerManager.IsRunning,
+                hidden = native?.Config?.Hidden,
+                currentMission = DedicatedServerManager.IsRunning && native != null ? native.CurrentMissionOption.Key.Name : null },
             units = UnitRegistry.allUnits.Count, aircraft = UnitRegistry.allAircraft.Count,
             remotePlayers = UnitRegistry.playerLookup.Values.Count(p => p != null && !p.IsHostPlayer),
+            playerNetIds = UnitRegistry.playerLookup.Values.Where(p => p != null).Select(p => p.NetId).ToArray(),
             localPlayerNetId = GameManager.GetLocalPlayer<Player>(out var localPlayer) ? (uint?)localPlayer.NetId : null,
             localPlayerOwnedCount = localPlayer != null ? localPlayer.OwnedAirframes.Count : 0,
             localPlayerAircraftNetId = localPlayer != null && localPlayer.Aircraft != null ? (uint?)localPlayer.Aircraft.NetId : null,
@@ -355,6 +416,7 @@ public sealed class Plugin : BaseUnityPlugin
             {
                 netId = p.NetId, index = p.PlayerIndex, host = p.IsHostPlayer, local = p.IsLocalPlayer,
                 faction = p.HQ != null ? p.HQ.faction.factionName : null,
+                rank = p.PlayerRank, allocation = p.Allocation,
                 ownedAircraft = p.OwnedAirframes.Select(a => a.Definition.jsonKey).ToArray(),
                 ownedCount = p.OwnedAirframes.Count,
                 aircraftNetId = p.Aircraft != null ? (uint?)p.Aircraft.NetId : null,

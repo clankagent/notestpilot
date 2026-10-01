@@ -4,6 +4,8 @@ using HarmonyLib;
 using Mirage;
 using NuclearOption.Networking;
 using NuclearOption.Networking.Authentication;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace NOTestPilot;
 
@@ -14,6 +16,24 @@ namespace NOTestPilot;
 // is untouched. This is deliberately labelled a UDP adapter, not a retail client.
 internal static class HeadlessUdpAdapter
 {
+    internal static long WaitingCamerasCreated { get; private set; }
+
+    internal static void BeforeVisualUpdate()
+    {
+        // The dedicated waiting scene has no camera, but this build's client
+        // visual-update method unconditionally reads Camera.main.transform.
+        // Supply only that empty-scene view dependency. Original interpolation,
+        // network receive/send and all game simulation continue normally.
+        if (Environment.GetEnvironmentVariable("NOTESTPILOT_ROLE") != "client" || !GameManager.IsHeadless
+            || !string.Equals(SceneManager.GetActiveScene().name, "empty", StringComparison.OrdinalIgnoreCase)
+            || Camera.main != null) return;
+        var view = new GameObject("NOTestPilot empty waiting scene view");
+        view.tag = "MainCamera";
+        view.AddComponent<Camera>().cullingMask = 0;
+        // Scene-owned: unloaded with the empty scene, never persists in a mission.
+        WaitingCamerasCreated++;
+    }
+
     // With no retail Steam API, the game selects a server-only name path on a
     // client and dereferences a missing Owner. Use the game's display fallback.
     // This changes display names only; it does not supply authentication data.
