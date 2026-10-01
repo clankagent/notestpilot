@@ -40,10 +40,15 @@ checks the join. This does not test Steam authentication or retail-client compat
 | `faction` | Client | `name`; request faction selection |
 | `reserve` | Client | Optional `aircraft` key; request eligible reserve airframe |
 | `purchase` | Client | `aircraft` key; request purchase (**unverified at runtime**) |
-| `spawn` | Client | Optional `aircraft`, `airbase`, `fuel`; owned unarmed aircraft |
+| `spawn` | Client | Optional `aircraft`, `airbase`, `fuel`; owned aircraft; game default loadout unless explicitly specified |
 | `engine` | Client | `on`; request ignition toggle if needed |
-| `controls` | Client | `pitch`, `roll`, `yaw`, `throttle`, `brake`, `seconds` |
+| `controls` | Client | `pitch`, `roll`, `yaw`, `throttle`, `brake`, `seconds`, optional `fire` |
 | `release-controls` | Client | End input override |
+| `fly` | Client | `seconds`, optional `fire`; experimental taxi, takeoff, climb and square circuit |
+| `catalog` | Either | Aircraft keys, compatible hardpoints and available standard loadouts |
+| `eject` | Client | Normal ejection; parked recovery/respawn passed for two clients |
+| `gear` | Client | `down`; normal gear operation |
+| `next-weapon` | Client | Cycle the normal weapon selection; runtime test pending |
 
 Default reserve selection is deterministic: eligible rank, then aircraft key.
 Default spawn chooses an owned airframe and a friendly compatible base. Game
@@ -101,5 +106,39 @@ client.call("release-controls")
 ```
 
 The port/token belong to an explicitly enabled disposable game process. The current
-CLI executes whole scenarios and closes its processes afterward. A live dashboard
-or route-following bot would use the same interface; neither is implemented yet.
+CLI executes whole scenarios and closes its processes afterward. The experimental flight script uses this same interface. An interactive dashboard
+is not implemented.
+
+## A longer action script
+
+An observation can renew a flight lease while checking the server every second:
+
+```json
+{
+  "target": "server",
+  "observe": {
+    "seconds": 900,
+    "expect": [{"path": "remotePlayers", "equals": 2}],
+    "actions": [
+      {"target": "client1", "command": "fly",
+       "args": {"seconds": 45, "fire": true}, "everySeconds": 20}
+    ]
+  }
+}
+```
+
+The included soak scenario renews both clients and additionally requires both owned
+aircraft to stay alive, moving and at least 80 metres above terrain. This is a
+**running test, not a passed soak**. Firing calls the game's normal weapon method;
+weapon safety, ammunition and firing cadence still apply.
+
+`fly` uses client-local taxi pathfinding and the game's steering helpers. It does
+not enable server AI for the player or assign aircraft position/velocity. Its
+steering replaces human input, so passing this script would not prove human skill,
+menu behaviour or sophisticated combat AI.
+
+Spawn accepts either a named `loadout` or `weapons` with one mount key/null per
+hardpoint set. Read `catalog` first. These options still go through normal spawn
+validation and need targeted runtime coverage. An empty request can receive the
+game's default weapons: inspect the actual aircraft's `weapons` snapshot rather
+than assuming an empty request means an unarmed plane.

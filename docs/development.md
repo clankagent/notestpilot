@@ -87,5 +87,7 @@ teleport aircraft or suppress failures to get a green test.
 
 Add flight/combat, disconnect cleanup, death/respawn, long sessions and the native
 dedicated-server-manager lifecycle before treating this as a complete server suite.
-A mod-under-test input manifest and separate server/client measurements are still
-needed for repeatable performance comparisons.
+Reports now fingerprint the scenario, bridge and game assembly, and measure each
+process separately over observation windows. A mod-under-test input manifest,
+repeated alternating baseline/mod runs and broader activity are still needed for
+repeatable performance comparisons.

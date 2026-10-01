@@ -75,6 +75,9 @@ public sealed class Plugin : BaseUnityPlugin
         foreach (var method in new[] { "PlayerControls", "PlayerAxisControls" })
             harmony.Patch(AccessTools.Method(typeof(PilotPlayerState), method),
                 prefix: new HarmonyMethod(typeof(ControlLease), nameof(ControlLease.BeforeControls)));
+        harmony.Patch(AccessTools.Method(typeof(Aircraft), nameof(Aircraft.FilterInputs)),
+            prefix: new HarmonyMethod(typeof(ControlLease), nameof(ControlLease.BeforeFilter)));
+        Observation.Install(harmony);
         listener.Start(4);
         Application.logMessageReceived += RecordError;
         new Thread(Serve) { IsBackground = true, Name = "NOTestPilot loopback" }.Start();
@@ -134,6 +137,7 @@ public sealed class Plugin : BaseUnityPlugin
     private void Update()
     {
         if (listener == null) return;
+        Observation.Frame();
         ControlLease.Tick();
         for (int n = 0; n < 4 && commands.TryDequeue(out var pending); n++)
         {
@@ -143,10 +147,12 @@ public sealed class Plugin : BaseUnityPlugin
         }
     }
 
+    private void FixedUpdate() { if (listener != null) Observation.FixedStep(); }
+
     private async UniTask Execute(Pending pending)
     {
         try { pending.Response = Success(pending.Request, await Dispatch(pending.Request)); }
-        catch (Exception ex) { pending.Response = Failure(pending.Request, ex.GetBaseException().Message); }
+        catch (Exception ex) { pending.Response = Failure(pending.Request, ex.GetBaseException().ToString()); }
         finally { pending.Done.Set(); }
     }
 
@@ -165,6 +171,21 @@ public sealed class Plugin : BaseUnityPlugin
         switch ((string)request["command"])
         {
             case "status": return Snapshot();
+            case "catalog":
+                return new { aircraft = Encyclopedia.i.aircraft.Select(a => new {
+                    key = a.jsonKey, rank = a.aircraftParameters.rankRequired,
+                    takeoffSpeed = a.aircraftParameters.takeoffSpeed,
+                    takeoffDistance = a.aircraftParameters.takeoffDistance,
+                    loadouts = (a.aircraftParameters.StandardLoadouts ?? new StandardLoadout[0])
+                        .Where(l => !l.disabled).Select(l => new { name = l.Name, fuel = l.FuelRatio,
+                            weapons = l.loadout.weapons.Select(w => w?.jsonKey).ToArray() }).ToArray(),
+                    hardpoints = (a.unitPrefab?.GetComponent<Aircraft>()?.weaponManager?.hardpointSets ?? new HardpointSet[0]).Select((h, index) => new {
+                        index, h.name, options = h.weaponOptions.Where(w => w != null).Select(w => new {
+                            key = w.jsonKey, name = w.mountName, ammo = w.ammo, gun = w.info != null && w.info.gun,
+                            nuclear = w.info != null && w.info.nuclear
+                        }).ToArray()
+                    }).ToArray()
+                }).ToArray() };
             case "host":
             {
                 RequireRole("server");
@@ -232,16 +253,39 @@ public sealed class Plugin : BaseUnityPlugin
                 if (airbase == null)
                     throw new ArgumentException("Unknown airbase");
                 if (player.HQ != airbase.CurrentHQ) throw new InvalidOperationException("Airbase is not in player's faction");
-                // An unarmed loadout is enough for initial ownership/flight tests.
-                // Later combat scenarios must select a vetted normal armed loadout.
                 var loadout = new Loadout();
+                string loadoutName = (string)args["loadout"];
+                if (loadoutName != null)
+                {
+                    var selectedLoadout = definition.aircraftParameters.StandardLoadouts?
+                        .FirstOrDefault(l => !l.disabled && l.Name == loadoutName);
+                    if (selectedLoadout == null) throw new ArgumentException("Unknown standard loadout");
+                    loadout = selectedLoadout.loadout;
+                }
+                if (args["weapons"] is JArray mounts)
+                {
+                    if (loadoutName != null) throw new ArgumentException("Choose a standard loadout or explicit mounts");
+                    var hardpoints = definition.unitPrefab.GetComponent<Aircraft>().weaponManager.hardpointSets;
+                    if (mounts.Count != hardpoints.Length) throw new ArgumentException("Specify one mount or null for each hardpoint set");
+                    for (int index = 0; index < mounts.Count; index++)
+                    {
+                        string key = (string)mounts[index];
+                        WeaponMount mount = null;
+                        if (key != null && (!Encyclopedia.WeaponLookup.TryGetValue(key, out mount) || !hardpoints[index].weaponOptions.Contains(mount)))
+                            throw new ArgumentException("Unknown/disallowed weapon mount at index " + index);
+                        loadout.weapons.Add(mount);
+                    }
+                }
                 bool accepted = await NetworkSceneSingleton<Spawner>.i.RequestSpawnAtAirbase(
                     airbase, definition, default(LiveryKey), loadout, (float?)args["fuel"] ?? 1f);
                 return new { accepted, aircraft = definition.jsonKey,
-                    airbase = FactionRegistry.airbaseLookup.First(a => ReferenceEquals(a.Value, airbase)).Key, armed = false };
+                    airbase = FactionRegistry.airbaseLookup.First(a => ReferenceEquals(a.Value, airbase)).Key,
+                    loadout = loadoutName, requestedWeaponMounts = loadout.weapons.Count };
             }
             case "controls":
                 return ControlLease.Set(LocalPlayer(), args);
+            case "fly":
+                return ControlLease.Fly(LocalPlayer(), args);
             case "release-controls":
                 LocalPlayer();
                 ControlLease.Release();
@@ -251,6 +295,28 @@ public sealed class Plugin : BaseUnityPlugin
                 var aircraft = LocalPlayer().Aircraft;
                 if (aircraft == null) throw new InvalidOperationException("Player has no aircraft");
                 if (aircraft.Ignition != ((bool?)args["on"] ?? true)) aircraft.CmdToggleIgnition();
+                return new { accepted = true };
+            }
+            case "eject":
+            {
+                var aircraft = LocalPlayer().Aircraft;
+                if (aircraft == null) throw new InvalidOperationException("Player has no aircraft");
+                ControlLease.Release();
+                aircraft.StartEjectionSequence();
+                return new { accepted = true };
+            }
+            case "gear":
+            {
+                var aircraft = LocalPlayer().Aircraft;
+                if (aircraft == null) throw new InvalidOperationException("Player has no aircraft");
+                aircraft.SetGear((bool?)args["down"] ?? true);
+                return new { accepted = true };
+            }
+            case "next-weapon":
+            {
+                var aircraft = LocalPlayer().Aircraft;
+                if (aircraft == null) throw new InvalidOperationException("Player has no aircraft");
+                aircraft.pilots[0].NextWeapon();
                 return new { accepted = true };
             }
             default: throw new ArgumentException("Unknown command");
@@ -283,6 +349,7 @@ public sealed class Plugin : BaseUnityPlugin
             localPlayerOwnedCount = localPlayer != null ? localPlayer.OwnedAirframes.Count : 0,
             localPlayerAircraftNetId = localPlayer != null && localPlayer.Aircraft != null ? (uint?)localPlayer.Aircraft.NetId : null,
             controlLease = ControlLease.Snapshot(),
+            observation = Observation.Snapshot(),
             errorCount = Interlocked.Read(ref errorCount), errors = errors.ToArray(),
             players = UnitRegistry.playerLookup.Values.Where(p => p != null).OrderBy(p => p.PlayerIndex).Select(p => new
             {
@@ -293,9 +360,20 @@ public sealed class Plugin : BaseUnityPlugin
                 aircraftNetId = p.Aircraft != null ? (uint?)p.Aircraft.NetId : null,
                 aircraftKey = p.Aircraft != null ? p.Aircraft.definition.jsonKey : null,
                 ignition = p.Aircraft != null ? (bool?)p.Aircraft.Ignition : null,
+                gearDown = p.Aircraft != null ? (bool?)p.Aircraft.gearDeployed : null,
+                weapons = p.Aircraft != null ? p.Aircraft.weaponStations.Select(s => new {
+                    index = s.Number, name = s.WeaponInfo?.weaponName, ammo = s.Ammo,
+                    fullAmmo = s.FullAmmo, selected = ReferenceEquals(s, p.Aircraft.weaponManager.currentWeaponStation)
+                }).ToArray() : null,
                 position = p.Aircraft != null ? new[] { p.Aircraft.GlobalPosition().x, p.Aircraft.GlobalPosition().y, p.Aircraft.GlobalPosition().z } : null,
                 speed = p.Aircraft != null ? (float?)p.Aircraft.speed : null,
                 radarAltitude = p.Aircraft != null ? (float?)p.Aircraft.radarAlt : null,
+                attitude = p.Aircraft != null ? new[] { p.Aircraft.transform.eulerAngles.x, p.Aircraft.transform.eulerAngles.y, p.Aircraft.transform.eulerAngles.z } : null,
+                forward = p.Aircraft != null ? new[] { p.Aircraft.transform.forward.x, p.Aircraft.transform.forward.y, p.Aircraft.transform.forward.z } : null,
+                disabled = p.Aircraft != null ? (bool?)p.Aircraft.disabled : null,
+                unitState = p.Aircraft != null ? p.Aircraft.unitState.ToString() : null,
+                pilotHealth = p.Aircraft != null ? p.Aircraft.pilots.Select(pilot => new { pilot.dead, pilot.ejected }).ToArray() : null,
+                spawningAirbase = p.Aircraft != null ? p.Aircraft.NetworkspawningHangar?.parentAirbase?.name : null,
                 pilotStates = p.Aircraft != null ? p.Aircraft.pilots.Select(pilot => pilot.GetCurrentState()).ToArray() : null,
                 inputs = p.Aircraft != null ? p.Aircraft.GetInputs() : null
             }).ToArray(),

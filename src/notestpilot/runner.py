@@ -22,7 +22,9 @@ HEADLESS_RENDER_ERRORS = {"There is no texture data available to upload."}
 
 
 class TestFailure(RuntimeError):
-    pass
+    def __init__(self, message, evidence=None):
+        super().__init__(message)
+        self.evidence = evidence
 
 
 class Bridge:
@@ -91,9 +93,11 @@ def matches(data, assertion):
         return value == assertion["equals"]
     if "atLeast" in assertion:
         return isinstance(value, (int, float)) and not isinstance(value, bool) and value >= assertion["atLeast"]
+    if "atMost" in assertion:
+        return isinstance(value, (int, float)) and not isinstance(value, bool) and value <= assertion["atMost"]
     if "notNull" in assertion:
         return (value is not None) == assertion["notNull"]
-    raise ValueError("Assertion needs equals, atLeast or notNull")
+    raise ValueError("Assertion needs equals, atLeast, atMost or notNull")
 
 
 def matches_with_peers(data, assertion, bridges):
@@ -132,7 +136,7 @@ def validate_scenario(data):
     if isinstance(count, bool) or not isinstance(count, int) or not 1 <= count <= 16:
         raise ValueError("Scenario clients must be between 1 and 16")
     targets = {"server", *client_names(count)}
-    allowed = {"status", "host", "connect", "disconnect", "faction", "purchase", "reserve", "spawn", "controls", "release-controls", "engine"}
+    allowed = {"status", "catalog", "host", "connect", "disconnect", "faction", "purchase", "reserve", "spawn", "controls", "release-controls", "engine", "eject", "gear", "next-weapon", "fly"}
     for step in data["steps"]:
         if step.get("target") not in targets:
             raise ValueError("Step target does not name a configured server/client")
@@ -144,7 +148,7 @@ def validate_scenario(data):
             if not step["expect"]:
                 raise ValueError("An expectation must contain assertions")
             for assertion in step["expect"]:
-                if not isinstance(assertion.get("path"), str) or sum(k in assertion for k in ("equals", "atLeast", "notNull", "equalsFrom")) != 1:
+                if not isinstance(assertion.get("path"), str) or sum(k in assertion for k in ("equals", "atLeast", "atMost", "notNull", "equalsFrom")) != 1:
                     raise ValueError("Invalid assertion")
                 if "equalsFrom" in assertion:
                     reference = assertion["equalsFrom"]
@@ -157,12 +161,18 @@ def validate_scenario(data):
             if not observe.get("expect"):
                 raise ValueError("Observation needs continuously checked expectations")
             for assertion in observe["expect"]:
-                if not isinstance(assertion.get("path"), str) or sum(k in assertion for k in ("equals", "atLeast", "notNull")) != 1:
+                if not isinstance(assertion.get("path"), str) or sum(k in assertion for k in ("equals", "atLeast", "atMost", "notNull")) != 1:
                     raise ValueError("Invalid observation assertion")
             for tracking in observe.get("motion", []):
                 minimum = tracking.get("minimumMetres")
                 if not isinstance(tracking.get("path"), str) or isinstance(minimum, bool) or not isinstance(minimum, (int, float)) or not math.isfinite(minimum) or minimum <= 0:
                     raise ValueError("Motion needs a player path and positive minimumMetres")
+            for action in observe.get("actions", []):
+                if action.get("target") not in targets or action.get("command") not in {"controls", "fly"}:
+                    raise ValueError("Repeated observation actions need a configured actor and controls/fly command")
+                interval = action.get("everySeconds", 20)
+                if isinstance(interval, bool) or not isinstance(interval, (float, int)) or not 1 <= interval <= 30:
+                    raise ValueError("Repeated action interval must be between 1 and 30 seconds")
         timeout = step.get("timeout", 60)
         if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not 0 < timeout <= 180:
             raise ValueError("Timeout must be between 0 and 180 seconds")
@@ -172,15 +182,40 @@ def client_names(count):
     return ["client"] if count == 1 else [f"client{i + 1}" for i in range(count)]
 
 
-def observe(bridge, bridges, specification):
-    deadline = time.monotonic() + specification["seconds"]
+def observe(bridge, bridges, specification, on_sample=None):
+    started = time.monotonic()
+    deadline = started + specification["seconds"]
     samples = []
     tracked = {}
+    first_observation = {}
+    telemetry = {}
+    actions = specification.get("actions", [])
+    next_actions = [started] * len(actions)
+    action_records = []
     while time.monotonic() < deadline:
+        for index, action in enumerate(actions):
+            now = time.monotonic()
+            if now >= next_actions[index]:
+                result = bridges[action["target"]].call(action["command"], action.get("args"))
+                if result.get("accepted") is False:
+                    raise TestFailure("Repeated player action rejected", {"samples": samples, "actions": action_records})
+                action_records.append({"seconds": now - started, "target": action["target"],
+                                       "command": action["command"], "result": result})
+                next_actions[index] = now + action.get("everySeconds", 20)
         states = {name: peer.status() for name, peer in bridges.items()}
         selected = next(state for name, state in states.items() if bridges[name] is bridge)
+        # Retain the failing sample too, so a dropped aircraft is diagnosable.
+        samples.append(states)
+        if on_sample is not None:
+            on_sample({"seconds": time.monotonic() - started, "states": states})
         if not all(matches(selected, assertion) for assertion in specification["expect"]):
-            raise TestFailure("State changed during sustained observation: " + str(selected))
+            raise TestFailure("State changed during sustained observation", {"samples": samples, "motion": tracked, "actions": action_records})
+        for name, state in states.items():
+            counters = state.get("observation")
+            if counters is not None:
+                if name not in first_observation:
+                    first_observation[name] = counters
+                telemetry[name] = window_telemetry(first_observation[name], counters)
         for tracking in specification.get("motion", []):
             path = tracking["path"]
             try:
@@ -189,28 +224,44 @@ def observe(bridge, bridges, specification):
                 if identity is None or not isinstance(position, list) or len(position) != 3 or not all(isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) for v in position):
                     raise ValueError("Missing/invalid aircraft position")
             except (KeyError, IndexError, TypeError, ValueError) as error:
-                raise TestFailure(f"Cannot track motion at {path}: {error}") from error
+                raise TestFailure(f"Cannot track motion at {path}: {error}", {"samples": samples, "motion": tracked}) from error
             if path not in tracked:
                 tracked[path] = {"aircraftNetId": identity, "initial": position, "maximumMetres": 0}
             track = tracked[path]
             if identity != track["aircraftNetId"]:
-                raise TestFailure("Tracked aircraft changed during motion observation")
+                raise TestFailure("Tracked aircraft changed during motion observation", {"samples": samples, "motion": tracked})
             track["maximumMetres"] = max(track["maximumMetres"], math.dist(track["initial"], position))
-        samples.append(states)
         time.sleep(1)
     for tracking in specification.get("motion", []):
         distance = tracked.get(tracking["path"], {}).get("maximumMetres", 0)
         if distance < tracking["minimumMetres"]:
-            raise TestFailure(f"Aircraft at {tracking['path']} moved only {distance:.2f}m; required {tracking['minimumMetres']}m")
+            raise TestFailure(f"Aircraft at {tracking['path']} moved only {distance:.2f}m; required {tracking['minimumMetres']}m", {"samples": samples, "motion": tracked})
     return {"samples": samples, "seconds": specification["seconds"], "motion": tracked,
+            "telemetry": telemetry, "actions": action_records,
             "activity": "aircraft movement observed; not a flight/combat soak" if tracked else "observation only; not evidence of playing"}
 
 
-def run_steps(scenario, bridges, report):
+def window_telemetry(first, last):
+    elapsed = last["realtimeSeconds"] - first["realtimeSeconds"]
+    cpu = last["processCpuSeconds"] - first["processCpuSeconds"]
+    frames = last["frames"] - first["frames"]
+    buckets = [b - a for a, b in zip(first["frameBuckets"], last["frameBuckets"])]
+    return {"seconds": elapsed, "cpuSeconds": cpu,
+            "cpuPercentOneCore": cpu / elapsed * 100 if elapsed > 0 else None,
+            "frames": frames, "framesPerSecond": frames / elapsed if elapsed > 0 else None,
+            "fixedSteps": last["fixedSteps"] - first["fixedSteps"],
+            "frameBucketBoundsMs": [16.7, 25, 33.4, 50, 100, None], "frameBucketCounts": buckets,
+            "gameSeconds": last["gameSeconds"] - first["gameSeconds"]}
+
+
+def run_steps(scenario, bridges, report, output_dir=None):
     validate_scenario(scenario)
     for index, step in enumerate(scenario["steps"]):
         record = {"name": step.get("name", f"Step {index + 1}"), "target": step["target"]}
         start = time.monotonic()
+        if output_dir is not None:
+            checkpoint(output_dir, {"scenario": scenario["name"], "step": record["name"],
+                                    "completedSteps": len(report["steps"]), "state": "running"})
         try:
             bridge = bridges[step["target"]]
             if "command" in step:
@@ -223,15 +274,36 @@ def run_steps(scenario, bridges, report):
             elif "expect" in step:
                 record["result"] = wait_for(bridge, step["expect"], step.get("timeout", 60), bridges)
             else:
-                record["result"] = observe(bridge, bridges, step["observe"])
+                def sample(evidence):
+                    if output_dir is not None:
+                        with (output_dir / "timeline.ndjson").open("a", encoding="utf-8") as stream:
+                            stream.write(json.dumps({"step": record["name"], **evidence}, allow_nan=False) + "\n")
+                        checkpoint(output_dir, {"scenario": scenario["name"], "step": record["name"],
+                            "completedSteps": len(report["steps"]), "state": "running", **evidence})
+                record["result"] = observe(bridge, bridges, step["observe"], sample if output_dir is not None else None)
             record["passed"] = True
             print(f"PASS {record['name']}", flush=True)
         except Exception as error:
             record.update(passed=False, error=str(error))
+            if isinstance(error, TestFailure) and error.evidence is not None:
+                record["result"] = error.evidence
+            record["failureSnapshots"] = {}
+            for name, peer in bridges.items():
+                try:
+                    record["failureSnapshots"][name] = peer.call("status", timeout=5)
+                except Exception as snapshot_error:
+                    record["failureSnapshots"][name] = {"unavailable": str(snapshot_error)}
             raise
         finally:
             record["seconds"] = round(time.monotonic() - start, 3)
             report["steps"].append(record)
+
+
+def checkpoint(directory, status):
+    directory.mkdir(parents=True, exist_ok=True)
+    temporary = directory / "progress.tmp"
+    temporary.write_text(json.dumps(status, allow_nan=False), encoding="utf-8")
+    temporary.replace(directory / "progress.json")
 
 
 def write_report(directory: Path, report: dict):
@@ -297,6 +369,11 @@ def run_lab(args):
     lab = prepare_lab(Path(args.game), Path(args.lab), scenario.get("clients", 1))
     directory = Path(args.output).resolve()
     report = {"scenario": scenario["name"], "passed": False, "steps": [], "mode": "real-process UDP lab", "startup": {}}
+    report["inputSha256"] = {
+        "scenario": hashlib.sha256(Path(args.scenario).read_bytes()).hexdigest(),
+        "gameAssembly": hashlib.sha256((Path(args.game) / "NuclearOptionServer_Data/Managed/Assembly-CSharp.dll").read_bytes()).hexdigest(),
+        "bridge": hashlib.sha256((Path(args.game) / "BepInEx/plugins/NOTestPilot/NOTestPilot.Bridge.dll").read_bytes()).hexdigest(),
+    }
     processes, bridges = {}, {}
     token = secrets.token_hex(32)
     try:
@@ -336,7 +413,7 @@ def run_lab(args):
             bridges[name].baseline_errors = snapshot["errorCount"]
             report["steps"].append({"name": f"{name} starts", "target": name, "passed": True,
                                     "seconds": round(time.monotonic() - start, 3)})
-        run_steps(scenario, bridges, report)
+        run_steps(scenario, bridges, report, directory)
         report["passed"] = True
         return 0
     except Exception as error:
@@ -355,6 +432,8 @@ def run_lab(args):
                     process.kill()
                     process.wait(timeout=8)
         write_report(directory, report)
+        checkpoint(directory, {"scenario": scenario["name"], "state": "passed" if report["passed"] else "failed",
+                               "completedSteps": len(report["steps"]), "error": report.get("error")})
 
 
 def main():

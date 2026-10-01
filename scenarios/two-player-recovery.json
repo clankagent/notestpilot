@@ -1,0 +1,324 @@
+{
+  "name": "Two clients eject parked aircraft, recover and respawn in Escalation",
+  "clients": 2,
+  "steps": [
+    {
+      "name": "Host Escalation",
+      "target": "server",
+      "command": "host",
+      "args": {
+        "mission": "Escalation",
+        "port": 17777
+      }
+    },
+    {
+      "name": "Verify the large mission",
+      "target": "server",
+      "expect": [
+        {
+          "path": "mission",
+          "equals": "Escalation"
+        },
+        {
+          "path": "missionRunning",
+          "equals": true
+        },
+        {
+          "path": "units",
+          "atLeast": 800
+        }
+      ]
+    },
+    {
+      "name": "First client joins",
+      "target": "client1",
+      "command": "connect",
+      "args": {
+        "port": 17777
+      }
+    },
+    {
+      "name": "First client owns its player",
+      "target": "client1",
+      "expect": [
+        {
+          "path": "localPlayerNetId",
+          "notNull": true
+        }
+      ]
+    },
+    {
+      "name": "Second client joins",
+      "target": "client2",
+      "command": "connect",
+      "args": {
+        "port": 17777
+      }
+    },
+    {
+      "name": "Second client owns its player",
+      "target": "client2",
+      "expect": [
+        {
+          "path": "localPlayerNetId",
+          "notNull": true
+        }
+      ]
+    },
+    {
+      "name": "Server sees both matching player identities",
+      "target": "server",
+      "expect": [
+        {
+          "path": "remotePlayers",
+          "equals": 2
+        },
+        {
+          "path": "players.1.netId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerNetId"
+          }
+        },
+        {
+          "path": "players.2.netId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerNetId"
+          }
+        }
+      ]
+    },
+    {
+      "name": "First player chooses Primeva",
+      "target": "client1",
+      "command": "faction",
+      "args": {
+        "name": "Primeva"
+      }
+    },
+    {
+      "name": "Second player chooses Boscali",
+      "target": "client2",
+      "command": "faction",
+      "args": {
+        "name": "Boscali"
+      }
+    },
+    {
+      "name": "Server confirms both faction decisions",
+      "target": "server",
+      "expect": [
+        {
+          "path": "players.1.faction",
+          "equals": "Primeva"
+        },
+        {
+          "path": "players.2.faction",
+          "equals": "Boscali"
+        }
+      ]
+    },
+    {
+      "target": "client1",
+      "name": "First player reserves an aircraft",
+      "command": "reserve"
+    },
+    {
+      "target": "client2",
+      "name": "Second player reserves an aircraft",
+      "command": "reserve"
+    },
+    {
+      "target": "client1",
+      "expect": [
+        {
+          "atLeast": 1,
+          "path": "localPlayerOwnedCount"
+        }
+      ],
+      "name": "First player receives an owned airframe"
+    },
+    {
+      "target": "client2",
+      "expect": [
+        {
+          "atLeast": 1,
+          "path": "localPlayerOwnedCount"
+        }
+      ],
+      "name": "Second player receives an owned airframe"
+    },
+    {
+      "target": "client1",
+      "name": "First player requests spawning",
+      "command": "spawn",
+      "args": {
+        "airbase": "Sandrift Airbase"
+      }
+    },
+    {
+      "target": "client2",
+      "name": "Second player requests spawning",
+      "command": "spawn",
+      "args": {
+        "airbase": "Maris Airport"
+      }
+    },
+    {
+      "timeout": 120,
+      "target": "client1",
+      "expect": [
+        {
+          "notNull": true,
+          "path": "localPlayerAircraftNetId"
+        }
+      ],
+      "name": "First client receives its aircraft"
+    },
+    {
+      "timeout": 120,
+      "target": "client2",
+      "expect": [
+        {
+          "notNull": true,
+          "path": "localPlayerAircraftNetId"
+        }
+      ],
+      "name": "Second client receives its aircraft"
+    },
+    {
+      "target": "server",
+      "expect": [
+        {
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.1.aircraftNetId"
+        },
+        {
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.2.aircraftNetId"
+        }
+      ],
+      "name": "Server matches both client aircraft identities"
+    },
+    {
+      "name": "Player 1 ejects normally",
+      "target": "client1",
+      "command": "eject"
+    },
+    {
+      "name": "Player 2 ejects normally",
+      "target": "client2",
+      "command": "eject"
+    },
+    {
+      "name": "Server returns both parked airframes to their owners",
+      "target": "server",
+      "timeout": 60,
+      "expect": [
+        {
+          "path": "remotePlayers",
+          "equals": 2
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "notNull": false
+        },
+        {
+          "path": "players.1.ownedCount",
+          "atLeast": 1
+        },
+        {
+          "path": "players.2.aircraftNetId",
+          "notNull": false
+        },
+        {
+          "path": "players.2.ownedCount",
+          "atLeast": 1
+        }
+      ]
+    },
+    {
+      "name": "Player 1 respawns recovered airframe",
+      "target": "client1",
+      "command": "spawn",
+      "args": {
+        "airbase": "Sandrift Airbase"
+      }
+    },
+    {
+      "name": "Client 1 receives replacement aircraft",
+      "target": "client1",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerAircraftNetId",
+          "notNull": true
+        }
+      ]
+    },
+    {
+      "name": "Player 2 respawns recovered airframe",
+      "target": "client2",
+      "command": "spawn",
+      "args": {
+        "airbase": "Maris Airport"
+      }
+    },
+    {
+      "name": "Client 2 receives replacement aircraft",
+      "target": "client2",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerAircraftNetId",
+          "notNull": true
+        }
+      ]
+    },
+    {
+      "name": "Server confirms both respawns belong to the original players",
+      "target": "server",
+      "expect": [
+        {
+          "path": "remotePlayers",
+          "equals": 2
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.netId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerNetId"
+          }
+        },
+        {
+          "path": "players.2.aircraftNetId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          }
+        },
+        {
+          "path": "players.2.netId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerNetId"
+          }
+        }
+      ]
+    }
+  ]
+}

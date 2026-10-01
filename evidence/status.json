@@ -1,5 +1,5 @@
 {
-  "checkpoint": "2026-10-01: two independent UDP clients spawn, control and move aircraft",
+  "checkpoint": "2026-10-01: two clients taxi, take off and fly circuits in Escalation",
   "game": {
     "version": "0.34.1",
     "steam_build": 24724541,
@@ -8,7 +8,7 @@
     "linux_assembly_sha256": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a"
   },
   "runner_unit_tests": {
-    "passed": 21,
+    "passed": 26,
     "platforms": [
       "Windows Python 3.12",
       "Linux Python 3.14"
@@ -53,7 +53,7 @@
         178.463,
         44.368
       ],
-      "scope": "two owned unarmed aircraft moving; not a flight/combat soak"
+      "scope": "two owned without firing aircraft moving; not a flight/combat soak"
     },
     {
       "junit_cases": 37,
@@ -69,6 +69,138 @@
       "scope": "repeat on latest bridge: second player lost aircraft during movement; cause not established",
       "scenario": "two-player-motion.json",
       "id": "two-motion-02"
+    },
+    {
+      "id": "motion-diagnostics-01",
+      "scenario": "two-player-motion.json",
+      "failures": 0,
+      "scope": "instrumented short movement repeat passed"
+    },
+    {
+      "id": "motion-diagnostics-02",
+      "scenario": "two-player-motion.json",
+      "failures": 1,
+      "scope": "pilot damage/death, ejection and inventory recovery; both clients stayed connected; initiating damage source uncertain"
+    },
+    {
+      "id": "two-flight-01",
+      "scenario": "two-player-flight.json",
+      "failures": 1,
+      "scope": "taxi steering rejected: client-local road nodes absent; fixed graph initialization"
+    },
+    {
+      "id": "two-flight-02",
+      "scenario": "two-player-flight.json",
+      "failures": 1,
+      "scope": "takeoff failure; found duplicate stateful filtering, subsequently fixed"
+    },
+    {
+      "id": "two-flight-03",
+      "scenario": "two-player-flight.json",
+      "failures": 1,
+      "scope": "one client flew a circuit, other crashed after remaining near runway elevation; separate climb phase added"
+    },
+    {
+      "id": "two-flight-04",
+      "scenario": "two-player-flight.json",
+      "junit_cases": 27,
+      "failures": 0,
+      "mission": "Escalation",
+      "initial_units": 1064,
+      "script_seconds": 180,
+      "scope": "taxi, takeoff, climb and circuit; about90seconds with both in circuit, not fifteen-minute soak",
+      "final_server_altitude_metres": [
+        741.3722,
+        885.1133
+      ],
+      "server_maximum_displacement_metres": [
+        6686.300186374644,
+        7156.715960493568
+      ],
+      "process_telemetry": {
+        "server": {
+          "seconds": 179.231272,
+          "cpuSeconds": 184.35999999999999,
+          "cpuPercentOneCore": 102.86151403310913,
+          "frames": 10587,
+          "framesPerSecond": 59.06893301521623,
+          "fixedSteps": 10754,
+          "frameBucketBoundsMs": [
+            16.7,
+            25,
+            33.4,
+            50,
+            100,
+            null
+          ],
+          "frameBucketCounts": [
+            5154,
+            5318,
+            101,
+            14,
+            0,
+            0
+          ],
+          "gameSeconds": 179.22456
+        },
+        "client1": {
+          "seconds": 179.23276800000002,
+          "cpuSeconds": 153.70999999999998,
+          "cpuPercentOneCore": 85.75998781651353,
+          "frames": 10666,
+          "framesPerSecond": 59.50920760203848,
+          "fixedSteps": 10754,
+          "frameBucketBoundsMs": [
+            16.7,
+            25,
+            33.4,
+            50,
+            100,
+            null
+          ],
+          "frameBucketCounts": [
+            5220,
+            5410,
+            20,
+            16,
+            0,
+            0
+          ],
+          "gameSeconds": 179.23655
+        },
+        "client2": {
+          "seconds": 179.2361279,
+          "cpuSeconds": 155.70999999999998,
+          "cpuPercentOneCore": 86.87422665528358,
+          "frames": 10656,
+          "framesPerSecond": 59.452299739175515,
+          "fixedSteps": 10756,
+          "frameBucketBoundsMs": [
+            16.7,
+            25,
+            33.4,
+            50,
+            100,
+            null
+          ],
+          "frameBucketCounts": [
+            5123,
+            5491,
+            31,
+            11,
+            0,
+            0
+          ],
+          "gameSeconds": 179.253964
+        }
+      }
+    },
+    {
+      "id": "two-recovery-01",
+      "scenario": "two-player-recovery.json",
+      "junit_cases": 30,
+      "failures": 0,
+      "scope": "both clients eject parked aircraft, server returns inventory, both respawn with original player IDs; not airborne combat death"
     }
   ],
   "runtime": {
@@ -80,12 +212,12 @@
     "aircraft_movement": "observed in one pass; repeat failed when second player lost aircraft; fixture not yet repeatable",
     "purchase": "unverified",
     "lease_expiry": "passed; client lease expires and server throttle/brakes clear without another command",
-    "flight_combat": "unverified",
-    "death_respawn": "unverified",
+    "flight_combat": "two-client taxi/takeoff/circuit passed three-minute script once; deliberate firing and sustained combat unverified",
+    "death_respawn": "parked ejection, inventory recovery and respawn passed for two independent clients; airborne death/respawn still unverified",
     "steam_authentication": "not tested",
     "retail_clients": "not tested",
     "dedicated_rotation": "not tested",
-    "long_multiplayer_soak": "not tested",
+    "long_multiplayer_soak": "fifteen-minute two-client flight/firing test running; no result claimed",
     "noperf_comparison": "not tested"
   },
   "limitations": [
@@ -94,11 +226,24 @@
     "Input driver bypasses keyboard/UI and input-level pilot-strength gates",
     "One exact headless texture upload Error is recorded but allowed",
     "Source and bridge are experimental and exact-build guarded",
-    "Straight throttle commands are not a navigation controller; the movement fixture failed on a repeat"
+    "Flight driver is a simple experimental circuit controller, not human input or combat AI; one short flight pass does not establish repeatability"
   ],
   "constraints": {
     "windows_game_runs": "prohibited",
     "remote_lab": "replacement supplied and tested",
     "production_deployment": "none"
+  },
+  "multicore_sample": {
+    "cpu_model": "Intel Xeon D-1531",
+    "lab_vcpus": 4,
+    "window_seconds": 20.015,
+    "workload": "early two-client Escalation taxi/takeoff attempt",
+    "server_cpu_percent_one_core": 100.475,
+    "main_thread_percent_one_core": 67.3,
+    "two_job_workers_percent_one_core": [
+      14.389,
+      13.94
+    ],
+    "scope": "thread CPU sample, not production capacity estimate or mod benefit"
   }
 }

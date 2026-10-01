@@ -22,11 +22,14 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Reserve and spawn two aircraft | Passed; server aircraft IDs match the owning clients |
 | Start engines and hold controls | Passed; the server receives distinct throttle values |
 | Two owned aircraft move in Escalation | One pass (178 m / 44 m); repeat lost the second aircraft — fixture needs work |
-| Flight, firing, death and respawn | Not verified |
+| Two-client taxi → takeoff → flight circuits | Three-minute script passed once; both finished airborne. Repeatability and long flight still being tested |
+| Damage → pilot death → ejection / recovery | Observed in a failed movement test; both players stayed connected |
+| Parked ejection → recovery → respawn | Passed for both clients; original player IDs retained |
+| Fifteen-minute flight and firing | Running; no result claimed yet |
 | Steam authentication, retail clients, dedicated-server rotation | Not verified |
 | Long multiplayer sessions / performance-mod comparison | Not verified |
 
-The runner also has **21 automated tests**. These protect the testing tool;
+The runner also has **26 automated tests**. These protect the testing tool;
 they do not count as game tests. See [the evidence summary](evidence/status.json).
 
 ## How the player works
@@ -68,8 +71,9 @@ The controls expire after 35 seconds. Pitch, roll and yaw range from −1 to +1;
 throttle and brake from 0 to 1. Expiry and cleared server inputs are verified. Another command replaces the controls;
 `release-controls` ends the override immediately.
 
-Edit a scenario or drive the same bridge from Python. The controller supplies raw
-control values; it does not yet plan routes or fly intelligently.
+Edit a scenario or drive the same bridge from Python. Raw controls are available, and an experimental `fly` command steers toward a runway,
+attempts takeoff, then follows a simple circuit. It still needs reliable repeated
+game tests; it is not a combat pilot.
 See [commands and protocol](docs/control.md).
 
 ## Run a test
@@ -86,7 +90,10 @@ uv run notestpilot scenarios/two-player-aircraft.json \
 ```
 
 The runner makes one game copy per process, starts the server and clients, executes
-the scenario, writes JSON and JUnit XML, and stops its child processes. It refuses
+the scenario, writes JSON and JUnit XML, and stops its child processes. It also saves
+a live progress file and a timeline so a long run can be inspected while it runs.
+Each process has separate CPU and frame counters; reports use observation-window
+deltas to exclude loading time. It refuses
 existing unmarked folders. Game runs require the explicit `--execute` flag.
 
 Run only the tool's unit tests, without installing the game:

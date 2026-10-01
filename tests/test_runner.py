@@ -6,7 +6,7 @@ import threading
 import unittest
 import xml.etree.ElementTree as ET
 from unittest.mock import patch
-from notestpilot.runner import Bridge, TestFailure, matches, matches_with_peers, observe, prepare_lab, run_steps, validate_scenario, wait_for, write_report
+from notestpilot.runner import Bridge, TestFailure, matches, matches_with_peers, observe, prepare_lab, run_steps, validate_scenario, wait_for, window_telemetry, write_report
 
 
 def reply_once(handler):
@@ -30,6 +30,61 @@ def reply_once(handler):
 
 
 class RunnerTests(unittest.TestCase):
+    def test_ammunition_upper_bound_rejects_missing_and_non_numeric_state(self):
+        assertion = {"path": "ammo", "atMost": 999}
+        self.assertTrue(matches({"ammo": 998}, assertion))
+        for state in ({"ammo": 1000}, {}, {"ammo": True}, {"ammo": float("nan")}, {"ammo": "998"}):
+            self.assertFalse(matches(state, assertion))
+        validate_scenario({"name": "ammo", "steps": [{"target": "server", "expect": [assertion]}]})
+
+    def test_repeated_actions_drive_each_client_during_observation(self):
+        class Peer:
+            def __init__(self): self.calls = []
+            def call(self, command, args):
+                self.calls.append((command, args))
+                return {"accepted": True}
+            def status(self): return {"running": True}
+        server, client1, client2 = Peer(), Peer(), Peer()
+        peers = {"server": server, "client1": client1, "client2": client2}
+        spec = {"seconds": 10, "expect": [{"path": "running", "equals": True}], "actions": [
+            {"target": "client1", "command": "fly", "args": {"seconds": 45}, "everySeconds": 2},
+            {"target": "client2", "command": "fly", "args": {"seconds": 45}, "everySeconds": 2}]}
+        with patch("notestpilot.runner.time.monotonic", side_effect=[0, 0, 0, 0, 3, 3, 3, 11]), patch("notestpilot.runner.time.sleep"):
+            result = observe(server, peers, spec)
+        self.assertEqual(2, len(client1.calls))
+        self.assertEqual(2, len(client2.calls))
+        self.assertEqual(4, len(result["actions"]))
+
+    def test_rejected_repeated_action_is_fatal(self):
+        class Peer:
+            def call(self, *args): return {"accepted": False}
+        peer = Peer()
+        spec = {"seconds": 10, "expect": [{"path": "running", "equals": True}],
+                "actions": [{"target": "client", "command": "fly"}]}
+        with self.assertRaisesRegex(TestFailure, "action rejected"):
+            observe(peer, {"client": peer}, spec)
+
+    def test_window_telemetry_excludes_loading_and_separates_process_cpu(self):
+        first = {"realtimeSeconds": 100, "gameSeconds": 70, "processCpuSeconds": 200,
+                 "frames": 5000, "fixedSteps": 3000, "frameBuckets": [1, 2, 3, 4, 5, 99]}
+        last = {"realtimeSeconds": 110, "gameSeconds": 80, "processCpuSeconds": 215,
+                "frames": 5500, "fixedSteps": 3500, "frameBuckets": [201, 202, 103, 4, 5, 99]}
+        result = window_telemetry(first, last)
+        self.assertEqual(150, result["cpuPercentOneCore"])
+        self.assertEqual(50, result["framesPerSecond"])
+        self.assertEqual([200, 200, 100, 0, 0, 0], result["frameBucketCounts"])
+        self.assertEqual(10, result["gameSeconds"])
+
+    def test_failed_observation_preserves_last_state_and_other_clients(self):
+        class Peer:
+            def status(self): return {"running": False, "observation": {"events": ["returned"]}}
+        peer = Peer()
+        with self.assertRaises(TestFailure) as failure:
+            observe(peer, {"server": peer, "client": peer},
+                    {"seconds": 1, "expect": [{"path": "running", "equals": True}]})
+        self.assertEqual(["returned"], failure.exception.evidence["samples"][0]["server"]["observation"]["events"])
+        self.assertIn("client", failure.exception.evidence["samples"][0])
+
     def test_socket_command_correlates_reply(self):
         port, thread = reply_once(lambda r: {"id": r["id"], "ok": True, "result": {"accepted": True}})
         self.assertTrue(Bridge(port, "token").call("connect")["accepted"])
