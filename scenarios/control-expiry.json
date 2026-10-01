@@ -1,0 +1,362 @@
+{
+  "name": "Expired client controls stop affecting the aircraft",
+  "clients": 2,
+  "steps": [
+    {
+      "name": "Host Escalation",
+      "target": "server",
+      "command": "host",
+      "args": {
+        "mission": "Escalation",
+        "port": 17777
+      }
+    },
+    {
+      "name": "Verify the large mission",
+      "target": "server",
+      "expect": [
+        {
+          "path": "mission",
+          "equals": "Escalation"
+        },
+        {
+          "path": "missionRunning",
+          "equals": true
+        },
+        {
+          "path": "units",
+          "atLeast": 800
+        }
+      ]
+    },
+    {
+      "name": "First client joins",
+      "target": "client1",
+      "command": "connect",
+      "args": {
+        "port": 17777
+      }
+    },
+    {
+      "name": "First client owns its player",
+      "target": "client1",
+      "expect": [
+        {
+          "path": "localPlayerNetId",
+          "notNull": true
+        }
+      ]
+    },
+    {
+      "name": "Second client joins",
+      "target": "client2",
+      "command": "connect",
+      "args": {
+        "port": 17777
+      }
+    },
+    {
+      "name": "Second client owns its player",
+      "target": "client2",
+      "expect": [
+        {
+          "path": "localPlayerNetId",
+          "notNull": true
+        }
+      ]
+    },
+    {
+      "name": "Server sees both matching player identities",
+      "target": "server",
+      "expect": [
+        {
+          "path": "remotePlayers",
+          "equals": 2
+        },
+        {
+          "path": "players.1.netId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerNetId"
+          }
+        },
+        {
+          "path": "players.2.netId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerNetId"
+          }
+        }
+      ]
+    },
+    {
+      "name": "First player chooses Primeva",
+      "target": "client1",
+      "command": "faction",
+      "args": {
+        "name": "Primeva"
+      }
+    },
+    {
+      "name": "Second player chooses Boscali",
+      "target": "client2",
+      "command": "faction",
+      "args": {
+        "name": "Boscali"
+      }
+    },
+    {
+      "name": "Server confirms both faction decisions",
+      "target": "server",
+      "expect": [
+        {
+          "path": "players.1.faction",
+          "equals": "Primeva"
+        },
+        {
+          "path": "players.2.faction",
+          "equals": "Boscali"
+        }
+      ]
+    },
+    {
+      "target": "client1",
+      "name": "First player reserves an aircraft",
+      "command": "reserve"
+    },
+    {
+      "target": "client2",
+      "name": "Second player reserves an aircraft",
+      "command": "reserve"
+    },
+    {
+      "target": "client1",
+      "expect": [
+        {
+          "atLeast": 1,
+          "path": "localPlayerOwnedCount"
+        }
+      ],
+      "name": "First player receives an owned airframe"
+    },
+    {
+      "target": "client2",
+      "expect": [
+        {
+          "atLeast": 1,
+          "path": "localPlayerOwnedCount"
+        }
+      ],
+      "name": "Second player receives an owned airframe"
+    },
+    {
+      "target": "client1",
+      "name": "First player requests spawning",
+      "command": "spawn"
+    },
+    {
+      "target": "client2",
+      "name": "Second player requests spawning",
+      "command": "spawn"
+    },
+    {
+      "timeout": 120,
+      "target": "client1",
+      "expect": [
+        {
+          "notNull": true,
+          "path": "localPlayerAircraftNetId"
+        }
+      ],
+      "name": "First client receives its aircraft"
+    },
+    {
+      "timeout": 120,
+      "target": "client2",
+      "expect": [
+        {
+          "notNull": true,
+          "path": "localPlayerAircraftNetId"
+        }
+      ],
+      "name": "Second client receives its aircraft"
+    },
+    {
+      "target": "server",
+      "expect": [
+        {
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.1.aircraftNetId"
+        },
+        {
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.2.aircraftNetId"
+        }
+      ],
+      "name": "Server matches both client aircraft identities"
+    },
+    {
+      "target": "client1",
+      "name": "First player starts its engine",
+      "command": "engine",
+      "args": {
+        "on": true
+      }
+    },
+    {
+      "target": "client2",
+      "name": "Second player starts its engine",
+      "command": "engine",
+      "args": {
+        "on": true
+      }
+    },
+    {
+      "target": "client1",
+      "name": "First player holds throttle and brakes",
+      "command": "controls",
+      "args": {
+        "brake": 1,
+        "seconds": 20,
+        "throttle": 0.3
+      }
+    },
+    {
+      "target": "client2",
+      "name": "Second player holds throttle and brakes",
+      "command": "controls",
+      "args": {
+        "brake": 1,
+        "seconds": 20,
+        "throttle": 0.4
+      }
+    },
+    {
+      "target": "server",
+      "expect": [
+        {
+          "atLeast": 0.25,
+          "path": "players.1.inputs.throttle"
+        },
+        {
+          "atLeast": 0.35,
+          "path": "players.2.inputs.throttle"
+        }
+      ],
+      "name": "Server receives both players control inputs"
+    },
+    {
+      "target": "server",
+      "name": "Observe controlled aircraft for ten seconds",
+      "observe": {
+        "seconds": 10,
+        "expect": [
+          {
+            "equals": 2,
+            "path": "remotePlayers"
+          },
+          {
+            "notNull": true,
+            "path": "players.1.aircraftNetId"
+          },
+          {
+            "notNull": true,
+            "path": "players.2.aircraftNetId"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Set a one-second control lease",
+      "command": "controls",
+      "args": {
+        "seconds": 1,
+        "throttle": 0.8,
+        "brake": 1
+      },
+      "target": "client1"
+    },
+    {
+      "name": "Pilot applies the lease",
+      "timeout": 10,
+      "target": "client1",
+      "expect": [
+        {
+          "path": "controlLease.applications",
+          "atLeast": 1
+        }
+      ]
+    },
+    {
+      "name": "Lease expires without another command",
+      "timeout": 10,
+      "target": "client1",
+      "expect": [
+        {
+          "equals": false,
+          "path": "controlLease.active"
+        },
+        {
+          "path": "controlLease.applications",
+          "atLeast": 1
+        }
+      ]
+    },
+    {
+      "name": "Server sees throttle and brakes cleared",
+      "timeout": 10,
+      "target": "server",
+      "expect": [
+        {
+          "equals": 0,
+          "path": "players.1.inputs.throttle"
+        },
+        {
+          "equals": 0,
+          "path": "players.1.inputs.brake"
+        }
+      ]
+    },
+    {
+      "target": "client1",
+      "name": "First player releases controls",
+      "command": "release-controls"
+    },
+    {
+      "target": "client2",
+      "name": "Second player releases controls",
+      "command": "release-controls"
+    },
+    {
+      "name": "First player leaves",
+      "target": "client1",
+      "command": "disconnect"
+    },
+    {
+      "name": "Second player stays connected",
+      "target": "server",
+      "expect": [
+        {
+          "path": "remotePlayers",
+          "equals": 1
+        }
+      ]
+    },
+    {
+      "name": "Second client still owns its player",
+      "target": "client2",
+      "expect": [
+        {
+          "path": "localPlayerNetId",
+          "notNull": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "checkpoint": "2026-10-01: two independent UDP clients spawn, control and move aircraft",
+  "game": {
+    "version": "0.34.1",
+    "steam_build": 24724541,
+    "bepinex": "5.4.23.3",
+    "runtime_platform": "Linux x64",
+    "linux_assembly_sha256": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a"
+  },
+  "runner_unit_tests": {
+    "passed": 21,
+    "platforms": [
+      "Windows Python 3.12",
+      "Linux Python 3.14"
+    ],
+    "scope": "test tooling, not game behaviour"
+  },
+  "bridge": {
+    "linux_compile": "pass, zero warnings/errors",
+    "main_thread_command_round_trip": "verified",
+    "mode": "dedicated-build headless UDP adapter"
+  },
+  "runs": [
+    {
+      "id": "lifecycle-05",
+      "scenario": "lifecycle.json",
+      "junit_cases": 12,
+      "failures": 0
+    },
+    {
+      "id": "two-player-01",
+      "scenario": "two-player-escalation.json",
+      "junit_cases": 17,
+      "failures": 0,
+      "connected_observation_seconds": 30
+    },
+    {
+      "id": "two-aircraft-02",
+      "scenario": "two-player-aircraft.json",
+      "junit_cases": 33,
+      "failures": 0,
+      "controlled_observation_seconds": 10
+    },
+    {
+      "id": "two-motion-01",
+      "scenario": "two-player-motion.json",
+      "junit_cases": 37,
+      "failures": 0,
+      "mission": "Escalation",
+      "initial_units": 1064,
+      "motion_observation_seconds": 20,
+      "server_observed_displacement_metres": [
+        178.463,
+        44.368
+      ],
+      "scope": "two owned unarmed aircraft moving; not a flight/combat soak"
+    },
+    {
+      "junit_cases": 37,
+      "id": "control-expiry-02",
+      "failures": 0,
+      "scope": "current bridge: two-client spawn/controls plus automatic expiry and replicated clearing",
+      "scenario": "control-expiry.json"
+    },
+    {
+      "junit_cases": 32,
+      "failures": 1,
+      "failed_step": "Both owned aircraft move on the server",
+      "scope": "repeat on latest bridge: second player lost aircraft during movement; cause not established",
+      "scenario": "two-player-motion.json",
+      "id": "two-motion-02"
+    }
+  ],
+  "runtime": {
+    "join_leave_rejoin": "passed",
+    "two_players": "passed",
+    "factions": "passed",
+    "reserve_spawn_ownership": "passed",
+    "replicated_controls": "passed",
+    "aircraft_movement": "observed in one pass; repeat failed when second player lost aircraft; fixture not yet repeatable",
+    "purchase": "unverified",
+    "lease_expiry": "passed; client lease expires and server throttle/brakes clear without another command",
+    "flight_combat": "unverified",
+    "death_respawn": "unverified",
+    "steam_authentication": "not tested",
+    "retail_clients": "not tested",
+    "dedicated_rotation": "not tested",
+    "long_multiplayer_soak": "not tested",
+    "noperf_comparison": "not tested"
+  },
+  "limitations": [
+    "Server and clients share one VM",
+    "UDP host probe, not native dedicated-server manager lifecycle",
+    "Input driver bypasses keyboard/UI and input-level pilot-strength gates",
+    "One exact headless texture upload Error is recorded but allowed",
+    "Source and bridge are experimental and exact-build guarded",
+    "Straight throttle commands are not a navigation controller; the movement fixture failed on a repeat"
+  ],
+  "constraints": {
+    "windows_game_runs": "prohibited",
+    "remote_lab": "replacement supplied and tested",
+    "production_deployment": "none"
+  }
+}

@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <GamePath Condition="'$(GamePath)' == ''">../../vendor/server</GamePath>
+    <ManagedPath>$(GamePath)/NuclearOptionServer_Data/Managed</ManagedPath>
+    <BepInExPath Condition="'$(BepInExPath)' == ''">../../vendor/server</BepInExPath>
+    <Deterministic>true</Deterministic>
+    <EnableSourceLink>false</EnableSourceLink>
+    <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <Reference Include="BepInEx"><HintPath>$(BepInExPath)/BepInEx/core/BepInEx.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(BepInExPath)/BepInEx/core/0Harmony.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(ManagedPath)/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine"><HintPath>$(ManagedPath)/UnityEngine.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(ManagedPath)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Mirage"><HintPath>$(ManagedPath)/Mirage.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Mirage.SocketLayer"><HintPath>$(ManagedPath)/Mirage.SocketLayer.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UniTask"><HintPath>$(ManagedPath)/UniTask.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+  <Target Name="CheckInputs" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('$(ManagedPath)/Assembly-CSharp.dll')" Text="Set ManagedPath to your Nuclear Option installation's Managed directory." />
+  </Target>
+</Project>

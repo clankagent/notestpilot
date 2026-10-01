@@ -1,0 +1,20 @@
+{
+  "name": "Two UDP players choose factions in a large Escalation mission",
+  "clients": 2,
+  "steps": [
+    {"name": "Host Escalation", "target": "server", "command": "host", "args": {"mission": "Escalation", "port": 17777}},
+    {"name": "Verify the large mission", "target": "server", "expect": [{"path": "mission", "equals": "Escalation"}, {"path": "missionRunning", "equals": true}, {"path": "units", "atLeast": 800}]},
+    {"name": "First client joins", "target": "client1", "command": "connect", "args": {"port": 17777}},
+    {"name": "First client owns its player", "target": "client1", "expect": [{"path": "localPlayerNetId", "notNull": true}]},
+    {"name": "Second client joins", "target": "client2", "command": "connect", "args": {"port": 17777}},
+    {"name": "Second client owns its player", "target": "client2", "expect": [{"path": "localPlayerNetId", "notNull": true}]},
+    {"name": "Server sees both matching player identities", "target": "server", "expect": [{"path": "remotePlayers", "equals": 2}, {"path": "players.1.netId", "equalsFrom": {"target": "client1", "path": "localPlayerNetId"}}, {"path": "players.2.netId", "equalsFrom": {"target": "client2", "path": "localPlayerNetId"}}]},
+    {"name": "First player chooses Primeva", "target": "client1", "command": "faction", "args": {"name": "Primeva"}},
+    {"name": "Second player chooses Boscali", "target": "client2", "command": "faction", "args": {"name": "Boscali"}},
+    {"name": "Server confirms both faction decisions", "target": "server", "expect": [{"path": "players.1.faction", "equals": "Primeva"}, {"path": "players.2.faction", "equals": "Boscali"}]},
+    {"name": "Observe connection stability for 30 seconds (not a play test)", "target": "server", "observe": {"seconds": 30, "expect": [{"path": "remotePlayers", "equals": 2}, {"path": "mission", "equals": "Escalation"}]}},
+    {"name": "First player leaves", "target": "client1", "command": "disconnect"},
+    {"name": "Second player stays connected", "target": "server", "expect": [{"path": "remotePlayers", "equals": 1}]},
+    {"name": "Second client still owns its player", "target": "client2", "expect": [{"path": "localPlayerNetId", "notNull": true}]}
+  ]
+}

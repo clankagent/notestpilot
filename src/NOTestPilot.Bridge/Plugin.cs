@@ -1,0 +1,315 @@
+using System;
+using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading;
+using HarmonyLib;
+using BepInEx;
+using Cysharp.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using NuclearOption.Networking;
+using NuclearOption.BuildScripts;
+using UnityEngine;
+using Player = NuclearOption.Networking.Player;
+using SocketType = NuclearOption.Networking.SocketType;
+using NuclearOption.SavedMission;
+
+namespace NOTestPilot;
+
+// No listener, patches or gameplay changes unless explicitly launched as a test process.
+[BepInPlugin("clankagent.notestpilot.bridge", "NOTestPilot disposable test bridge", "0.1.0")]
+public sealed class Plugin : BaseUnityPlugin
+{
+    internal const string WindowsBuild = "01e2c543cb5de43a01a996d831ee85f8962d076a6f066d75152d20f0c2a3d162";
+    internal const string LinuxBuild = "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a";
+    private readonly ConcurrentQueue<Pending> commands = new ConcurrentQueue<Pending>();
+    private readonly ConcurrentQueue<object> errors = new ConcurrentQueue<object>();
+    private TcpListener listener;
+    private string token, role, build;
+    private volatile bool stopping;
+    private long errorCount;
+    private Harmony harmony;
+    private readonly string instance = Guid.NewGuid().ToString("N");
+
+    private sealed class Pending
+    {
+        public JObject Request;
+        public readonly ManualResetEventSlim Done = new ManualResetEventSlim(false);
+        public JObject Response;
+        public long Expires = Stopwatch.GetTimestamp() + 10 * Stopwatch.Frequency;
+    }
+
+    private void Awake()
+    {
+        if (Environment.GetEnvironmentVariable("NOTESTPILOT_ENABLE") != "1") return;
+        token = Environment.GetEnvironmentVariable("NOTESTPILOT_TOKEN");
+        role = Environment.GetEnvironmentVariable("NOTESTPILOT_ROLE");
+        if (token == null || token.Length < 32 || (role != "server" && role != "client"))
+        { Logger.LogError("Refusing test bridge: set token (32+ characters) and role server/client."); return; }
+        using (var file = File.OpenRead(typeof(GameManager).Assembly.Location))
+        using (var sha = SHA256.Create())
+            build = BitConverter.ToString(sha.ComputeHash(file)).Replace("-", "").ToLowerInvariant();
+        if (build != WindowsBuild && build != LinuxBuild)
+        { Logger.LogError("Refusing unreviewed game assembly: " + build); return; }
+        // A dedicated build otherwise automatically hosts and advertises during menu startup.
+        // The disposable lab must let the scenario choose when/how to start networking.
+        CommandLineArgParser.IsAutoStart = true;
+        // Use the free dedicated build's server API initialization path. This is
+        // not retail-client/Steam-login coverage and never fabricates a Steam ID.
+        CommandLineArgParser.ForceSteamServerInit = true;
+        NuclearOption.DedicatedServer.DedicatedServerManager.AutoRun = false;
+        if (!int.TryParse(Environment.GetEnvironmentVariable("NOTESTPILOT_PORT"), out int port) || port < 1024 || port > 65535)
+        { Logger.LogError("Refusing invalid test bridge port."); return; }
+        listener = new TcpListener(IPAddress.Loopback, port);
+        harmony = new Harmony("clankagent.notestpilot.headless-udp");
+        harmony.Patch(AccessTools.Method(typeof(NuclearOption.Networking.Authentication.NetworkAuthenticatorNuclearOption), "OnClientConnected"),
+            prefix: new HarmonyMethod(typeof(HeadlessUdpAdapter), nameof(HeadlessUdpAdapter.OnConnected)));
+        harmony.Patch(AccessTools.Method(typeof(Player), nameof(Player.GetPlayerName)),
+            prefix: new HarmonyMethod(typeof(HeadlessUdpAdapter), nameof(HeadlessUdpAdapter.DisplayName)));
+        foreach (var method in new[] { "PlayerControls", "PlayerAxisControls" })
+            harmony.Patch(AccessTools.Method(typeof(PilotPlayerState), method),
+                prefix: new HarmonyMethod(typeof(ControlLease), nameof(ControlLease.BeforeControls)));
+        listener.Start(4);
+        Application.logMessageReceived += RecordError;
+        new Thread(Serve) { IsBackground = true, Name = "NOTestPilot loopback" }.Start();
+        Logger.LogInfo("Test-only bridge listening on loopback, role=" + role);
+    }
+
+    private void RecordError(string message, string trace, LogType type)
+    {
+        if (type != LogType.Error && type != LogType.Exception && type != LogType.Assert) return;
+        long seq = Interlocked.Increment(ref errorCount);
+        errors.Enqueue(new { seq, type = type.ToString(), message = message.Length > 1500 ? message.Substring(0, 1500) : message });
+        while (errors.Count > 32) errors.TryDequeue(out _);
+    }
+
+    private void Serve()
+    {
+        while (!stopping)
+        {
+            try
+            {
+                using (var connection = listener.AcceptTcpClient())
+                {
+                    connection.ReceiveTimeout = 3000;
+                    connection.SendTimeout = 3000;
+                    using (var stream = connection.GetStream())
+                    {
+                        var bytes = new MemoryStream();
+                        int next;
+                        while ((next = stream.ReadByte()) != -1 && next != '\n')
+                        {
+                            if (bytes.Length >= 16384) throw new InvalidDataException("Request too large");
+                            bytes.WriteByte((byte)next);
+                        }
+                        if (next != '\n') throw new InvalidDataException("Incomplete request");
+                        JObject request = JObject.Parse(Encoding.UTF8.GetString(bytes.ToArray()));
+                        JObject response;
+                        if ((string)request["token"] != token)
+                            response = Failure(request, "Unauthorized");
+                        else
+                        {
+                            var pending = new Pending { Request = request };
+                            commands.Enqueue(pending);
+                            response = pending.Done.Wait(120000) ? pending.Response : Failure(request, "Main thread timeout");
+                        }
+                        var output = Encoding.UTF8.GetBytes(response.ToString(Formatting.None) + "\n");
+                        stream.Write(output, 0, output.Length);
+                    }
+                }
+            }
+            catch (Exception ex) { if (stopping) return; Logger.LogWarning("Local bridge request failed: " + ex.Message); }
+        }
+    }
+
+    private static JObject Failure(JObject request, string error) => JObject.FromObject(new { id = (string)request["id"], ok = false, error });
+    private static JObject Success(JObject request, object result) => JObject.FromObject(new { id = (string)request["id"], ok = true, result });
+
+    private void Update()
+    {
+        if (listener == null) return;
+        ControlLease.Tick();
+        for (int n = 0; n < 4 && commands.TryDequeue(out var pending); n++)
+        {
+            if (Stopwatch.GetTimestamp() > pending.Expires)
+            { pending.Response = Failure(pending.Request, "Expired before execution"); pending.Done.Set(); continue; }
+            Execute(pending).Forget();
+        }
+    }
+
+    private async UniTask Execute(Pending pending)
+    {
+        try { pending.Response = Success(pending.Request, await Dispatch(pending.Request)); }
+        catch (Exception ex) { pending.Response = Failure(pending.Request, ex.GetBaseException().Message); }
+        finally { pending.Done.Set(); }
+    }
+
+    private void RequireRole(string expected)
+    { if (role != expected) throw new InvalidOperationException("Command requires " + expected + " role"); }
+    private Player LocalPlayer()
+    {
+        RequireRole("client");
+        if (!GameManager.GetLocalPlayer<Player>(out var player)) throw new InvalidOperationException("No local game player yet");
+        return player;
+    }
+
+    private async UniTask<object> Dispatch(JObject request)
+    {
+        var args = request["args"] as JObject ?? new JObject();
+        switch ((string)request["command"])
+        {
+            case "status": return Snapshot();
+            case "host":
+            {
+                RequireRole("server");
+                if (MainMenu.State != MainMenu.LoadingState.Loaded) throw new InvalidOperationException("Menu not loaded yet");
+                string missionName = (string)args["mission"] ?? "Terminal Control";
+                var mission = CommandLineArgParser.LoadMission(missionName, false);
+                MissionManager.SetMission(mission, false);
+                int port = (int?)args["port"] ?? 17777;
+                if (port < 1024 || port > 65535) throw new ArgumentException("Invalid UDP port");
+                await NetworkManagerNuclearOption.i.StartHostAsync(new HostOptions(SocketType.UDP, GameState.Multiplayer, mission.MapKey)
+                    { UdpPort = port, MaxConnections = 4, Password = (string)args["password"] });
+                return Snapshot();
+            }
+            case "connect":
+            {
+                RequireRole("client");
+                if (MainMenu.State != MainMenu.LoadingState.Loaded) throw new InvalidOperationException("Menu not loaded yet");
+                int port = (int?)args["port"] ?? 17777;
+                if (port < 1024 || port > 65535) throw new ArgumentException("Invalid UDP port");
+                // Initial lab mode is local only. Steam authentication is deliberately untouched.
+                NetworkManagerNuclearOption.i.StartClient(new ConnectOptions(SocketType.UDP, "127.0.0.1", port)
+                    { Password = (string)args["password"] });
+                return new { accepted = true };
+            }
+            case "disconnect":
+                RequireRole("client");
+                await NetworkManagerNuclearOption.i.StopAsync(false);
+                return Snapshot();
+            case "faction":
+            {
+                var player = LocalPlayer();
+                var hq = FactionRegistry.HqFromName((string)args["name"]);
+                if (hq == null) throw new ArgumentException("Unknown faction");
+                player.SetFaction(hq);
+                return new { accepted = true }; // Runner must confirm the change from the server.
+            }
+            case "purchase":
+            {
+                var player = LocalPlayer();
+                var definition = FindAircraft((string)args["aircraft"]);
+                player.CmdPurchaseAirframe(definition);
+                return new { accepted = true };
+            }
+            case "reserve":
+            {
+                var player = LocalPlayer();
+                if (player.HQ == null) throw new InvalidOperationException("Choose a faction first");
+                var definition = args["aircraft"] != null ? FindAircraft((string)args["aircraft"]) : Encyclopedia.i.aircraft
+                    .Where(a => a.aircraftParameters.rankRequired <= player.PlayerRank && !player.HQ.restrictedAircraft.Contains(a.jsonKey))
+                    .OrderBy(a => a.aircraftParameters.rankRequired).ThenBy(a => a.jsonKey, StringComparer.Ordinal).FirstOrDefault();
+                if (definition == null) throw new InvalidOperationException("No rank-appropriate aircraft found");
+                player.CmdRequestReserveAirframe(definition);
+                return new { accepted = true, aircraft = definition.jsonKey };
+            }
+            case "spawn":
+            {
+                var player = LocalPlayer();
+                if (player.Aircraft != null) throw new InvalidOperationException("Player already has an aircraft");
+                var definition = args["aircraft"] != null ? FindAircraft((string)args["aircraft"]) : player.OwnedAirframes
+                    .Select(a => a.Definition).OrderBy(a => a.jsonKey, StringComparer.Ordinal).FirstOrDefault();
+                if (definition == null) throw new InvalidOperationException("Player owns no airframe");
+                var airbase = args["airbase"] != null ? FactionRegistry.airbaseLookup.TryGetValue((string)args["airbase"], out var selected) ? selected : null :
+                    FactionRegistry.airbaseLookup.OrderBy(a => a.Key, StringComparer.Ordinal)
+                    .Select(a => a.Value).FirstOrDefault(a => a.CurrentHQ == player.HQ && a.CanSpawnAircraft(definition));
+                if (airbase == null)
+                    throw new ArgumentException("Unknown airbase");
+                if (player.HQ != airbase.CurrentHQ) throw new InvalidOperationException("Airbase is not in player's faction");
+                // An unarmed loadout is enough for initial ownership/flight tests.
+                // Later combat scenarios must select a vetted normal armed loadout.
+                var loadout = new Loadout();
+                bool accepted = await NetworkSceneSingleton<Spawner>.i.RequestSpawnAtAirbase(
+                    airbase, definition, default(LiveryKey), loadout, (float?)args["fuel"] ?? 1f);
+                return new { accepted, aircraft = definition.jsonKey,
+                    airbase = FactionRegistry.airbaseLookup.First(a => ReferenceEquals(a.Value, airbase)).Key, armed = false };
+            }
+            case "controls":
+                return ControlLease.Set(LocalPlayer(), args);
+            case "release-controls":
+                LocalPlayer();
+                ControlLease.Release();
+                return new { accepted = true };
+            case "engine":
+            {
+                var aircraft = LocalPlayer().Aircraft;
+                if (aircraft == null) throw new InvalidOperationException("Player has no aircraft");
+                if (aircraft.Ignition != ((bool?)args["on"] ?? true)) aircraft.CmdToggleIgnition();
+                return new { accepted = true };
+            }
+            default: throw new ArgumentException("Unknown command");
+        }
+    }
+
+    private static AircraftDefinition FindAircraft(string key)
+    {
+        if (!Encyclopedia.Lookup.TryGetValue(key, out var definition) || !(definition is AircraftDefinition aircraft))
+            throw new ArgumentException("Unknown aircraft key");
+        return aircraft;
+    }
+
+    private object Snapshot()
+    {
+        bool menuReady = MainMenu.State == MainMenu.LoadingState.Loaded;
+        // The singleton getter creates/logs an error if queried before menu preload.
+        var network = menuReady ? NetworkManagerNuclearOption.i : null;
+        return new
+        {
+            protocol = 1, instance, role, assemblySha256 = build, gameVersion = Application.version,
+            clientMode = "dedicated-build UDP adapter", steamAuthenticationTested = false,
+            menuReady,
+            serverActive = network != null && network.Server.Active,
+            clientActive = network != null && network.Client.Active,
+            mission = MissionManager.CurrentMission?.Name, missionRunning = MissionManager.IsRunning,
+            units = UnitRegistry.allUnits.Count, aircraft = UnitRegistry.allAircraft.Count,
+            remotePlayers = UnitRegistry.playerLookup.Values.Count(p => p != null && !p.IsHostPlayer),
+            localPlayerNetId = GameManager.GetLocalPlayer<Player>(out var localPlayer) ? (uint?)localPlayer.NetId : null,
+            localPlayerOwnedCount = localPlayer != null ? localPlayer.OwnedAirframes.Count : 0,
+            localPlayerAircraftNetId = localPlayer != null && localPlayer.Aircraft != null ? (uint?)localPlayer.Aircraft.NetId : null,
+            controlLease = ControlLease.Snapshot(),
+            errorCount = Interlocked.Read(ref errorCount), errors = errors.ToArray(),
+            players = UnitRegistry.playerLookup.Values.Where(p => p != null).OrderBy(p => p.PlayerIndex).Select(p => new
+            {
+                netId = p.NetId, index = p.PlayerIndex, host = p.IsHostPlayer, local = p.IsLocalPlayer,
+                faction = p.HQ != null ? p.HQ.faction.factionName : null,
+                ownedAircraft = p.OwnedAirframes.Select(a => a.Definition.jsonKey).ToArray(),
+                ownedCount = p.OwnedAirframes.Count,
+                aircraftNetId = p.Aircraft != null ? (uint?)p.Aircraft.NetId : null,
+                aircraftKey = p.Aircraft != null ? p.Aircraft.definition.jsonKey : null,
+                ignition = p.Aircraft != null ? (bool?)p.Aircraft.Ignition : null,
+                position = p.Aircraft != null ? new[] { p.Aircraft.GlobalPosition().x, p.Aircraft.GlobalPosition().y, p.Aircraft.GlobalPosition().z } : null,
+                speed = p.Aircraft != null ? (float?)p.Aircraft.speed : null,
+                radarAltitude = p.Aircraft != null ? (float?)p.Aircraft.radarAlt : null,
+                pilotStates = p.Aircraft != null ? p.Aircraft.pilots.Select(pilot => pilot.GetCurrentState()).ToArray() : null,
+                inputs = p.Aircraft != null ? p.Aircraft.GetInputs() : null
+            }).ToArray(),
+            factions = FactionRegistry.GetAllHQs().Select(h => new { name = h.faction.factionName, preventJoin = h.preventJoin }).ToArray(),
+            airbases = FactionRegistry.airbaseLookup.Select(a => new { name = a.Key, faction = a.Value.CurrentHQ?.faction.factionName }).ToArray()
+        };
+    }
+
+    private void OnDestroy()
+    {
+        stopping = true;
+        ControlLease.Release();
+        Application.logMessageReceived -= RecordError;
+        listener?.Stop();
+        harmony?.UnpatchSelf();
+    }
+}

@@ -1,0 +1,18 @@
+vendor/
+lab/
+artifacts/
+evidence/private/
+**/bin/
+**/obj/
+__pycache__/
+.venv/
+*.user
+*.log
+*.zip
+*.dll
+*.exe
+*.pdb
+
+# Private workspace instructions and checkpoints
+AGENTS.md
+WORKLOG.md

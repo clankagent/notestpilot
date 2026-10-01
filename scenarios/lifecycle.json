@@ -1,0 +1,15 @@
+{
+  "name": "Join, disconnect and rejoin",
+  "steps": [
+    {"name": "Host Terminal Control", "target": "server", "command": "host", "args": {"mission": "Terminal Control", "port": 17777}},
+    {"name": "Server runs populated mission", "target": "server", "expect": [{"path": "serverActive", "equals": true}, {"path": "missionRunning", "equals": true}, {"path": "units", "atLeast": 1}]},
+    {"name": "Client connects", "target": "client", "command": "connect", "args": {"port": 17777}},
+    {"name": "Server sees a remote player", "target": "server", "expect": [{"path": "remotePlayers", "equals": 1}]},
+    {"name": "Client receives its player and mission", "target": "client", "expect": [{"path": "localPlayerNetId", "notNull": true}, {"path": "mission", "equals": "Terminal Control"}]},
+    {"name": "Client disconnects", "target": "client", "command": "disconnect"},
+    {"name": "Server removes remote player", "target": "server", "expect": [{"path": "remotePlayers", "equals": 0}]},
+    {"name": "Client reconnects", "target": "client", "command": "connect", "args": {"port": 17777}},
+    {"name": "Server sees rejoined player", "target": "server", "expect": [{"path": "remotePlayers", "equals": 1}]},
+    {"name": "Client receives rejoined player", "target": "client", "expect": [{"path": "localPlayerNetId", "notNull": true}]}
+  ]
+}
