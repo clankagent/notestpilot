@@ -122,6 +122,23 @@ is not implemented.
 
 ## A longer action script
 
+For a repeatable player-count workload, generate a scenario instead of duplicating
+every player's instructions by hand:
+
+```sh
+uv run python -m notestpilot.scenarios --players 4 --seconds 600 --output workload.json
+```
+
+This writes a plan for separate players to join stock Escalation, reserve COINs,
+spawn at separate airbases, take off and fly while firing guns. It checks each
+player/aircraft identity, sustained movement and altitude, and server ammunition
+use. `--no-fire` produces the same flight plan without shooting. `--seconds` is the
+airborne observation after a separate three-minute taxi/takeoff phase. The generator
+accepts one through four players, matching the current native server fixture cap.
+Generating a file does not launch the game or prove that the player count passes.
+Higher-player flight workloads remain experimental; use the normal remote-lab
+runner to execute the file and inspect its result.
+
 An observation can renew a flight lease while checking the server every second:
 
 ```json

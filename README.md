@@ -34,7 +34,7 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Steam authentication / retail clients | Not tested |
 | Long multiplayer sessions / performance-mod comparison | Not verified |
 
-The runner also has **35 automated tests**. These protect the testing tool;
+The runner also has **38 automated tests**. These protect the testing tool;
 they do not count as game tests. See [the evidence summary](evidence/status.json).
 
 ## How the player works
@@ -80,6 +80,11 @@ Edit a scenario or drive the same bridge from Python. Raw controls are available
 attempts takeoff, then follows a simple circuit. It still needs reliable repeated
 game tests; it is not a combat pilot.
 See [commands and protocol](docs/control.md).
+
+The workload generator also lets you choose one through four pilots and how long
+they should stay airborne, producing the commands and checks for every player.
+See [the generator example](docs/control.md#a-longer-action-script). More-than-two
+player flight workloads are experimental and still need runtime validation.
 
 ## Run a test
 
