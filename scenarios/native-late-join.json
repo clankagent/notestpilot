@@ -1,0 +1,163 @@
+{
+  "name": "Native Escalation delayed second-client mission load",
+  "clients": 2,
+  "steps": [
+    {
+      "name": "Start hidden native dedicated manager",
+      "target": "server",
+      "command": "dedicated",
+      "args": {
+        "missions": [
+          "Escalation"
+        ],
+        "port": 17777
+      }
+    },
+    {
+      "name": "Native server listens while waiting for players",
+      "target": "server",
+      "timeout": 90,
+      "expect": [
+        {
+          "path": "serverActive",
+          "equals": true
+        },
+        {
+          "path": "dedicated.running",
+          "equals": true
+        },
+        {
+          "path": "dedicated.hidden",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "First client joins native waiting server",
+      "target": "client1",
+      "command": "connect",
+      "args": {
+        "port": 17777
+      }
+    },
+    {
+      "name": "First player triggers native mission loading",
+      "target": "client1",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerNetId",
+          "notNull": true
+        },
+        {
+          "path": "mission",
+          "equals": "Escalation"
+        },
+        {
+          "path": "missionRunning",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "Let stock Escalation advance for sixty seconds before the second join",
+      "target": "server",
+      "observe": {
+        "seconds": 60,
+        "expect": [
+          {
+            "path": "remotePlayers",
+            "equals": 1
+          },
+          {
+            "path": "missionRunning",
+            "equals": true
+          },
+          {
+            "path": "mission",
+            "equals": "Escalation"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Second client joins native server",
+      "target": "client2",
+      "command": "connect",
+      "args": {
+        "port": 17777
+      }
+    },
+    {
+      "name": "Second native client loads the mission",
+      "target": "client2",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerNetId",
+          "notNull": true
+        },
+        {
+          "path": "mission",
+          "equals": "Escalation"
+        },
+        {
+          "path": "missionRunning",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "Native server sees both players",
+      "target": "server",
+      "expect": [
+        {
+          "path": "remotePlayers",
+          "equals": 2
+        }
+      ]
+    },
+    {
+      "name": "Native server runs large Escalation",
+      "target": "server",
+      "expect": [
+        {
+          "path": "dedicated.currentMission",
+          "equals": "Escalation"
+        },
+        {
+          "path": "units",
+          "atLeast": 800
+        },
+        {
+          "path": "missionRunning",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "Server sees both matching player identities",
+      "target": "server",
+      "expect": [
+        {
+          "path": "remotePlayers",
+          "equals": 2
+        },
+        {
+          "path": "players.0.netId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerNetId"
+          }
+        },
+        {
+          "path": "players.1.netId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerNetId"
+          }
+        }
+      ]
+    }
+  ]
+}

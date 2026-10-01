@@ -156,3 +156,10 @@ Both clients also completed another two-sortie lifecycle run with these
 diagnostics: flight, rockets, airborne ejection, replacement and flight again
 (51 checks). Physics mode context was observed. The physical joint-break callback
 has not been exercised, so its installation is not proof of callback coverage.
+
+
+The two-sortie lifecycle also passed a consecutive repeat (51 checks).
+`native-late-join.json` passed a narrower 10-check case: one client starts
+Escalation, the mission advances for 60 seconds, then a second client joins.
+It checks both identities against the server and requests no aircraft.
+That successful delayed join does not resolve the intermittent loading error.
