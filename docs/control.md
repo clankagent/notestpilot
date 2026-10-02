@@ -25,6 +25,17 @@ The socket worker parses requests; game methods run on Unity's main thread. Each
 request has an ID, token and execution deadline. The runner creates a fresh random
 token for each run. This token is separate from the game server password.
 
+An experimental recovery workload can react to a verified missile strike. If
+flight checks fail, it requires recent server evidence of an external missile,
+destructive part damage and the same damage replicated to the owning client.
+It then follows the scenario's ordinary ejection, reserve and spawn steps. An
+unexplained loss, game error, disconnect or mission failure still stops the run.
+
+The interrupted flight is recorded as partial. Remaining weapon checks are listed
+as omitted, rather than reported as completed. This branch has automated runner
+coverage; live damage-triggered recovery is still under validation. See
+`scenarios/native-combat-recovery.json`; the strict survival fixture stays separate.
+
 Two scoped adapters allow headless UDP connections without retail Steam callbacks
 and provide a fallback display name. The server's original authenticator still
 checks the join. This does not test Steam authentication or retail-client compatibility.

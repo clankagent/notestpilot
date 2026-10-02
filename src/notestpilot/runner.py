@@ -165,7 +165,8 @@ def validate_scenario(data):
     targets = {"server", *client_names(count)}
     captures = set()
     allowed = {"status", "catalog", "host", "dedicated", "rotate", "connect", "disconnect", "faction", "purchase", "reserve", "spawn", "controls", "release-controls", "engine", "eject", "gear", "next-weapon", "fly"}
-    for step in data["steps"]:
+    names = [step.get("name") for step in data["steps"]]
+    for step_index, step in enumerate(data["steps"]):
         if step.get("target") not in targets:
             raise ValueError("Step target does not name a configured server/client")
         if sum(k in step for k in ("command", "expect", "observe")) != 1:
@@ -207,6 +208,31 @@ def validate_scenario(data):
                 interval = action.get("everySeconds", 20)
                 if isinstance(interval, bool) or not isinstance(interval, (float, int)) or not 1 <= interval <= 30:
                     raise ValueError("Repeated action interval must be between 1 and 30 seconds")
+        if "onCombatLoss" in step:
+            policy = step["onCombatLoss"]
+            if "observe" not in step or step["target"] != "server" or not isinstance(policy, dict):
+                raise ValueError("Combat-loss branching requires a server observation")
+            destination = policy.get("resumeAt")
+            if not isinstance(destination, str) or names.count(destination) != 1 or names.index(destination) <= step_index:
+                raise ValueError("Combat-loss recovery needs a unique later named step")
+            actors = policy.get("actors")
+            if not isinstance(actors, list) or not actors:
+                raise ValueError("Combat-loss recovery needs explicit client/player mappings")
+            paths, clients = set(), set()
+            for actor in actors:
+                if not isinstance(actor, dict):
+                    raise ValueError("Invalid combat-loss client/player mapping")
+                path, client = actor.get("playerPath"), actor.get("target")
+                if client not in targets - {"server"} or not isinstance(path, str) or not path.startswith("players.") or not path[8:].isdigit() or path in paths or client in clients:
+                    raise ValueError("Invalid combat-loss client/player mapping")
+                paths.add(path); clients.add(client)
+            resume_index = names.index(destination)
+            omitted_captures = {s["capture"] for s in data["steps"][step_index + 1:resume_index] if "capture" in s}
+            for subsequent in data["steps"][resume_index:]:
+                for assertion in subsequent.get("expect", []):
+                    for key in ("equalsSaved", "notEqualsSaved"):
+                        if key in assertion and assertion[key].get("capture") in omitted_captures:
+                            raise ValueError("Combat-loss branch would omit a required capture")
         timeout = step.get("timeout", 60)
         if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not 0 < timeout <= 180:
             raise ValueError("Timeout must be between 0 and 180 seconds")
@@ -221,7 +247,65 @@ def client_names(count):
     return ["client"] if count == 1 else [f"client{i + 1}" for i in range(count)]
 
 
-def observe(bridge, bridges, specification, on_sample=None):
+def verified_missile_loss(states, assertions, policy):
+    """Narrow evidence gate, not an exception handler for arbitrary flight failures."""
+    server = states["server"]
+    failed = [a for a in assertions if not matches(server, a)]
+    if not failed:
+        return None
+    evidence = []
+    remaining = list(failed)
+    now = server.get("observation", {}).get("realtimeSeconds")
+    if not isinstance(now, (int, float)) or not math.isfinite(now):
+        return None
+    events = server.get("observation", {}).get("firstDamageEvents", [])
+    for mapping in policy["actors"]:
+        path, actor = mapping["playerPath"], mapping["target"]
+        losses = [a for a in failed if
+                  (a["path"] in {path + ".speed", path + ".radarAltitude"} and "atLeast" in a)
+                  or (a["path"] == path + ".disabled" and a.get("equals") is False)
+                  or (a["path"] == path + ".aircraftNetId" and a.get("notNull") is True)]
+        if not losses:
+            continue
+        try:
+            player = value_at(server, path)
+            client = states[actor]
+            player_id, aircraft_id = player["netId"], player["aircraftNetId"]
+        except (KeyError, IndexError, ValueError, TypeError):
+            return None
+        if player_id is None or aircraft_id is None or client.get("localPlayerNetId") != player_id or client.get("localPlayerAircraftNetId") != aircraft_id:
+            return None
+        matching = [e for e in events if e.get("aircraftNetId") == aircraft_id and e.get("playerNetId") == player_id
+                    and isinstance(e.get("seconds"), (int, float)) and 0 <= now - e["seconds"] <= 30
+                    and isinstance(e.get("radarAltitude"), (int, float)) and e["radarAltitude"] >= 80]
+        incoming = next((e for e in matching if e.get("action") == "PartTakeDamage"
+                        and e.get("damage", {}).get("dealerValid") is True
+                        and e.get("damage", {}).get("dealerIsSelf") is False
+                        and "Missile.ServerFixedUpdate" in e.get("callers", [])), None)
+        destructive = next((e for e in matching if e.get("action") == "DestructivePartApplyDamage"
+                           and isinstance(e.get("damage", {}).get("predictedHitPointsAfter"), (int, float))
+                           and e["damage"]["predictedHitPointsAfter"] <= 0
+                           and isinstance(e.get("damage", {}).get("hitPointsBefore"), (int, float))
+                           and e["damage"]["hitPointsBefore"] > 0), None)
+        if incoming is None or destructive is None or abs(incoming["seconds"] - destructive["seconds"]) > 2:
+            return None
+        # A server-only trace is insufficient: require the same destructive part
+        # damage on the controlling client, within the same short interval.
+        client_events = client.get("observation", {}).get("firstDamageEvents", [])
+        replicated = next((e for e in client_events if e.get("action") == "DestructivePartApplyDamage"
+                          and e.get("aircraftNetId") == aircraft_id and e.get("playerNetId") == player_id
+                          and e.get("damage", {}).get("part", {}).get("partID") == destructive.get("damage", {}).get("part", {}).get("partID")
+                          and e.get("damage", {}).get("predictedHitPointsAfter") == destructive["damage"]["predictedHitPointsAfter"]), None)
+        if replicated is None:
+            return None
+        evidence.append({"target": actor, "playerPath": path, "aircraftNetId": aircraft_id,
+                         "playerNetId": player_id, "failedAssertions": losses,
+                         "incoming": incoming, "destructive": destructive, "clientDamage": replicated})
+        remaining = [a for a in remaining if a not in losses]
+    return evidence if evidence and not remaining else None
+
+
+def observe(bridge, bridges, specification, on_sample=None, combat_policy=None):
     started = time.monotonic()
     deadline = started + specification["seconds"]
     samples = []
@@ -250,6 +334,13 @@ def observe(bridge, bridges, specification, on_sample=None):
             if on_sample is not None:
                 on_sample({"seconds": time.monotonic() - started, "states": states})
             if not all(matches(selected, assertion) for assertion in specification["expect"]):
+                combat = verified_missile_loss(states, specification["expect"], combat_policy) if combat_policy else None
+                if combat:
+                    return {"samples": samples, "seconds": specification["seconds"],
+                            "completedSeconds": time.monotonic() - started,
+                            "outcome": "verified-missile-loss", "survivalCompleted": False,
+                            "combatLoss": combat, "motion": tracked, "actions": action_records,
+                            "telemetry": telemetry, "activity": "Interrupted flight; ordinary recovery is required"}
                 raise TestFailure("State changed during sustained observation", {"samples": samples, "motion": tracked, "actions": action_records})
             for name, state in states.items():
                 counters = state.get("observation")
@@ -289,6 +380,16 @@ def observe(bridge, bridges, specification, on_sample=None):
             "samples": samples, "seconds": specification["seconds"],
             "completedSeconds": time.monotonic() - started, "incomplete": True,
             "telemetry": telemetry, "motion": tracked, "actions": action_records}) from error
+    except TestFailure as error:
+        # Preserve earlier observations when a status call itself reports a
+        # game exception. Keep the original failure and bridge evidence fatal.
+        details = dict(error.evidence or {})
+        details.setdefault("samples", samples)
+        details.setdefault("motion", tracked)
+        details.setdefault("actions", action_records)
+        details.setdefault("seconds", specification["seconds"])
+        details["incomplete"] = True
+        raise TestFailure(str(error), details) from error
 
 
 
@@ -308,7 +409,13 @@ def window_telemetry(first, last):
 def run_steps(scenario, bridges, report, output_dir=None):
     validate_scenario(scenario)
     captures = {}
+    resume_at = None
     for index, step in enumerate(scenario["steps"]):
+        if resume_at is not None:
+            if step.get("name") != resume_at:
+                report["steps"][-1].setdefault("omittedSteps", []).append(step.get("name", f"Step {index + 1}"))
+                continue
+            resume_at = None
         record = {"name": step.get("name", f"Step {index + 1}"), "target": step["target"]}
         start = time.monotonic()
         if output_dir is not None:
@@ -332,7 +439,11 @@ def run_steps(scenario, bridges, report, output_dir=None):
                             stream.write(json.dumps({"runId": report.get("runId"), "step": record["name"], **evidence}, allow_nan=False) + "\n")
                         checkpoint(output_dir, {"runId": report.get("runId"), "scenario": scenario["name"], "step": record["name"],
                             "completedSteps": len(report["steps"]), "state": "running", **evidence})
-                record["result"] = observe(bridge, bridges, step["observe"], sample if output_dir is not None else None)
+                record["result"] = observe(bridge, bridges, step["observe"], sample if output_dir is not None else None,
+                                           step.get("onCombatLoss"))
+                if record["result"].get("outcome") == "verified-missile-loss":
+                    resume_at = step["onCombatLoss"]["resumeAt"]
+                    record["resumeAt"] = resume_at
             if "capture" in step:
                 # Keep a value snapshot, independent of later mutable fixture state.
                 captures[step["capture"]] = json.loads(json.dumps(record["result"], allow_nan=False))
@@ -368,6 +479,11 @@ def checkpoint(directory, status):
 
 def write_report(directory: Path, report: dict):
     directory.mkdir(parents=True, exist_ok=True)
+    report["combatLossInterruptions"] = [
+        {"step": s["name"], "requestedSeconds": s["result"]["seconds"],
+         "completedSeconds": s["result"]["completedSeconds"], "survivalCompleted": False,
+         "resumeAt": s["resumeAt"], "omittedSteps": s.get("omittedSteps", [])}
+        for s in report["steps"] if s.get("result", {}).get("outcome") == "verified-missile-loss"]
     temporary = directory / "result.tmp"
     temporary.write_text(json.dumps(report, indent=2, allow_nan=False), encoding="utf-8")
     temporary.replace(directory / "result.json")
@@ -377,6 +493,12 @@ def write_report(directory: Path, report: dict):
         case = ET.SubElement(suite, "testcase", name=step["name"], classname="NOTestPilot", time=str(step["seconds"]))
         if not step["passed"]:
             ET.SubElement(case, "failure", message=step.get("error", "failed")).text = step.get("error")
+        if step.get("result", {}).get("outcome") == "verified-missile-loss":
+            ET.SubElement(case, "system-out").text = json.dumps({
+                "outcome": "verified-missile-loss", "survivalCompleted": False,
+                "completedSeconds": step["result"]["completedSeconds"],
+                "requestedSeconds": step["result"]["seconds"],
+                "resumeAt": step["resumeAt"], "omittedSteps": step.get("omittedSteps", [])})
     ET.ElementTree(suite).write(directory / "junit.tmp", encoding="utf-8", xml_declaration=True)
     (directory / "junit.tmp").replace(directory / "junit.xml")
 

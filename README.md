@@ -38,9 +38,10 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Steam authentication / retail clients | Not tested |
 | Performance-mod comparison | One complete baseline/Spatial pair; no whole-server gain established. Earlier failures retained |
 | Five-sortie aging workload | Failed during the second and third sorties in separate runs; the latter traced a missile strike before the aircraft slowed. Earlier completed sorties remain recorded |
+| Automatic reaction to missile damage | Experimental runner branch with automated checks; live recovery remains unverified. Its first remote workload stopped on an airbrake animation exception during the second sortie |
 | Long multiplayer sessions | Not verified |
 
-The runner also has **43 automated tests** (all pass on Linux; 42 pass on Windows
+The runner also has **49 automated tests** (all pass on Linux; 48 pass on Windows
 with the POSIX signal test skipped). These protect the testing tool;
 they do not count as game tests. See [the evidence summary](evidence/status.json).
 
