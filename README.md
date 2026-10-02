@@ -37,8 +37,8 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Dedicated-server mission rotation | Failed during ship-effect cleanup and, in a separate occupied run, turret cleanup; both retained |
 | Steam authentication / retail clients | Not tested |
 | Performance-mod comparison | One complete baseline/Spatial pair; no whole-server gain established. Earlier failures retained |
-| Five-sortie aging workload | Failed during the second and third sorties in separate runs; the latter traced a missile strike before the aircraft slowed. Earlier completed sorties remain recorded |
-| Automatic reaction to missile damage | Experimental runner branch with automated checks; live recovery remains unverified. Its first remote workload stopped on an airbrake animation exception during the second sortie |
+| Five-sortie aging workload | Four full sorties completed. An enemy missile interrupted the fifth; its remaining firing checks were skipped and recorded |
+| Automatic reaction to missile damage | One live pass verified missile damage triggered normal ejection and replacement, with the same players receiving new aircraft. Repeated recovery remains unverified |
 | Long multiplayer sessions | Not verified |
 
 The runner also has **49 automated tests** (all pass on Linux; 48 pass on Windows
@@ -98,7 +98,7 @@ The workload generator also lets you choose one through four pilots and how long
 they should stay airborne, producing the commands and checks for every player.
 See [the generator example](docs/control.md#a-longer-action-script). The revised four-pilot ten-minute flight/firing script passed. Its earlier
 empty-ammunition failure remains recorded.
-Longer play, combat recovery and reliable repeated scenarios still need validation.
+Longer play, repeated combat recovery and reliable repeated scenarios still need validation.
 
 ## Run a test
 

@@ -17,8 +17,8 @@ aircraft network IDs across processes so the test follows the correct player.
 | `native-startup-flight.json` | Native waiting server, player-triggered Escalation loading, two-client flight, weapon cycling and rockets | Passed 37 checks; three-minute flight plus 30 seconds of firing |
 | `native-dedicated-flight.json` | Native Terminal Control startup and time-limit rotation to Escalation | Failed during ship particle-effect cleanup; subsequent flight steps were not reached |
 | `native-two-sorties.json` | Airborne ejection, normal reserve replacement, changed aircraft IDs with original player IDs, second takeoff | Passed 51 checks; both replacement aircraft finished airborne |
-| `native-aging-sorties.json` | Five planned takeoff/flight/gun/rocket sorties with ordinary aircraft replacement | Experimental strict survival workload; two runs failed during the second and third sorties. Not a completed aging or combat soak |
-| `native-combat-recovery.json` | Separate experimental workload that branches to normal ejection and replacement after recent, replicated destructive missile damage | Runner checks pass. First remote run failed during the second sortie in `Airbrake.Update` before the damage branch activated; live automatic recovery remains unverified |
+| `native-aging-sorties.json` | Five planned takeoff/flight/gun/rocket sorties with ordinary aircraft replacement | The strict-survival fixture remains unchanged; earlier runs failed during the second and third sorties. Not a completed aging or combat soak |
+| `native-combat-recovery.json` | Five sorties with a two-minute taxi/takeoff phase followed by a separate one-minute continuously checked airborne gate; verified missile loss branches to ordinary ejection and replacement | One native 142-check run completed four full sorties and the fifth taxi, then verified missile loss at 58.03/60 seconds airborne. Normal ejection and replacement passed; fifth-sortie gun-flight and rocket steps were omitted. One recovery pass, not five completed sorties or a long-session pass |
 | `native-three-sorties-reconnect.json` | Three sorties, airborne replacement, rockets, six minutes of gun firing, sequential reconnects | Repeat passed flight/replacement/firing and the first reconnect, then failed while the second client disconnected: missile-warning display exception |
 | `native-flight-reconnect.json` | Occupied-aircraft disconnect and reconnect after native flight/rockets | Failed on first disconnect in radar-warning display cleanup |
 | `native-gun-bursts.json` | Three brief gun bursts per client; trigger expires while flight continues; ammunition stops decreasing | Passed 54 checks on the native server |
@@ -48,17 +48,24 @@ performance-mod regression, and the earlier collision failure remains separate.
 
 ## Failure handling
 
-The five-sortie workload keeps survival checks strict. In its latest run, both
-clients completed two full sorties and replacements before a missile struck one
-aircraft during the third. Damage reached both clients, then the aircraft slowed
-below the required flight speed. This identifies that run's cause; the earlier
-breakup remains separate. Neither run establishes the planned 32.5 minutes.
+The strict-survival five-sortie fixture keeps its original behavior. Earlier runs
+failed during the second and third sorties; one later trace found missile
+fragment damage before a pilot slowed, while the cause of an earlier breakup
+remains separate. A separate recovery scenario changes the takeoff window to
+120 seconds of taxi plus a continuously checked 60-second airborne gate. Its
+first native run completed four full sorties and the fifth taxi, then reached
+the evidence-gated branch after 58.03 of 60 airborne seconds. Both clients
+ejected and completed ordinary replacement checks, but the fifth gun-flight
+and rocket steps were omitted. This verifies one recovery path, not five full
+sorties or an uninterrupted 32.5-minute soak.
 
 The bridge now retains the first incoming damage, applied damage and joint-break
 events separately from its rolling event queue. That helps distinguish a weapon
 hit from later collisions between broken aircraft parts. It records original
-game actions; it does not prevent damage or make a failed flight pass. Automatic
-combat-loss recovery is not implemented yet.
+game actions; it does not prevent damage or make an uninterrupted survival check
+pass. The separate recovery scenario now has one native run in which the
+verified missile-loss branch led through ordinary ejection and replacement;
+repeat recovery and longer combat coverage remain unverified.
 
 Wrong request IDs, missing state, rejected actions, process exits, restarts and
 deadlines fail. Unexpected game errors fail, including errors on other clients

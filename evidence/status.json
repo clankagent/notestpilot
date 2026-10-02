@@ -8145,6 +8145,32 @@
       "overall_passed": false,
       "failure": "Headless clients reported Airbrake.Update transform rotation NullReferenceException during second airborne observation.",
       "scope": "No exception allowance or presentation patch added. Runtime combat-loss recovery remains unverified."
+    },
+    {
+      "id": "ryzen-airbrake-aging-02",
+      "scenario": "native-combat-recovery.json",
+      "junit_cases": 142,
+      "failures": 0,
+      "passed": true,
+      "completed_full_sorties": 4,
+      "fifth_sortie": {
+        "taxi_takeoff_window_seconds": 120,
+        "continuously_checked_airborne_gate_requested_seconds": 60,
+        "verified_missile_loss_after_seconds": 58.03,
+        "survival_observation_completed": false,
+        "normal_ejection_and_replacement_confirmed": true,
+        "player_identities_retained": true,
+        "omitted": [
+          "fifth-sortie sustained gun-flight checks",
+          "fifth-sortie rocket firing and ammunition checks"
+        ]
+      },
+      "scope": "One native evidence-gated recovery pass. The separate 120-second taxi/takeoff and 60-second continuously checked airborne gate covers the earlier takeoff-loss gap. The fifth airborne observation was interrupted at 58.03/60 seconds; ordinary ejection and replacement passed, while the fifth gun-flight and rocket phases were omitted. Not five completed sorties, an uninterrupted long-session pass, stock/retail coverage or capacity evidence. The public scenario contract is identical to the verified input apart from its sanitized top-level name.",
+      "input_sha256": {
+        "scenario": "f88e81d6b06280153825a38e873ca135b3bbcec1504108622add3dbddc431d6c6",
+        "gameAssembly": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a",
+        "bridge": "d1dd2de60e3afafc6fe27294d7d81a94b48a8d40533f2df6780649009ed04e39"
+      }
     }
   ],
   "runtime": {
@@ -8157,11 +8183,11 @@
     "purchase": "unverified",
     "lease_expiry": "passed; client lease expires and server throttle/brakes clear without another command",
     "flight_combat": "three-minute flight passed on UDP host and native dedicated manager; both guns and rockets consumed through normal firing; deliberate target hits unverified",
-    "death_respawn": "parked ejection/recovery and native airborne ejection/replacement/second flight passed for both clients; deliberate combat death/respawn unverified",
+    "death_respawn": "Parked ejection/recovery and native airborne ejection/replacement/second flight passed for both clients. One later native run verified the evidence-gated missile-loss branch through ordinary ejection and replacement; deliberate combat death/respawn remains unverified.",
     "steam_authentication": "not tested",
     "retail_clients": "not tested",
     "dedicated_rotation": "Older ship particle cleanup failure and new occupied Escalation->Terminal Control Turret cleanup failure are retained; no reliable full rotation pass.",
-    "long_multiplayer_soak": "Strict survival tests failed: old physical collision; new three-sortie repeat traced missile fragment damage to a pilot before own-part collisions and descent. No attacker identified.",
+    "long_multiplayer_soak": "Uninterrupted long multiplayer survival remains unverified. Earlier physical-collision and missile-damage failures remain recorded. A separate native recovery run completed four full sorties, then verified missile-loss recovery during the fifth airborne gate at 58.03/60 seconds; normal replacement passed, but fifth-sortie gun-flight and rocket work was omitted.",
     "noperf_comparison": "One completed four-client baseline-Spatial pair passed50checks each with actual patch activation verified; CPU0.757baseline/0.761Spatial cores, within passing-baseline variation. No whole-server gain established; later baseline loading failures retained.",
     "native_dedicated_startup": "passed; waits for players, first join loads stock Escalation, both matching clients join",
     "server_mod_manifest": "Runtime Spatial-only server loading passed37checks; loaded-plugin GUID and actual patch log verified. Clients remained bridge-only.",
@@ -8202,7 +8228,7 @@
     ],
     "scope": "thread CPU sample, not production capacity estimate or mod benefit"
   },
-  "project_state": "Experimental tested foundation: two repeated two-sortie lifecycle passes, three four-client10min baselines and one matched Spatial pass. Deeper profiling completed. Long-flight breakups, intermittent loading, occupied reconnect and rotation failures remain unresolved; retail Steam, truly stock/no-loader and realistic capacity are unverified.",
+  "project_state": "Experimental tested foundation: two repeated two-sortie lifecycle passes, three four-client10min baselines and one matched Spatial pass. One native evidence-gated missile-loss recovery pass completed ejection and replacement after four full sorties; the fifth airborne check interrupted at 58.03/60 seconds, so the fifth gun/rocket phases were omitted. Deeper profiling completed. Long uninterrupted survival, intermittent loading, occupied reconnect and rotation failures remain unresolved; retail Steam, truly stock/no-loader, five completed aging sorties and realistic capacity are unverified.",
   "multicore_samples": [
     {
       "cpu_model": "AMD Ryzen 5 PRO 3600",
@@ -8231,18 +8257,22 @@
   ],
   "aging_damage_diagnostics": {
     "evidence": "AgingFailureValidation.json",
-    "planned_five_sorties_completed": false,
-    "latest_run_missile_damage_observed_before_speed_failure": true,
     "automatic_combat_loss_recovery_implemented": true,
-    "live_automatic_recovery_verified": false
+    "live_automatic_recovery_verified": true,
+    "verified_native_recovery_passes": 1,
+    "latest_native_recovery_full_sorties_completed": 4,
+    "latest_native_recovery_fifth_airborne_gate": "verified missile loss after 58.03 of 60 seconds; normal ejection and replacement passed; fifth gun-flight and rocket phases omitted",
+    "planned_five_sorties_completed": false,
+    "latest_run_missile_damage_observed_before_speed_failure": true
   },
   "combat_loss_branch": {
     "experimental": true,
     "tooling_verified": true,
     "saved_damage_failure_replay_verified": true,
-    "live_recovery_verified": false,
+    "live_recovery_verified": true,
+    "verified_native_recovery_passes": 1,
     "strict_survival_fixture_changed": false,
     "gate": "Recent server external-missile trace, destructive part damage and matching controlling-client damage; unrelated errors remain fatal.",
-    "reports": "Interrupted flight duration and omitted weapon checks retained; not counted as a completed survival observation."
+    "reports": "Interrupted flight duration and omitted weapon checks are retained. One native run verified normal ejection and replacement after the fifth airborne check was interrupted; this does not count as a completed survival observation or five complete sorties."
   }
 }

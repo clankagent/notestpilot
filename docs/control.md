@@ -33,7 +33,10 @@ unexplained loss, game error, disconnect or mission failure still stops the run.
 
 The interrupted flight is recorded as partial. Remaining weapon checks are listed
 as omitted, rather than reported as completed. This branch has automated runner
-coverage; live damage-triggered recovery is still under validation. See
+coverage and one native run confirmed normal ejection and replacement after a
+verified missile-loss interruption at 58.03 of a 60-second airborne check. The
+fifth-sortie gun-flight and rocket checks were omitted; repeated recovery and a
+completed five-sortie survival run remain unverified. See
 `scenarios/native-combat-recovery.json`; the strict survival fixture stays separate.
 
 Two scoped adapters allow headless UDP connections without retail Steam callbacks
