@@ -1,0 +1,1461 @@
+{
+  "game_assembly_sha256": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a",
+  "bridge_sha256": "d1dd2de60e3afafc6fe27294d7d81a94b48a8d40533f2df6780649009ed04e39",
+  "scenario_sha256": "f0a5a816f98c6b81497de230e693a180ffdd68dfbfae18a88fa8698ff14b694b",
+  "planned_observation_seconds": 1950,
+  "planned_sorties": 5,
+  "clients": 2,
+  "runs": [
+    {
+      "id": "ryzen-aging-sorties-01",
+      "passed": false,
+      "checks": 56,
+      "completed_full_sorties": 1,
+      "failed_phase": "Sortie 2: Sustained multiplayer flight and gun firing",
+      "observation_windows": [
+        {
+          "name": "Sortie 1: Both clients steer, taxi and attempt takeoff for three minutes",
+          "passed": true,
+          "requested_seconds": 180,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1061,
+          "units_max": 1086,
+          "registered_aircraft_min": 9,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 179.9607505,
+              "cpu_cores": 0.6878166469971463,
+              "updates_per_second": 59.96307511509295,
+              "fixed_steps_per_second": 60.00197248566154,
+              "resident_peak_bytes": 1147629568,
+              "frames": 10791,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5795,
+                4991,
+                4,
+                1,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 179.951974,
+              "cpu_cores": 0.5686517225979416,
+              "updates_per_second": 59.96599959498082,
+              "fixed_steps_per_second": 59.99934182439143,
+              "resident_peak_bytes": 1152819200,
+              "frames": 10791,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5874,
+                4909,
+                8,
+                0,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 179.956571,
+              "cpu_cores": 0.5621356277120882,
+              "updates_per_second": 59.958910864110656,
+              "fixed_steps_per_second": 59.99780913807254,
+              "resident_peak_bytes": 1147346944,
+              "frames": 10790,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                6043,
+                4735,
+                12,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 180.40954244099703,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.4514727929462946
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.11058173381557491
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.09533863767558338
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.025054107110095168
+              },
+              {
+                "name": "Loading.Preload",
+                "main_thread": false,
+                "cpu_cores": 0.0017737420962899233
+              }
+            ],
+            "guest_cpu_steal_percent": 0.3358744582108065,
+            "guest_cpu_busy_percent": 45.848954050701714,
+            "guest_min_available_memory_bytes": 4435709952,
+            "guest_max_swap_used_bytes": 21684224,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 4.977794898480521,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.0018796123276622284,
+              "memory_full_stall_percent": 0.0013181120953054495,
+              "io_some_stall_percent": 0.058221421427501474,
+              "io_full_stall_percent": 0.03234307853703658
+            }
+          }
+        },
+        {
+          "name": "Sortie 1: Sustained multiplayer flight and gun firing",
+          "passed": true,
+          "requested_seconds": 180,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1040,
+          "units_max": 1082,
+          "registered_aircraft_min": 9,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 179.656875,
+              "cpu_cores": 0.7411350108366295,
+              "updates_per_second": 59.953174628023554,
+              "fixed_steps_per_second": 60.00327012256002,
+              "resident_peak_bytes": 1165258752,
+              "frames": 10771,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5695,
+                5075,
+                1,
+                0,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 179.654129,
+              "cpu_cores": 0.6277618033482548,
+              "updates_per_second": 59.94295850556265,
+              "fixed_steps_per_second": 60.0041872680811,
+              "resident_peak_bytes": 1170006016,
+              "frames": 10769,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5977,
+                4785,
+                6,
+                1,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 179.653015,
+              "cpu_cores": 0.6436296101125828,
+              "updates_per_second": 59.954462773697394,
+              "fixed_steps_per_second": 60.004559344578766,
+              "resident_peak_bytes": 1164746752,
+              "frames": 10771,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5753,
+                5016,
+                2,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 180.41149060900352,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.4797366271285643
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.12255316956455871
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.10664509192320713
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.02760356329405257
+              },
+              {
+                "name": "IPC:CSteamEngin",
+                "main_thread": false,
+                "cpu_cores": 0.0011640056810745061
+              }
+            ],
+            "guest_cpu_steal_percent": 0.35396256915508856,
+            "guest_cpu_busy_percent": 50.62500870970889,
+            "guest_min_available_memory_bytes": 4373843968,
+            "guest_max_swap_used_bytes": 21680128,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 5.832474951833735,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.0,
+              "memory_full_stall_percent": 0.0,
+              "io_some_stall_percent": 0.06595256188968152,
+              "io_full_stall_percent": 0.03292085210288483
+            }
+          }
+        },
+        {
+          "name": "Sortie 1: Both native clients fly and fire rockets for thirty seconds",
+          "passed": true,
+          "requested_seconds": 30,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1039,
+          "units_max": 1059,
+          "registered_aircraft_min": 9,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 29.919299999999964,
+              "cpu_cores": 0.7747507461738755,
+              "updates_per_second": 59.96129588593323,
+              "fixed_steps_per_second": 59.99471912778715,
+              "resident_peak_bytes": 1167855616,
+              "frames": 1794,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                935,
+                859,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 29.93212900000003,
+              "cpu_cores": 0.6661737960570732,
+              "updates_per_second": 59.935596295205,
+              "fixed_steps_per_second": 60.00241412831002,
+              "resident_peak_bytes": 1170128896,
+              "frames": 1794,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                970,
+                823,
+                1,
+                0,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 29.937134000000015,
+              "cpu_cores": 0.6213019589650761,
+              "updates_per_second": 59.95897937324258,
+              "fixed_steps_per_second": 59.99238270436973,
+              "resident_peak_bytes": 1166467072,
+              "frames": 1795,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                998,
+                797,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 30.076527568999154,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.5033825784996959
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.12634437241075594
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.11304496478857114
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.028593726387697457
+              },
+              {
+                "name": "IPC:CSteamEngin",
+                "main_thread": false,
+                "cpu_cores": 0.001329940762218484
+              }
+            ],
+            "guest_cpu_steal_percent": 0.29222676797194624,
+            "guest_cpu_busy_percent": 51.99131669032312,
+            "guest_min_available_memory_bytes": 4365639680,
+            "guest_max_swap_used_bytes": 21676032,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 6.317394837688796,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.0,
+              "memory_full_stall_percent": 0.0,
+              "io_some_stall_percent": 0.05795216871367047,
+              "io_full_stall_percent": 0.0217644805737055
+            }
+          }
+        },
+        {
+          "name": "Sortie 2: Both clients steer, taxi and attempt takeoff for three minutes",
+          "passed": true,
+          "requested_seconds": 180,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1047,
+          "units_max": 1075,
+          "registered_aircraft_min": 9,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 179.70203200000003,
+              "cpu_cores": 0.8304858789799326,
+              "updates_per_second": 59.89359096395748,
+              "fixed_steps_per_second": 59.99932154356495,
+              "resident_peak_bytes": 1226248192,
+              "frames": 10763,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5564,
+                5190,
+                7,
+                2,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 179.70398000000006,
+              "cpu_cores": 0.6857944938114335,
+              "updates_per_second": 59.876247593403306,
+              "fixed_steps_per_second": 59.99867114796231,
+              "resident_peak_bytes": 1232920576,
+              "frames": 10760,
+              "frames_over_50ms": 1,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5612,
+                5135,
+                11,
+                1,
+                1,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 179.703888,
+              "cpu_cores": 0.6891893179295042,
+              "updates_per_second": 59.89297237686922,
+              "fixed_steps_per_second": 59.99870186448052,
+              "resident_peak_bytes": 1228238848,
+              "frames": 10763,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5608,
+                5142,
+                11,
+                2,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 175.4146367180001,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.5368423169349859
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.1361345919975306
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.12205366895590998
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.02947302515189419
+              },
+              {
+                "name": "Loading.Preload",
+                "main_thread": false,
+                "cpu_cores": 0.0015392102110273552
+              }
+            ],
+            "guest_cpu_steal_percent": 0.36896130931017157,
+            "guest_cpu_busy_percent": 55.388701457181824,
+            "guest_min_available_memory_bytes": 4160946176,
+            "guest_max_swap_used_bytes": 21676032,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 8.111966176959188,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.0007918381418951845,
+              "memory_full_stall_percent": 0.0007912680640392484,
+              "io_some_stall_percent": 0.07084357515717392,
+              "io_full_stall_percent": 0.02550984389742672
+            }
+          }
+        },
+        {
+          "name": "Sortie 2: Sustained multiplayer flight and gun firing",
+          "passed": false,
+          "requested_seconds": null,
+          "partial_window_derived_from_samples": true,
+          "units_min": 1017,
+          "units_max": 1056,
+          "registered_aircraft_min": 9,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 115.055249,
+              "cpu_cores": 0.798485951736109,
+              "updates_per_second": 59.910347940753226,
+              "fixed_steps_per_second": 59.997262706371615,
+              "resident_peak_bytes": 1239789568,
+              "frames": 6893,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                3616,
+                3275,
+                1,
+                1,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 115.0526000000001,
+              "cpu_cores": 0.6800367831756948,
+              "updates_per_second": 59.90303565499601,
+              "fixed_steps_per_second": 59.998644098438405,
+              "resident_peak_bytes": 1238822912,
+              "frames": 6892,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                3646,
+                3245,
+                0,
+                1,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 115.051649,
+              "cpu_cores": 0.667787038845484,
+              "updates_per_second": 59.91222255319435,
+              "fixed_steps_per_second": 59.999140038401364,
+              "resident_peak_bytes": 1239445504,
+              "frames": 6893,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                3694,
+                3197,
+                2,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 110.24720574100502,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.501418604022173
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.13642069110878222
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.12326843033034242
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.031021194387768264
+              },
+              {
+                "name": "IPC:CSteamEngin",
+                "main_thread": false,
+                "cpu_cores": 0.0010884629609743256
+              }
+            ],
+            "guest_cpu_steal_percent": 0.34492998606574227,
+            "guest_cpu_busy_percent": 53.81593073988624,
+            "guest_min_available_memory_bytes": 4110299136,
+            "guest_max_swap_used_bytes": 21676032,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 7.742475596209325,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.0009723602451370643,
+              "memory_full_stall_percent": 0.0009669179303321927,
+              "io_some_stall_percent": 0.0703881785288072,
+              "io_full_stall_percent": 0.03202620852173457
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ryzen-damage-trace-01",
+      "passed": false,
+      "checks": 81,
+      "completed_full_sorties": 2,
+      "failed_phase": "Sortie 3: Sustained multiplayer flight and gun firing",
+      "observation_windows": [
+        {
+          "name": "Sortie 1: Both clients steer, taxi and attempt takeoff for three minutes",
+          "passed": true,
+          "requested_seconds": 180,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1062,
+          "units_max": 1083,
+          "registered_aircraft_min": 9,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 179.2121185,
+              "cpu_cores": 0.6385170877827663,
+              "updates_per_second": 59.97920280151144,
+              "fixed_steps_per_second": 60.00152272068588,
+              "resident_peak_bytes": 1133187072,
+              "frames": 10749,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5908,
+                4836,
+                5,
+                0,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 179.2118031,
+              "cpu_cores": 0.5294852144702293,
+              "updates_per_second": 59.973728371019334,
+              "fixed_steps_per_second": 60.001628319089214,
+              "resident_peak_bytes": 1137901568,
+              "frames": 10748,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                6213,
+                4528,
+                6,
+                1,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 179.2236097,
+              "cpu_cores": 0.5317379789388317,
+              "updates_per_second": 59.98093676382415,
+              "fixed_steps_per_second": 60.00325525192231,
+              "resident_peak_bytes": 1135357952,
+              "frames": 10750,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                6054,
+                4688,
+                8,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 180.41809158900287,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.41825073824580655
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.10386984938677997
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.08679839068286949
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.024332371334469798
+              },
+              {
+                "name": "Loading.Preload",
+                "main_thread": false,
+                "cpu_cores": 0.0015519507912645886
+              }
+            ],
+            "guest_cpu_steal_percent": 0.2772553117380704,
+            "guest_cpu_busy_percent": 42.92023685127133,
+            "guest_min_available_memory_bytes": 4455903232,
+            "guest_max_swap_used_bytes": 21676032,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 2.739749077526155,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.0,
+              "memory_full_stall_percent": 0.0,
+              "io_some_stall_percent": 0.06225207184646107,
+              "io_full_stall_percent": 0.03587223400380149
+            }
+          }
+        },
+        {
+          "name": "Sortie 1: Sustained multiplayer flight and gun firing",
+          "passed": true,
+          "requested_seconds": 180,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1039,
+          "units_max": 1067,
+          "registered_aircraft_min": 9,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 179.096649,
+              "cpu_cores": 0.7512145020647484,
+              "updates_per_second": 59.945286860169,
+              "fixed_steps_per_second": 59.995539056679945,
+              "resident_peak_bytes": 1181270016,
+              "frames": 10736,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5709,
+                5020,
+                7,
+                0,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 179.09625200000002,
+              "cpu_cores": 0.6406052539837628,
+              "updates_per_second": 59.93983615022831,
+              "fixed_steps_per_second": 60.00125563766683,
+              "resident_peak_bytes": 1187348480,
+              "frames": 10735,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5840,
+                4890,
+                4,
+                1,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 179.10502699999998,
+              "cpu_cores": 0.64364469234021,
+              "updates_per_second": 59.93689948188892,
+              "fixed_steps_per_second": 60.003899276372636,
+              "resident_peak_bytes": 1184591872,
+              "frames": 10735,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5752,
+                4978,
+                5,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 180.41610693399707,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.48776132849487586
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.12205118697110415
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.10797262135318388
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.02721486503306637
+              },
+              {
+                "name": "Loading.Preload",
+                "main_thread": false,
+                "cpu_cores": 0.001939959829240983
+              }
+            ],
+            "guest_cpu_steal_percent": 0.3665351971346146,
+            "guest_cpu_busy_percent": 51.193678313101884,
+            "guest_min_available_memory_bytes": 4317966336,
+            "guest_max_swap_used_bytes": 21680128,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 6.189424652692014,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.001998158624118213,
+              "memory_full_stall_percent": 0.001779220300532445,
+              "io_some_stall_percent": 0.0656377094110133,
+              "io_full_stall_percent": 0.03120397671622276
+            }
+          }
+        },
+        {
+          "name": "Sortie 1: Both native clients fly and fire rockets for thirty seconds",
+          "passed": true,
+          "requested_seconds": 30,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1038,
+          "units_max": 1061,
+          "registered_aircraft_min": 9,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 29.72271699999999,
+              "cpu_cores": 0.7805477540966411,
+              "updates_per_second": 59.95414214656085,
+              "fixed_steps_per_second": 60.02143074605194,
+              "resident_peak_bytes": 1186656256,
+              "frames": 1782,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                932,
+                847,
+                3,
+                0,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 29.731322999999975,
+              "cpu_cores": 0.6770637149244927,
+              "updates_per_second": 59.93678787856166,
+              "fixed_steps_per_second": 60.00405700075982,
+              "resident_peak_bytes": 1194639360,
+              "frames": 1782,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                942,
+                839,
+                1,
+                0,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 29.730164000000002,
+              "cpu_cores": 0.6595994559599474,
+              "updates_per_second": 59.93912445286208,
+              "fixed_steps_per_second": 59.972760325170086,
+              "resident_peak_bytes": 1191936000,
+              "frames": 1782,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                980,
+                802,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 30.062069386003714,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.5149346108291264
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.1224133958560198
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.11243404293297458
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.027942188184526203
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.0009979352923045065
+              }
+            ],
+            "guest_cpu_steal_percent": 0.42796005706134094,
+            "guest_cpu_busy_percent": 53.08382982294202,
+            "guest_min_available_memory_bytes": 4306472960,
+            "guest_max_swap_used_bytes": 21680128,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 7.7683674068269,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.003901926992910624,
+              "memory_full_stall_percent": 0.0038886211890132305,
+              "io_some_stall_percent": 0.043855929645808756,
+              "io_full_stall_percent": 0.024961688111510078
+            }
+          }
+        },
+        {
+          "name": "Sortie 2: Both clients steer, taxi and attempt takeoff for three minutes",
+          "passed": true,
+          "requested_seconds": 180,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1036,
+          "units_max": 1070,
+          "registered_aircraft_min": 9,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 179.75300000000004,
+              "cpu_cores": 0.7867462573642716,
+              "updates_per_second": 59.93224035203862,
+              "fixed_steps_per_second": 59.998998625892185,
+              "resident_peak_bytes": 1224323072,
+              "frames": 10773,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5694,
+                5078,
+                0,
+                1,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 179.7453,
+              "cpu_cores": 0.6505872476220519,
+              "updates_per_second": 59.929244325164554,
+              "fixed_steps_per_second": 59.99600545883537,
+              "resident_peak_bytes": 1235218432,
+              "frames": 10772,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5716,
+                5053,
+                3,
+                0,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 179.73950000000002,
+              "cpu_cores": 0.6533900450374011,
+              "updates_per_second": 59.936741784638315,
+              "fixed_steps_per_second": 59.997941465287255,
+              "resident_peak_bytes": 1233211392,
+              "frames": 10773,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5784,
+                4983,
+                6,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 180.42040109500522,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.5079802474873075
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.12881026679328988
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.11589598445127762
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.028987852638937443
+              },
+              {
+                "name": "IPC:CSteamEngin",
+                "main_thread": false,
+                "cpu_cores": 0.001219374298387426
+              }
+            ],
+            "guest_cpu_steal_percent": 0.3737587861207185,
+            "guest_cpu_busy_percent": 52.52147718397858,
+            "guest_min_available_memory_bytes": 4152934400,
+            "guest_max_swap_used_bytes": 21676032,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 7.076293436060566,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.0006895007396336174,
+              "memory_full_stall_percent": 0.0006872836954547311,
+              "io_some_stall_percent": 0.057822174968487024,
+              "io_full_stall_percent": 0.024653531269214872
+            }
+          }
+        },
+        {
+          "name": "Sortie 2: Sustained multiplayer flight and gun firing",
+          "passed": true,
+          "requested_seconds": 180,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1003,
+          "units_max": 1051,
+          "registered_aircraft_min": 8,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 179.84929999999997,
+              "cpu_cores": 0.8683937051742766,
+              "updates_per_second": 59.84454762959879,
+              "fixed_steps_per_second": 60.00023352884889,
+              "resident_peak_bytes": 1257091072,
+              "frames": 10763,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5442,
+                5308,
+                12,
+                1,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 179.84259999999995,
+              "cpu_cores": 0.7442063226399085,
+              "updates_per_second": 59.835656290556315,
+              "fixed_steps_per_second": 60.00246882551744,
+              "resident_peak_bytes": 1253928960,
+              "frames": 10761,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5538,
+                5212,
+                10,
+                1,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 179.83459500000004,
+              "cpu_cores": 0.7337853987437735,
+              "updates_per_second": 59.821637766637714,
+              "fixed_steps_per_second": 59.999579057633476,
+              "resident_peak_bytes": 1253728256,
+              "frames": 10758,
+              "frames_over_50ms": 1,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5514,
+                5230,
+                11,
+                2,
+                1,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 180.454279036996,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.5639655681378191
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.13715385488268667
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.1307256338053567
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.032529015279247314
+              },
+              {
+                "name": "IPC:CSteamEngin",
+                "main_thread": false,
+                "cpu_cores": 0.0011637296777924934
+              }
+            ],
+            "guest_cpu_steal_percent": 0.4623421611353224,
+            "guest_cpu_busy_percent": 58.790088278019894,
+            "guest_min_available_memory_bytes": 4055117824,
+            "guest_max_swap_used_bytes": 21676032,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 12.408328646731295,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.0009138048755618196,
+              "memory_full_stall_percent": 0.0008107316755287702,
+              "io_some_stall_percent": 0.05432234720236415,
+              "io_full_stall_percent": 0.02122365853798795
+            }
+          }
+        },
+        {
+          "name": "Sortie 2: Both native clients fly and fire rockets for thirty seconds",
+          "passed": true,
+          "requested_seconds": 30,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1000,
+          "units_max": 1025,
+          "registered_aircraft_min": 10,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 29.858397999999966,
+              "cpu_cores": 0.8580500534556487,
+              "updates_per_second": 59.7821758555165,
+              "fixed_steps_per_second": 60.016615760832245,
+              "resident_peak_bytes": 1257136128,
+              "frames": 1785,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                893,
+                887,
+                5,
+                0,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 29.858734000000027,
+              "cpu_cores": 0.7555578210382256,
+              "updates_per_second": 59.74801208919301,
+              "fixed_steps_per_second": 60.015940394525714,
+              "resident_peak_bytes": 1253978112,
+              "frames": 1784,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                917,
+                865,
+                1,
+                1,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 29.860900000000015,
+              "cpu_cores": 0.7246934955075023,
+              "updates_per_second": 59.810655405563764,
+              "fixed_steps_per_second": 60.011587058661966,
+              "resident_peak_bytes": 1253736448,
+              "frames": 1786,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                877,
+                908,
+                1,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 30.066955674999917,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.5560922156779019
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.13636232561479705
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.12571941239608095
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.031928739656147564
+              },
+              {
+                "name": "IPC:CSteamEngin",
+                "main_thread": false,
+                "cpu_cores": 0.0013303641523394782
+              }
+            ],
+            "guest_cpu_steal_percent": 0.5611860289806516,
+            "guest_cpu_busy_percent": 58.32984337046654,
+            "guest_min_available_memory_bytes": 4046614528,
+            "guest_max_swap_used_bytes": 21671936,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 11.665993185058333,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.0,
+              "memory_full_stall_percent": 0.0,
+              "io_some_stall_percent": 0.06381424247734403,
+              "io_full_stall_percent": 0.026081789206615517
+            }
+          }
+        },
+        {
+          "name": "Sortie 3: Both clients steer, taxi and attempt takeoff for three minutes",
+          "passed": true,
+          "requested_seconds": 180,
+          "partial_window_derived_from_samples": false,
+          "units_min": 1004,
+          "units_max": 1048,
+          "registered_aircraft_min": 8,
+          "registered_aircraft_max": 10,
+          "processes": {
+            "server": {
+              "seconds": 179.50766599999997,
+              "cpu_cores": 0.8743916262606855,
+              "updates_per_second": 59.83031387640014,
+              "fixed_steps_per_second": 59.997437658177795,
+              "resident_peak_bytes": 1277661184,
+              "frames": 10740,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5447,
+                5283,
+                9,
+                1,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 179.50689699999998,
+              "cpu_cores": 0.7627004994688309,
+              "updates_per_second": 59.82499937035846,
+              "fixed_steps_per_second": 60.0032655012693,
+              "resident_peak_bytes": 1308520448,
+              "frames": 10739,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5395,
+                5335,
+                9,
+                0,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 179.51356599999997,
+              "cpu_cores": 0.7524779492152697,
+              "updates_per_second": 59.8283474575955,
+              "fixed_steps_per_second": 60.00103635621612,
+              "resident_peak_bytes": 1303773184,
+              "frames": 10740,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                5466,
+                5264,
+                10,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 180.43104925499938,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.5728504069935519
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.13395698855489696
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.13040992721128364
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.03297658592890512
+              },
+              {
+                "name": "IPC:CSteamEngin",
+                "main_thread": false,
+                "cpu_cores": 0.0011638795033731219
+              }
+            ],
+            "guest_cpu_steal_percent": 0.4473835055293805,
+            "guest_cpu_busy_percent": 59.83055349728075,
+            "guest_min_available_memory_bytes": 3885572096,
+            "guest_max_swap_used_bytes": 21671936,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 13.326553328422634,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.002113272641124626,
+              "memory_full_stall_percent": 0.0016582511781392292,
+              "io_some_stall_percent": 0.05884907306055469,
+              "io_full_stall_percent": 0.020269238665410392
+            }
+          }
+        },
+        {
+          "name": "Sortie 3: Sustained multiplayer flight and gun firing",
+          "passed": false,
+          "requested_seconds": null,
+          "partial_window_derived_from_samples": true,
+          "units_min": 1029,
+          "units_max": 1034,
+          "registered_aircraft_min": 10,
+          "registered_aircraft_max": 11,
+          "processes": {
+            "server": {
+              "seconds": 13.488749999999982,
+              "cpu_cores": 0.8614586229265143,
+              "updates_per_second": 59.82763413956083,
+              "fixed_steps_per_second": 60.05004170141793,
+              "resident_peak_bytes": 1277767680,
+              "frames": 807,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                410,
+                396,
+                1,
+                0,
+                0,
+                0
+              ]
+            },
+            "client1": {
+              "seconds": 13.4923,
+              "cpu_cores": 0.7470927862558675,
+              "updates_per_second": 59.81189270917486,
+              "fixed_steps_per_second": 59.96012540486055,
+              "resident_peak_bytes": 1309122560,
+              "frames": 807,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                421,
+                385,
+                1,
+                0,
+                0,
+                0
+              ]
+            },
+            "client2": {
+              "seconds": 13.491882000000032,
+              "cpu_cores": 0.7241391527141994,
+              "updates_per_second": 59.81374577690481,
+              "fixed_steps_per_second": 60.03610170916097,
+              "resident_peak_bytes": 1306238976,
+              "frames": 807,
+              "frames_over_50ms": 0,
+              "frames_over_100ms": 0,
+              "frame_bucket_counts": [
+                399,
+                407,
+                1,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "external_approximate": {
+            "seconds": 10.021338126003684,
+            "server_threads": [
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": true,
+                "cpu_cores": 0.5528203848969684
+              },
+              {
+                "name": "Job.Worker 1",
+                "main_thread": false,
+                "cpu_cores": 0.13870403158967212
+              },
+              {
+                "name": "Job.Worker 0",
+                "main_thread": false,
+                "cpu_cores": 0.13271680720450618
+              },
+              {
+                "name": "NuclearOptionSe",
+                "main_thread": false,
+                "cpu_cores": 0.03392760484927229
+              },
+              {
+                "name": "IPC:CSteamEngin",
+                "main_thread": false,
+                "cpu_cores": 0.001995741461721902
+              }
+            ],
+            "guest_cpu_steal_percent": 0.5264477312609677,
+            "guest_cpu_busy_percent": 58.81173226372525,
+            "guest_min_available_memory_bytes": 3879690240,
+            "guest_max_swap_used_bytes": 21671936,
+            "guest_pressure": {
+              "cpu_some_stall_percent": 11.442683457855601,
+              "cpu_full_stall_percent": 0.0,
+              "memory_some_stall_percent": 0.0,
+              "memory_full_stall_percent": 0.0,
+              "io_some_stall_percent": 0.06478176784749289,
+              "io_full_stall_percent": 0.036272601066795536
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "latest_failure": {
+    "incoming_damage_caller": "Missile.ServerFixedUpdate",
+    "nonself_valid_dealer_observed": true,
+    "destructive_blast_damage_reached_both_clients": true,
+    "incoming_damage_altitude_metres": 885.536743,
+    "aircraft_speed_at_failed_server_check": 47.7819138,
+    "required_speed_metres_per_second": 50,
+    "earlier_run_initiating_damage_cause": "unresolved"
+  },
+  "earliest_damage_retention": {
+    "native_take_damage_and_apply_damage_hooks_observed": true,
+    "independent_first_joint_capture_observed": true,
+    "key_capacity": 64,
+    "over_64_event_burst_retention_tested": false,
+    "mission_rotation_netid_reuse_tested": false
+  },
+  "long_aging_pass_established": false,
+  "automatic_combat_loss_recovery_implemented": false,
+  "whole_server_gain_established": false,
+  "memory_saving_established": false,
+  "limits": [
+    "Strict survival observations failed; complete and failed partial windows are distinguished.",
+    "Observation times exclude loading; mission time is not a single continuous flight.",
+    "Baseline includes BepInEx, NOTestPilot observation hooks and native player-loop phase probes.",
+    "Dedicated-build headless UDP clients; retail Steam clients and authentication are untested.",
+    "Server and clients share four vCPUs and eight GiB; these samples do not establish production capacity.",
+    "Earlier breakup remains unresolved; one traced missile strike does not explain every previous failure.",
+    "No optimizer variant was compared in these runs."
+  ]
+}

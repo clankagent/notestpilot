@@ -1,5 +1,5 @@
 {
-  "checkpoint": "2026-10-01: repeated two-sortie foundation, matched four-client Spatial pair, failed long-flight diagnostics and three completed deeper job profiles",
+  "checkpoint": "2026-10-02: strict aging failures retained; first incoming/applied damage traced in the native multiplayer run",
   "game": {
     "version": "0.34.1",
     "steam_build": 24724541,
@@ -28,7 +28,7 @@
     "mode": "dedicated-build headless UDP adapter",
     "latest_windows_compile": "pass, zero warnings/errors (compilation only)",
     "latest_linux_compile": "pass, zero warnings/errors against the current real assembly; loaded-plugin metadata observed in native game repeat",
-    "diagnostic_bridge_sha256": "4f4f2e99cae1430151d5ef6d9e649edfb67e86e9f2a8cf78d2b38a30aefed799"
+    "diagnostic_bridge_sha256": "d1dd2de60e3afafc6fe27294d7d81a94b48a8d40533f2df6780649009ed04e39"
   },
   "runs": [
     {
@@ -8119,6 +8119,20 @@
         "External thread windows approximate the bridge window using nearest CPU-counter samples."
       ],
       "scope": "Second consecutive same-input normalized-config repeat passed30checks through180sec takeoff+180sec flight and gun firing with optional job profiling. Instrumentation overhead; not an optimization comparison."
+    },
+    {
+      "id": "ryzen-aging-sorties-01",
+      "passed": false,
+      "checks": 56,
+      "completed_full_sorties": 1,
+      "failed_phase": "Sortie 2: Sustained multiplayer flight and gun firing"
+    },
+    {
+      "id": "ryzen-damage-trace-01",
+      "passed": false,
+      "checks": 81,
+      "completed_full_sorties": 2,
+      "failed_phase": "Sortie 3: Sustained multiplayer flight and gun firing"
     }
   ],
   "runtime": {
@@ -8202,5 +8216,11 @@
       "whole_server_benefit_established": false,
       "scope": "One completed baseline-Spatial pair in a shared four-vCPU lab. Earlier flight/load failures and later baseline loading failures retained. No whole-server benefit established."
     }
-  ]
+  ],
+  "aging_damage_diagnostics": {
+    "evidence": "AgingFailureValidation.json",
+    "planned_five_sorties_completed": false,
+    "latest_run_missile_damage_observed_before_speed_failure": true,
+    "automatic_combat_loss_recovery_implemented": false
+  }
 }

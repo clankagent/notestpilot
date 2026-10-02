@@ -17,6 +17,7 @@ aircraft network IDs across processes so the test follows the correct player.
 | `native-startup-flight.json` | Native waiting server, player-triggered Escalation loading, two-client flight, weapon cycling and rockets | Passed 37 checks; three-minute flight plus 30 seconds of firing |
 | `native-dedicated-flight.json` | Native Terminal Control startup and time-limit rotation to Escalation | Failed during ship particle-effect cleanup; subsequent flight steps were not reached |
 | `native-two-sorties.json` | Airborne ejection, normal reserve replacement, changed aircraft IDs with original player IDs, second takeoff | Passed 51 checks; both replacement aircraft finished airborne |
+| `native-aging-sorties.json` | Five planned takeoff/flight/gun/rocket sorties with ordinary aircraft replacement | Experimental strict survival workload; two runs failed during the second and third sorties. Not a completed aging or combat soak |
 | `native-three-sorties-reconnect.json` | Three sorties, airborne replacement, rockets, six minutes of gun firing, sequential reconnects | Repeat passed flight/replacement/firing and the first reconnect, then failed while the second client disconnected: missile-warning display exception |
 | `native-flight-reconnect.json` | Occupied-aircraft disconnect and reconnect after native flight/rockets | Failed on first disconnect in radar-warning display cleanup |
 | `native-gun-bursts.json` | Three brief gun bursts per client; trigger expires while flight continues; ammunition stops decreasing | Passed 54 checks on the native server |
@@ -45,6 +46,18 @@ The strict survival test failed. It does not establish a server crash or a
 performance-mod regression, and the earlier collision failure remains separate.
 
 ## Failure handling
+
+The five-sortie workload keeps survival checks strict. In its latest run, both
+clients completed two full sorties and replacements before a missile struck one
+aircraft during the third. Damage reached both clients, then the aircraft slowed
+below the required flight speed. This identifies that run's cause; the earlier
+breakup remains separate. Neither run establishes the planned 32.5 minutes.
+
+The bridge now retains the first incoming damage, applied damage and joint-break
+events separately from its rolling event queue. That helps distinguish a weapon
+hit from later collisions between broken aircraft parts. It records original
+game actions; it does not prevent damage or make a failed flight pass. Automatic
+combat-loss recovery is not implemented yet.
 
 Wrong request IDs, missing state, rejected actions, process exits, restarts and
 deadlines fail. Unexpected game errors fail, including errors on other clients

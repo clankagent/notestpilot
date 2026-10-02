@@ -37,6 +37,7 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Dedicated-server mission rotation | Failed during ship-effect cleanup and, in a separate occupied run, turret cleanup; both retained |
 | Steam authentication / retail clients | Not tested |
 | Performance-mod comparison | One complete baseline/Spatial pair; no whole-server gain established. Earlier failures retained |
+| Five-sortie aging workload | Failed during the second and third sorties in separate runs; the latter traced a missile strike before the aircraft slowed. Earlier completed sorties remain recorded |
 | Long multiplayer sessions | Not verified |
 
 The runner also has **43 automated tests** (all pass on Linux; 42 pass on Windows

@@ -1,0 +1,2621 @@
+{
+  "name": "Experimental stock Escalation aging: two clients, five normal flight/weapon/replacement sorties",
+  "clients": 2,
+  "steps": [
+    {
+      "name": "Start hidden native dedicated manager",
+      "target": "server",
+      "command": "dedicated",
+      "args": {
+        "missions": [
+          "Escalation"
+        ],
+        "port": 17777
+      }
+    },
+    {
+      "name": "Native server listens while waiting for players",
+      "target": "server",
+      "timeout": 90,
+      "expect": [
+        {
+          "path": "serverActive",
+          "equals": true
+        },
+        {
+          "path": "dedicated.running",
+          "equals": true
+        },
+        {
+          "path": "dedicated.hidden",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "First client joins native waiting server",
+      "target": "client1",
+      "command": "connect",
+      "args": {
+        "port": 17777
+      }
+    },
+    {
+      "name": "First player triggers native mission loading",
+      "target": "client1",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerNetId",
+          "notNull": true
+        },
+        {
+          "path": "mission",
+          "equals": "Escalation"
+        },
+        {
+          "path": "missionRunning",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "Second client joins native server",
+      "target": "client2",
+      "command": "connect",
+      "args": {
+        "port": 17777
+      }
+    },
+    {
+      "name": "Second native client loads the mission",
+      "target": "client2",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerNetId",
+          "notNull": true
+        },
+        {
+          "path": "mission",
+          "equals": "Escalation"
+        },
+        {
+          "path": "missionRunning",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "Native server sees both players",
+      "target": "server",
+      "expect": [
+        {
+          "path": "remotePlayers",
+          "equals": 2
+        }
+      ]
+    },
+    {
+      "name": "Native server runs large Escalation",
+      "target": "server",
+      "expect": [
+        {
+          "path": "dedicated.currentMission",
+          "equals": "Escalation"
+        },
+        {
+          "path": "units",
+          "atLeast": 800
+        },
+        {
+          "path": "missionRunning",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "Server sees both matching player identities",
+      "target": "server",
+      "expect": [
+        {
+          "path": "remotePlayers",
+          "equals": 2
+        },
+        {
+          "path": "players.0.netId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerNetId"
+          }
+        },
+        {
+          "path": "players.1.netId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerNetId"
+          }
+        }
+      ]
+    },
+    {
+      "name": "First player chooses Primeva",
+      "target": "client1",
+      "command": "faction",
+      "args": {
+        "name": "Primeva"
+      }
+    },
+    {
+      "name": "Second player chooses Boscali",
+      "target": "client2",
+      "command": "faction",
+      "args": {
+        "name": "Boscali"
+      }
+    },
+    {
+      "name": "Server confirms both faction decisions",
+      "target": "server",
+      "expect": [
+        {
+          "path": "players.0.faction",
+          "equals": "Primeva"
+        },
+        {
+          "path": "players.1.faction",
+          "equals": "Boscali"
+        }
+      ]
+    },
+    {
+      "target": "client1",
+      "name": "First player reserves an aircraft",
+      "command": "reserve"
+    },
+    {
+      "target": "client2",
+      "name": "Second player reserves an aircraft",
+      "command": "reserve"
+    },
+    {
+      "target": "client1",
+      "expect": [
+        {
+          "atLeast": 1,
+          "path": "localPlayerOwnedCount"
+        }
+      ],
+      "name": "First player receives an owned airframe"
+    },
+    {
+      "target": "client2",
+      "expect": [
+        {
+          "atLeast": 1,
+          "path": "localPlayerOwnedCount"
+        }
+      ],
+      "name": "Second player receives an owned airframe"
+    },
+    {
+      "target": "client1",
+      "name": "First player requests spawning",
+      "command": "spawn",
+      "args": {
+        "airbase": "Sandrift Airbase"
+      }
+    },
+    {
+      "target": "client2",
+      "name": "Second player requests spawning",
+      "command": "spawn",
+      "args": {
+        "airbase": "Maris Airport"
+      }
+    },
+    {
+      "timeout": 120,
+      "target": "client1",
+      "expect": [
+        {
+          "notNull": true,
+          "path": "localPlayerAircraftNetId"
+        }
+      ],
+      "name": "First client receives its aircraft"
+    },
+    {
+      "timeout": 120,
+      "target": "client2",
+      "expect": [
+        {
+          "notNull": true,
+          "path": "localPlayerAircraftNetId"
+        }
+      ],
+      "name": "Second client receives its aircraft"
+    },
+    {
+      "target": "server",
+      "expect": [
+        {
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.0.aircraftNetId"
+        },
+        {
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.1.aircraftNetId"
+        }
+      ],
+      "name": "Server matches both client aircraft identities"
+    },
+    {
+      "target": "client1",
+      "name": "First player starts its engine",
+      "command": "engine",
+      "args": {
+        "on": true
+      }
+    },
+    {
+      "target": "client2",
+      "name": "Second player starts its engine",
+      "command": "engine",
+      "args": {
+        "on": true
+      }
+    },
+    {
+      "name": "Inspect aircraft and standard loadouts",
+      "target": "client1",
+      "command": "catalog"
+    },
+    {
+      "name": "Sortie 1: Both clients steer, taxi and attempt takeoff for three minutes",
+      "target": "server",
+      "observe": {
+        "seconds": 180,
+        "expect": [
+          {
+            "equals": 2,
+            "path": "remotePlayers"
+          },
+          {
+            "notNull": true,
+            "path": "players.0.aircraftNetId"
+          },
+          {
+            "notNull": true,
+            "path": "players.1.aircraftNetId"
+          },
+          {
+            "equals": false,
+            "path": "players.0.disabled"
+          },
+          {
+            "equals": false,
+            "path": "players.1.disabled"
+          }
+        ],
+        "motion": [
+          {
+            "minimumMetres": 100,
+            "path": "players.0"
+          },
+          {
+            "minimumMetres": 100,
+            "path": "players.1"
+          }
+        ],
+        "actions": [
+          {
+            "command": "fly",
+            "target": "client1",
+            "args": {
+              "seconds": 45
+            },
+            "everySeconds": 20
+          },
+          {
+            "command": "fly",
+            "target": "client2",
+            "args": {
+              "seconds": 45
+            },
+            "everySeconds": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sortie 1: Server confirms both aircraft are airborne",
+      "target": "server",
+      "timeout": 10,
+      "expect": [
+        {
+          "atLeast": 80,
+          "path": "players.0.radarAltitude"
+        },
+        {
+          "atLeast": 80,
+          "path": "players.1.radarAltitude"
+        }
+      ]
+    },
+    {
+      "target": "server",
+      "expect": [
+        {
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.0.aircraftNetId"
+        },
+        {
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.1.aircraftNetId"
+        }
+      ],
+      "name": "Sortie 1: Capture matched aircraft before sustained flight",
+      "capture": "sortie-1-airframes"
+    },
+    {
+      "name": "Sortie 1: Sustained multiplayer flight and gun firing",
+      "target": "server",
+      "observe": {
+        "seconds": 180,
+        "expect": [
+          {
+            "path": "remotePlayers",
+            "equals": 2
+          },
+          {
+            "path": "mission",
+            "equals": "Escalation"
+          },
+          {
+            "path": "missionRunning",
+            "equals": true
+          },
+          {
+            "path": "players.0.aircraftNetId",
+            "notNull": true
+          },
+          {
+            "path": "players.0.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.1.aircraftNetId",
+            "notNull": true
+          },
+          {
+            "path": "players.1.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.0.radarAltitude",
+            "atLeast": 80
+          },
+          {
+            "path": "players.0.speed",
+            "atLeast": 50
+          },
+          {
+            "path": "players.1.radarAltitude",
+            "atLeast": 80
+          },
+          {
+            "path": "players.1.speed",
+            "atLeast": 50
+          }
+        ],
+        "motion": [
+          {
+            "path": "players.0",
+            "minimumMetres": 100
+          },
+          {
+            "path": "players.1",
+            "minimumMetres": 100
+          }
+        ],
+        "actions": [
+          {
+            "target": "client1",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true,
+              "fireSeconds": 0.5
+            },
+            "everySeconds": 20
+          },
+          {
+            "target": "client2",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true,
+              "fireSeconds": 0.5
+            },
+            "everySeconds": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sortie 1: Confirm same aircraft and gun ammunition consumed",
+      "target": "server",
+      "expect": [
+        {
+          "path": "players.0.netId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerNetId"
+          }
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          }
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "equalsSaved": {
+            "capture": "sortie-1-airframes",
+            "path": "players.0.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.0.weapons.0.ammo",
+          "atMost": 999
+        },
+        {
+          "path": "players.0.weapons.0.ammo",
+          "atLeast": 1
+        },
+        {
+          "path": "players.1.netId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerNetId"
+          }
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "equalsSaved": {
+            "capture": "sortie-1-airframes",
+            "path": "players.1.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "atMost": 999
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "atLeast": 1
+        }
+      ],
+      "timeout": 120
+    },
+    {
+      "name": "Sortie 1: Client 1 selects next weapon normally",
+      "target": "client1",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 1: Client 1 selects rocket station normally",
+      "target": "client1",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 1: Client 1 confirms selected rocket station",
+      "target": "client1",
+      "expect": [
+        {
+          "path": "players.0.weapons.2.selected",
+          "equals": true
+        },
+        {
+          "path": "players.0.weapons.2.name",
+          "equals": "AGR-24 Kingpin"
+        }
+      ]
+    },
+    {
+      "name": "Sortie 1: Client 2 selects next weapon normally",
+      "target": "client2",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 1: Client 2 selects rocket station normally",
+      "target": "client2",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 1: Client 2 confirms selected rocket station",
+      "target": "client2",
+      "expect": [
+        {
+          "path": "players.1.weapons.2.selected",
+          "equals": true
+        },
+        {
+          "path": "players.1.weapons.2.name",
+          "equals": "AGR-24 Kingpin"
+        }
+      ]
+    },
+    {
+      "name": "Sortie 1: Both native clients fly and fire rockets for thirty seconds",
+      "target": "server",
+      "observe": {
+        "seconds": 30,
+        "expect": [
+          {
+            "path": "remotePlayers",
+            "equals": 2
+          },
+          {
+            "path": "players.0.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.1.disabled",
+            "equals": false
+          }
+        ],
+        "actions": [
+          {
+            "target": "client1",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true
+            },
+            "everySeconds": 20
+          },
+          {
+            "target": "client2",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true
+            },
+            "everySeconds": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sortie 1: Native server confirms rockets consumed on both aircraft",
+      "target": "server",
+      "timeout": 10,
+      "expect": [
+        {
+          "path": "players.0.weapons.2.ammo",
+          "atMost": 7
+        },
+        {
+          "path": "players.1.weapons.2.ammo",
+          "atMost": 7
+        }
+      ],
+      "capture": "sortie-1-end"
+    },
+    {
+      "name": "Sortie 1: Client 1 ejects during flight",
+      "target": "client1",
+      "command": "eject"
+    },
+    {
+      "name": "Sortie 1: Client 2 ejects during flight",
+      "target": "client2",
+      "command": "eject"
+    },
+    {
+      "name": "Sortie 1: Native server confirms both aircraft abandoned",
+      "target": "server",
+      "timeout": 60,
+      "expect": [
+        {
+          "path": "players.0.disabled",
+          "equals": true
+        },
+        {
+          "path": "players.1.disabled",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "Sortie 1: Client 1 requests a normal reserve replacement",
+      "target": "client1",
+      "command": "reserve"
+    },
+    {
+      "name": "Sortie 1: Client 1 receives replacement inventory",
+      "target": "client1",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerOwnedCount",
+          "atLeast": 1
+        }
+      ]
+    },
+    {
+      "name": "Sortie 1: Client 2 requests a normal reserve replacement",
+      "target": "client2",
+      "command": "reserve"
+    },
+    {
+      "name": "Sortie 1: Client 2 receives replacement inventory",
+      "target": "client2",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerOwnedCount",
+          "atLeast": 1
+        }
+      ]
+    },
+    {
+      "name": "Sortie 1: Client 1 starts replacement spawn through normal request",
+      "target": "client1",
+      "command": "spawn",
+      "args": {
+        "airbase": "Sandrift Airbase"
+      }
+    },
+    {
+      "name": "Sortie 1: Client 2 starts replacement spawn through normal request",
+      "target": "client2",
+      "command": "spawn",
+      "args": {
+        "airbase": "Maris Airport"
+      }
+    },
+    {
+      "name": "Sortie 1: Native server confirms new airframes and unchanged player identities",
+      "target": "server",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "remotePlayers",
+          "equals": 2
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "notEqualsSaved": {
+            "capture": "sortie-1-end",
+            "path": "players.0.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.0.netId",
+          "equalsSaved": {
+            "capture": "sortie-1-end",
+            "path": "players.0.netId"
+          }
+        },
+        {
+          "path": "players.0.disabled",
+          "equals": false
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "notEqualsSaved": {
+            "capture": "sortie-1-end",
+            "path": "players.1.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.netId",
+          "equalsSaved": {
+            "capture": "sortie-1-end",
+            "path": "players.1.netId"
+          }
+        },
+        {
+          "path": "players.1.disabled",
+          "equals": false
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sortie 1: Client 1 starts replacement engine",
+      "target": "client1",
+      "command": "engine",
+      "args": {
+        "on": true
+      }
+    },
+    {
+      "name": "Sortie 1: Client 2 starts replacement engine",
+      "target": "client2",
+      "command": "engine",
+      "args": {
+        "on": true
+      }
+    },
+    {
+      "name": "Sortie 2: Both clients steer, taxi and attempt takeoff for three minutes",
+      "target": "server",
+      "observe": {
+        "seconds": 180,
+        "expect": [
+          {
+            "equals": 2,
+            "path": "remotePlayers"
+          },
+          {
+            "notNull": true,
+            "path": "players.0.aircraftNetId"
+          },
+          {
+            "notNull": true,
+            "path": "players.1.aircraftNetId"
+          },
+          {
+            "equals": false,
+            "path": "players.0.disabled"
+          },
+          {
+            "equals": false,
+            "path": "players.1.disabled"
+          }
+        ],
+        "motion": [
+          {
+            "minimumMetres": 100,
+            "path": "players.0"
+          },
+          {
+            "minimumMetres": 100,
+            "path": "players.1"
+          }
+        ],
+        "actions": [
+          {
+            "command": "fly",
+            "target": "client1",
+            "args": {
+              "seconds": 45
+            },
+            "everySeconds": 20
+          },
+          {
+            "command": "fly",
+            "target": "client2",
+            "args": {
+              "seconds": 45
+            },
+            "everySeconds": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sortie 2: Server confirms both aircraft are airborne",
+      "target": "server",
+      "timeout": 10,
+      "expect": [
+        {
+          "atLeast": 80,
+          "path": "players.0.radarAltitude"
+        },
+        {
+          "atLeast": 80,
+          "path": "players.1.radarAltitude"
+        }
+      ]
+    },
+    {
+      "target": "server",
+      "expect": [
+        {
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.0.aircraftNetId"
+        },
+        {
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.1.aircraftNetId"
+        }
+      ],
+      "name": "Sortie 2: Capture matched aircraft before sustained flight",
+      "capture": "sortie-2-airframes"
+    },
+    {
+      "name": "Sortie 2: Sustained multiplayer flight and gun firing",
+      "target": "server",
+      "observe": {
+        "seconds": 180,
+        "expect": [
+          {
+            "path": "remotePlayers",
+            "equals": 2
+          },
+          {
+            "path": "mission",
+            "equals": "Escalation"
+          },
+          {
+            "path": "missionRunning",
+            "equals": true
+          },
+          {
+            "path": "players.0.aircraftNetId",
+            "notNull": true
+          },
+          {
+            "path": "players.0.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.1.aircraftNetId",
+            "notNull": true
+          },
+          {
+            "path": "players.1.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.0.radarAltitude",
+            "atLeast": 80
+          },
+          {
+            "path": "players.0.speed",
+            "atLeast": 50
+          },
+          {
+            "path": "players.1.radarAltitude",
+            "atLeast": 80
+          },
+          {
+            "path": "players.1.speed",
+            "atLeast": 50
+          }
+        ],
+        "motion": [
+          {
+            "path": "players.0",
+            "minimumMetres": 100
+          },
+          {
+            "path": "players.1",
+            "minimumMetres": 100
+          }
+        ],
+        "actions": [
+          {
+            "target": "client1",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true,
+              "fireSeconds": 0.5
+            },
+            "everySeconds": 20
+          },
+          {
+            "target": "client2",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true,
+              "fireSeconds": 0.5
+            },
+            "everySeconds": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sortie 2: Confirm same aircraft and gun ammunition consumed",
+      "target": "server",
+      "expect": [
+        {
+          "path": "players.0.netId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerNetId"
+          }
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          }
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "equalsSaved": {
+            "capture": "sortie-2-airframes",
+            "path": "players.0.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.0.weapons.0.ammo",
+          "atMost": 999
+        },
+        {
+          "path": "players.0.weapons.0.ammo",
+          "atLeast": 1
+        },
+        {
+          "path": "players.1.netId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerNetId"
+          }
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "equalsSaved": {
+            "capture": "sortie-2-airframes",
+            "path": "players.1.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "atMost": 999
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "atLeast": 1
+        }
+      ],
+      "timeout": 120
+    },
+    {
+      "name": "Sortie 2: Client 1 selects next weapon normally",
+      "target": "client1",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 2: Client 1 selects rocket station normally",
+      "target": "client1",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 2: Client 1 confirms selected rocket station",
+      "target": "client1",
+      "expect": [
+        {
+          "path": "players.0.weapons.2.selected",
+          "equals": true
+        },
+        {
+          "path": "players.0.weapons.2.name",
+          "equals": "AGR-24 Kingpin"
+        }
+      ]
+    },
+    {
+      "name": "Sortie 2: Client 2 selects next weapon normally",
+      "target": "client2",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 2: Client 2 selects rocket station normally",
+      "target": "client2",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 2: Client 2 confirms selected rocket station",
+      "target": "client2",
+      "expect": [
+        {
+          "path": "players.1.weapons.2.selected",
+          "equals": true
+        },
+        {
+          "path": "players.1.weapons.2.name",
+          "equals": "AGR-24 Kingpin"
+        }
+      ]
+    },
+    {
+      "name": "Sortie 2: Both native clients fly and fire rockets for thirty seconds",
+      "target": "server",
+      "observe": {
+        "seconds": 30,
+        "expect": [
+          {
+            "path": "remotePlayers",
+            "equals": 2
+          },
+          {
+            "path": "players.0.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.1.disabled",
+            "equals": false
+          }
+        ],
+        "actions": [
+          {
+            "target": "client1",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true
+            },
+            "everySeconds": 20
+          },
+          {
+            "target": "client2",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true
+            },
+            "everySeconds": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sortie 2: Native server confirms rockets consumed on both aircraft",
+      "target": "server",
+      "timeout": 10,
+      "expect": [
+        {
+          "path": "players.0.weapons.2.ammo",
+          "atMost": 7
+        },
+        {
+          "path": "players.1.weapons.2.ammo",
+          "atMost": 7
+        }
+      ],
+      "capture": "sortie-2-end"
+    },
+    {
+      "name": "Sortie 2: Client 1 ejects during flight",
+      "target": "client1",
+      "command": "eject"
+    },
+    {
+      "name": "Sortie 2: Client 2 ejects during flight",
+      "target": "client2",
+      "command": "eject"
+    },
+    {
+      "name": "Sortie 2: Native server confirms both aircraft abandoned",
+      "target": "server",
+      "timeout": 60,
+      "expect": [
+        {
+          "path": "players.0.disabled",
+          "equals": true
+        },
+        {
+          "path": "players.1.disabled",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "Sortie 2: Client 1 requests a normal reserve replacement",
+      "target": "client1",
+      "command": "reserve"
+    },
+    {
+      "name": "Sortie 2: Client 1 receives replacement inventory",
+      "target": "client1",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerOwnedCount",
+          "atLeast": 1
+        }
+      ]
+    },
+    {
+      "name": "Sortie 2: Client 2 requests a normal reserve replacement",
+      "target": "client2",
+      "command": "reserve"
+    },
+    {
+      "name": "Sortie 2: Client 2 receives replacement inventory",
+      "target": "client2",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerOwnedCount",
+          "atLeast": 1
+        }
+      ]
+    },
+    {
+      "name": "Sortie 2: Client 1 starts replacement spawn through normal request",
+      "target": "client1",
+      "command": "spawn",
+      "args": {
+        "airbase": "Sandrift Airbase"
+      }
+    },
+    {
+      "name": "Sortie 2: Client 2 starts replacement spawn through normal request",
+      "target": "client2",
+      "command": "spawn",
+      "args": {
+        "airbase": "Maris Airport"
+      }
+    },
+    {
+      "name": "Sortie 2: Native server confirms new airframes and unchanged player identities",
+      "target": "server",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "remotePlayers",
+          "equals": 2
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "notEqualsSaved": {
+            "capture": "sortie-2-end",
+            "path": "players.0.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.0.netId",
+          "equalsSaved": {
+            "capture": "sortie-2-end",
+            "path": "players.0.netId"
+          }
+        },
+        {
+          "path": "players.0.disabled",
+          "equals": false
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "notEqualsSaved": {
+            "capture": "sortie-2-end",
+            "path": "players.1.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.netId",
+          "equalsSaved": {
+            "capture": "sortie-2-end",
+            "path": "players.1.netId"
+          }
+        },
+        {
+          "path": "players.1.disabled",
+          "equals": false
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sortie 2: Client 1 starts replacement engine",
+      "target": "client1",
+      "command": "engine",
+      "args": {
+        "on": true
+      }
+    },
+    {
+      "name": "Sortie 2: Client 2 starts replacement engine",
+      "target": "client2",
+      "command": "engine",
+      "args": {
+        "on": true
+      }
+    },
+    {
+      "name": "Sortie 3: Both clients steer, taxi and attempt takeoff for three minutes",
+      "target": "server",
+      "observe": {
+        "seconds": 180,
+        "expect": [
+          {
+            "equals": 2,
+            "path": "remotePlayers"
+          },
+          {
+            "notNull": true,
+            "path": "players.0.aircraftNetId"
+          },
+          {
+            "notNull": true,
+            "path": "players.1.aircraftNetId"
+          },
+          {
+            "equals": false,
+            "path": "players.0.disabled"
+          },
+          {
+            "equals": false,
+            "path": "players.1.disabled"
+          }
+        ],
+        "motion": [
+          {
+            "minimumMetres": 100,
+            "path": "players.0"
+          },
+          {
+            "minimumMetres": 100,
+            "path": "players.1"
+          }
+        ],
+        "actions": [
+          {
+            "command": "fly",
+            "target": "client1",
+            "args": {
+              "seconds": 45
+            },
+            "everySeconds": 20
+          },
+          {
+            "command": "fly",
+            "target": "client2",
+            "args": {
+              "seconds": 45
+            },
+            "everySeconds": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sortie 3: Server confirms both aircraft are airborne",
+      "target": "server",
+      "timeout": 10,
+      "expect": [
+        {
+          "atLeast": 80,
+          "path": "players.0.radarAltitude"
+        },
+        {
+          "atLeast": 80,
+          "path": "players.1.radarAltitude"
+        }
+      ]
+    },
+    {
+      "target": "server",
+      "expect": [
+        {
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.0.aircraftNetId"
+        },
+        {
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.1.aircraftNetId"
+        }
+      ],
+      "name": "Sortie 3: Capture matched aircraft before sustained flight",
+      "capture": "sortie-3-airframes"
+    },
+    {
+      "name": "Sortie 3: Sustained multiplayer flight and gun firing",
+      "target": "server",
+      "observe": {
+        "seconds": 180,
+        "expect": [
+          {
+            "path": "remotePlayers",
+            "equals": 2
+          },
+          {
+            "path": "mission",
+            "equals": "Escalation"
+          },
+          {
+            "path": "missionRunning",
+            "equals": true
+          },
+          {
+            "path": "players.0.aircraftNetId",
+            "notNull": true
+          },
+          {
+            "path": "players.0.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.1.aircraftNetId",
+            "notNull": true
+          },
+          {
+            "path": "players.1.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.0.radarAltitude",
+            "atLeast": 80
+          },
+          {
+            "path": "players.0.speed",
+            "atLeast": 50
+          },
+          {
+            "path": "players.1.radarAltitude",
+            "atLeast": 80
+          },
+          {
+            "path": "players.1.speed",
+            "atLeast": 50
+          }
+        ],
+        "motion": [
+          {
+            "path": "players.0",
+            "minimumMetres": 100
+          },
+          {
+            "path": "players.1",
+            "minimumMetres": 100
+          }
+        ],
+        "actions": [
+          {
+            "target": "client1",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true,
+              "fireSeconds": 0.5
+            },
+            "everySeconds": 20
+          },
+          {
+            "target": "client2",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true,
+              "fireSeconds": 0.5
+            },
+            "everySeconds": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sortie 3: Confirm same aircraft and gun ammunition consumed",
+      "target": "server",
+      "expect": [
+        {
+          "path": "players.0.netId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerNetId"
+          }
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          }
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "equalsSaved": {
+            "capture": "sortie-3-airframes",
+            "path": "players.0.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.0.weapons.0.ammo",
+          "atMost": 999
+        },
+        {
+          "path": "players.0.weapons.0.ammo",
+          "atLeast": 1
+        },
+        {
+          "path": "players.1.netId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerNetId"
+          }
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "equalsSaved": {
+            "capture": "sortie-3-airframes",
+            "path": "players.1.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "atMost": 999
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "atLeast": 1
+        }
+      ],
+      "timeout": 120
+    },
+    {
+      "name": "Sortie 3: Client 1 selects next weapon normally",
+      "target": "client1",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 3: Client 1 selects rocket station normally",
+      "target": "client1",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 3: Client 1 confirms selected rocket station",
+      "target": "client1",
+      "expect": [
+        {
+          "path": "players.0.weapons.2.selected",
+          "equals": true
+        },
+        {
+          "path": "players.0.weapons.2.name",
+          "equals": "AGR-24 Kingpin"
+        }
+      ]
+    },
+    {
+      "name": "Sortie 3: Client 2 selects next weapon normally",
+      "target": "client2",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 3: Client 2 selects rocket station normally",
+      "target": "client2",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 3: Client 2 confirms selected rocket station",
+      "target": "client2",
+      "expect": [
+        {
+          "path": "players.1.weapons.2.selected",
+          "equals": true
+        },
+        {
+          "path": "players.1.weapons.2.name",
+          "equals": "AGR-24 Kingpin"
+        }
+      ]
+    },
+    {
+      "name": "Sortie 3: Both native clients fly and fire rockets for thirty seconds",
+      "target": "server",
+      "observe": {
+        "seconds": 30,
+        "expect": [
+          {
+            "path": "remotePlayers",
+            "equals": 2
+          },
+          {
+            "path": "players.0.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.1.disabled",
+            "equals": false
+          }
+        ],
+        "actions": [
+          {
+            "target": "client1",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true
+            },
+            "everySeconds": 20
+          },
+          {
+            "target": "client2",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true
+            },
+            "everySeconds": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sortie 3: Native server confirms rockets consumed on both aircraft",
+      "target": "server",
+      "timeout": 10,
+      "expect": [
+        {
+          "path": "players.0.weapons.2.ammo",
+          "atMost": 7
+        },
+        {
+          "path": "players.1.weapons.2.ammo",
+          "atMost": 7
+        }
+      ],
+      "capture": "sortie-3-end"
+    },
+    {
+      "name": "Sortie 3: Client 1 ejects during flight",
+      "target": "client1",
+      "command": "eject"
+    },
+    {
+      "name": "Sortie 3: Client 2 ejects during flight",
+      "target": "client2",
+      "command": "eject"
+    },
+    {
+      "name": "Sortie 3: Native server confirms both aircraft abandoned",
+      "target": "server",
+      "timeout": 60,
+      "expect": [
+        {
+          "path": "players.0.disabled",
+          "equals": true
+        },
+        {
+          "path": "players.1.disabled",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "Sortie 3: Client 1 requests a normal reserve replacement",
+      "target": "client1",
+      "command": "reserve"
+    },
+    {
+      "name": "Sortie 3: Client 1 receives replacement inventory",
+      "target": "client1",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerOwnedCount",
+          "atLeast": 1
+        }
+      ]
+    },
+    {
+      "name": "Sortie 3: Client 2 requests a normal reserve replacement",
+      "target": "client2",
+      "command": "reserve"
+    },
+    {
+      "name": "Sortie 3: Client 2 receives replacement inventory",
+      "target": "client2",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerOwnedCount",
+          "atLeast": 1
+        }
+      ]
+    },
+    {
+      "name": "Sortie 3: Client 1 starts replacement spawn through normal request",
+      "target": "client1",
+      "command": "spawn",
+      "args": {
+        "airbase": "Sandrift Airbase"
+      }
+    },
+    {
+      "name": "Sortie 3: Client 2 starts replacement spawn through normal request",
+      "target": "client2",
+      "command": "spawn",
+      "args": {
+        "airbase": "Maris Airport"
+      }
+    },
+    {
+      "name": "Sortie 3: Native server confirms new airframes and unchanged player identities",
+      "target": "server",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "remotePlayers",
+          "equals": 2
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "notEqualsSaved": {
+            "capture": "sortie-3-end",
+            "path": "players.0.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.0.netId",
+          "equalsSaved": {
+            "capture": "sortie-3-end",
+            "path": "players.0.netId"
+          }
+        },
+        {
+          "path": "players.0.disabled",
+          "equals": false
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "notEqualsSaved": {
+            "capture": "sortie-3-end",
+            "path": "players.1.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.netId",
+          "equalsSaved": {
+            "capture": "sortie-3-end",
+            "path": "players.1.netId"
+          }
+        },
+        {
+          "path": "players.1.disabled",
+          "equals": false
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sortie 3: Client 1 starts replacement engine",
+      "target": "client1",
+      "command": "engine",
+      "args": {
+        "on": true
+      }
+    },
+    {
+      "name": "Sortie 3: Client 2 starts replacement engine",
+      "target": "client2",
+      "command": "engine",
+      "args": {
+        "on": true
+      }
+    },
+    {
+      "name": "Sortie 4: Both clients steer, taxi and attempt takeoff for three minutes",
+      "target": "server",
+      "observe": {
+        "seconds": 180,
+        "expect": [
+          {
+            "equals": 2,
+            "path": "remotePlayers"
+          },
+          {
+            "notNull": true,
+            "path": "players.0.aircraftNetId"
+          },
+          {
+            "notNull": true,
+            "path": "players.1.aircraftNetId"
+          },
+          {
+            "equals": false,
+            "path": "players.0.disabled"
+          },
+          {
+            "equals": false,
+            "path": "players.1.disabled"
+          }
+        ],
+        "motion": [
+          {
+            "minimumMetres": 100,
+            "path": "players.0"
+          },
+          {
+            "minimumMetres": 100,
+            "path": "players.1"
+          }
+        ],
+        "actions": [
+          {
+            "command": "fly",
+            "target": "client1",
+            "args": {
+              "seconds": 45
+            },
+            "everySeconds": 20
+          },
+          {
+            "command": "fly",
+            "target": "client2",
+            "args": {
+              "seconds": 45
+            },
+            "everySeconds": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sortie 4: Server confirms both aircraft are airborne",
+      "target": "server",
+      "timeout": 10,
+      "expect": [
+        {
+          "atLeast": 80,
+          "path": "players.0.radarAltitude"
+        },
+        {
+          "atLeast": 80,
+          "path": "players.1.radarAltitude"
+        }
+      ]
+    },
+    {
+      "target": "server",
+      "expect": [
+        {
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.0.aircraftNetId"
+        },
+        {
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.1.aircraftNetId"
+        }
+      ],
+      "name": "Sortie 4: Capture matched aircraft before sustained flight",
+      "capture": "sortie-4-airframes"
+    },
+    {
+      "name": "Sortie 4: Sustained multiplayer flight and gun firing",
+      "target": "server",
+      "observe": {
+        "seconds": 180,
+        "expect": [
+          {
+            "path": "remotePlayers",
+            "equals": 2
+          },
+          {
+            "path": "mission",
+            "equals": "Escalation"
+          },
+          {
+            "path": "missionRunning",
+            "equals": true
+          },
+          {
+            "path": "players.0.aircraftNetId",
+            "notNull": true
+          },
+          {
+            "path": "players.0.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.1.aircraftNetId",
+            "notNull": true
+          },
+          {
+            "path": "players.1.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.0.radarAltitude",
+            "atLeast": 80
+          },
+          {
+            "path": "players.0.speed",
+            "atLeast": 50
+          },
+          {
+            "path": "players.1.radarAltitude",
+            "atLeast": 80
+          },
+          {
+            "path": "players.1.speed",
+            "atLeast": 50
+          }
+        ],
+        "motion": [
+          {
+            "path": "players.0",
+            "minimumMetres": 100
+          },
+          {
+            "path": "players.1",
+            "minimumMetres": 100
+          }
+        ],
+        "actions": [
+          {
+            "target": "client1",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true,
+              "fireSeconds": 0.5
+            },
+            "everySeconds": 20
+          },
+          {
+            "target": "client2",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true,
+              "fireSeconds": 0.5
+            },
+            "everySeconds": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sortie 4: Confirm same aircraft and gun ammunition consumed",
+      "target": "server",
+      "expect": [
+        {
+          "path": "players.0.netId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerNetId"
+          }
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          }
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "equalsSaved": {
+            "capture": "sortie-4-airframes",
+            "path": "players.0.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.0.weapons.0.ammo",
+          "atMost": 999
+        },
+        {
+          "path": "players.0.weapons.0.ammo",
+          "atLeast": 1
+        },
+        {
+          "path": "players.1.netId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerNetId"
+          }
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "equalsSaved": {
+            "capture": "sortie-4-airframes",
+            "path": "players.1.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "atMost": 999
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "atLeast": 1
+        }
+      ],
+      "timeout": 120
+    },
+    {
+      "name": "Sortie 4: Client 1 selects next weapon normally",
+      "target": "client1",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 4: Client 1 selects rocket station normally",
+      "target": "client1",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 4: Client 1 confirms selected rocket station",
+      "target": "client1",
+      "expect": [
+        {
+          "path": "players.0.weapons.2.selected",
+          "equals": true
+        },
+        {
+          "path": "players.0.weapons.2.name",
+          "equals": "AGR-24 Kingpin"
+        }
+      ]
+    },
+    {
+      "name": "Sortie 4: Client 2 selects next weapon normally",
+      "target": "client2",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 4: Client 2 selects rocket station normally",
+      "target": "client2",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 4: Client 2 confirms selected rocket station",
+      "target": "client2",
+      "expect": [
+        {
+          "path": "players.1.weapons.2.selected",
+          "equals": true
+        },
+        {
+          "path": "players.1.weapons.2.name",
+          "equals": "AGR-24 Kingpin"
+        }
+      ]
+    },
+    {
+      "name": "Sortie 4: Both native clients fly and fire rockets for thirty seconds",
+      "target": "server",
+      "observe": {
+        "seconds": 30,
+        "expect": [
+          {
+            "path": "remotePlayers",
+            "equals": 2
+          },
+          {
+            "path": "players.0.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.1.disabled",
+            "equals": false
+          }
+        ],
+        "actions": [
+          {
+            "target": "client1",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true
+            },
+            "everySeconds": 20
+          },
+          {
+            "target": "client2",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true
+            },
+            "everySeconds": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sortie 4: Native server confirms rockets consumed on both aircraft",
+      "target": "server",
+      "timeout": 10,
+      "expect": [
+        {
+          "path": "players.0.weapons.2.ammo",
+          "atMost": 7
+        },
+        {
+          "path": "players.1.weapons.2.ammo",
+          "atMost": 7
+        }
+      ],
+      "capture": "sortie-4-end"
+    },
+    {
+      "name": "Sortie 4: Client 1 ejects during flight",
+      "target": "client1",
+      "command": "eject"
+    },
+    {
+      "name": "Sortie 4: Client 2 ejects during flight",
+      "target": "client2",
+      "command": "eject"
+    },
+    {
+      "name": "Sortie 4: Native server confirms both aircraft abandoned",
+      "target": "server",
+      "timeout": 60,
+      "expect": [
+        {
+          "path": "players.0.disabled",
+          "equals": true
+        },
+        {
+          "path": "players.1.disabled",
+          "equals": true
+        }
+      ]
+    },
+    {
+      "name": "Sortie 4: Client 1 requests a normal reserve replacement",
+      "target": "client1",
+      "command": "reserve"
+    },
+    {
+      "name": "Sortie 4: Client 1 receives replacement inventory",
+      "target": "client1",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerOwnedCount",
+          "atLeast": 1
+        }
+      ]
+    },
+    {
+      "name": "Sortie 4: Client 2 requests a normal reserve replacement",
+      "target": "client2",
+      "command": "reserve"
+    },
+    {
+      "name": "Sortie 4: Client 2 receives replacement inventory",
+      "target": "client2",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "localPlayerOwnedCount",
+          "atLeast": 1
+        }
+      ]
+    },
+    {
+      "name": "Sortie 4: Client 1 starts replacement spawn through normal request",
+      "target": "client1",
+      "command": "spawn",
+      "args": {
+        "airbase": "Sandrift Airbase"
+      }
+    },
+    {
+      "name": "Sortie 4: Client 2 starts replacement spawn through normal request",
+      "target": "client2",
+      "command": "spawn",
+      "args": {
+        "airbase": "Maris Airport"
+      }
+    },
+    {
+      "name": "Sortie 4: Native server confirms new airframes and unchanged player identities",
+      "target": "server",
+      "timeout": 120,
+      "expect": [
+        {
+          "path": "remotePlayers",
+          "equals": 2
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "notEqualsSaved": {
+            "capture": "sortie-4-end",
+            "path": "players.0.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.0.netId",
+          "equalsSaved": {
+            "capture": "sortie-4-end",
+            "path": "players.0.netId"
+          }
+        },
+        {
+          "path": "players.0.disabled",
+          "equals": false
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "notEqualsSaved": {
+            "capture": "sortie-4-end",
+            "path": "players.1.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.netId",
+          "equalsSaved": {
+            "capture": "sortie-4-end",
+            "path": "players.1.netId"
+          }
+        },
+        {
+          "path": "players.1.disabled",
+          "equals": false
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sortie 4: Client 1 starts replacement engine",
+      "target": "client1",
+      "command": "engine",
+      "args": {
+        "on": true
+      }
+    },
+    {
+      "name": "Sortie 4: Client 2 starts replacement engine",
+      "target": "client2",
+      "command": "engine",
+      "args": {
+        "on": true
+      }
+    },
+    {
+      "name": "Sortie 5: Both clients steer, taxi and attempt takeoff for three minutes",
+      "target": "server",
+      "observe": {
+        "seconds": 180,
+        "expect": [
+          {
+            "equals": 2,
+            "path": "remotePlayers"
+          },
+          {
+            "notNull": true,
+            "path": "players.0.aircraftNetId"
+          },
+          {
+            "notNull": true,
+            "path": "players.1.aircraftNetId"
+          },
+          {
+            "equals": false,
+            "path": "players.0.disabled"
+          },
+          {
+            "equals": false,
+            "path": "players.1.disabled"
+          }
+        ],
+        "motion": [
+          {
+            "minimumMetres": 100,
+            "path": "players.0"
+          },
+          {
+            "minimumMetres": 100,
+            "path": "players.1"
+          }
+        ],
+        "actions": [
+          {
+            "command": "fly",
+            "target": "client1",
+            "args": {
+              "seconds": 45
+            },
+            "everySeconds": 20
+          },
+          {
+            "command": "fly",
+            "target": "client2",
+            "args": {
+              "seconds": 45
+            },
+            "everySeconds": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sortie 5: Server confirms both aircraft are airborne",
+      "target": "server",
+      "timeout": 10,
+      "expect": [
+        {
+          "atLeast": 80,
+          "path": "players.0.radarAltitude"
+        },
+        {
+          "atLeast": 80,
+          "path": "players.1.radarAltitude"
+        }
+      ]
+    },
+    {
+      "target": "server",
+      "expect": [
+        {
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.0.aircraftNetId"
+        },
+        {
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          },
+          "path": "players.1.aircraftNetId"
+        }
+      ],
+      "name": "Sortie 5: Capture matched aircraft before sustained flight",
+      "capture": "sortie-5-airframes"
+    },
+    {
+      "name": "Sortie 5: Sustained multiplayer flight and gun firing",
+      "target": "server",
+      "observe": {
+        "seconds": 180,
+        "expect": [
+          {
+            "path": "remotePlayers",
+            "equals": 2
+          },
+          {
+            "path": "mission",
+            "equals": "Escalation"
+          },
+          {
+            "path": "missionRunning",
+            "equals": true
+          },
+          {
+            "path": "players.0.aircraftNetId",
+            "notNull": true
+          },
+          {
+            "path": "players.0.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.1.aircraftNetId",
+            "notNull": true
+          },
+          {
+            "path": "players.1.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.0.radarAltitude",
+            "atLeast": 80
+          },
+          {
+            "path": "players.0.speed",
+            "atLeast": 50
+          },
+          {
+            "path": "players.1.radarAltitude",
+            "atLeast": 80
+          },
+          {
+            "path": "players.1.speed",
+            "atLeast": 50
+          }
+        ],
+        "motion": [
+          {
+            "path": "players.0",
+            "minimumMetres": 100
+          },
+          {
+            "path": "players.1",
+            "minimumMetres": 100
+          }
+        ],
+        "actions": [
+          {
+            "target": "client1",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true,
+              "fireSeconds": 0.5
+            },
+            "everySeconds": 20
+          },
+          {
+            "target": "client2",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true,
+              "fireSeconds": 0.5
+            },
+            "everySeconds": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sortie 5: Confirm same aircraft and gun ammunition consumed",
+      "target": "server",
+      "expect": [
+        {
+          "path": "players.0.netId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerNetId"
+          }
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "equalsFrom": {
+            "target": "client1",
+            "path": "localPlayerAircraftNetId"
+          }
+        },
+        {
+          "path": "players.0.aircraftNetId",
+          "equalsSaved": {
+            "capture": "sortie-5-airframes",
+            "path": "players.0.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.0.weapons.0.ammo",
+          "atMost": 999
+        },
+        {
+          "path": "players.0.weapons.0.ammo",
+          "atLeast": 1
+        },
+        {
+          "path": "players.1.netId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerNetId"
+          }
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "equalsFrom": {
+            "target": "client2",
+            "path": "localPlayerAircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.aircraftNetId",
+          "equalsSaved": {
+            "capture": "sortie-5-airframes",
+            "path": "players.1.aircraftNetId"
+          }
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "atMost": 999
+        },
+        {
+          "path": "players.1.weapons.0.ammo",
+          "atLeast": 1
+        }
+      ],
+      "timeout": 120
+    },
+    {
+      "name": "Sortie 5: Client 1 selects next weapon normally",
+      "target": "client1",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 5: Client 1 selects rocket station normally",
+      "target": "client1",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 5: Client 1 confirms selected rocket station",
+      "target": "client1",
+      "expect": [
+        {
+          "path": "players.0.weapons.2.selected",
+          "equals": true
+        },
+        {
+          "path": "players.0.weapons.2.name",
+          "equals": "AGR-24 Kingpin"
+        }
+      ]
+    },
+    {
+      "name": "Sortie 5: Client 2 selects next weapon normally",
+      "target": "client2",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 5: Client 2 selects rocket station normally",
+      "target": "client2",
+      "command": "next-weapon"
+    },
+    {
+      "name": "Sortie 5: Client 2 confirms selected rocket station",
+      "target": "client2",
+      "expect": [
+        {
+          "path": "players.1.weapons.2.selected",
+          "equals": true
+        },
+        {
+          "path": "players.1.weapons.2.name",
+          "equals": "AGR-24 Kingpin"
+        }
+      ]
+    },
+    {
+      "name": "Sortie 5: Both native clients fly and fire rockets for thirty seconds",
+      "target": "server",
+      "observe": {
+        "seconds": 30,
+        "expect": [
+          {
+            "path": "remotePlayers",
+            "equals": 2
+          },
+          {
+            "path": "players.0.disabled",
+            "equals": false
+          },
+          {
+            "path": "players.1.disabled",
+            "equals": false
+          }
+        ],
+        "actions": [
+          {
+            "target": "client1",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true
+            },
+            "everySeconds": 20
+          },
+          {
+            "target": "client2",
+            "command": "fly",
+            "args": {
+              "seconds": 45,
+              "fire": true
+            },
+            "everySeconds": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sortie 5: Native server confirms rockets consumed on both aircraft",
+      "target": "server",
+      "timeout": 10,
+      "expect": [
+        {
+          "path": "players.0.weapons.2.ammo",
+          "atMost": 7
+        },
+        {
+          "path": "players.1.weapons.2.ammo",
+          "atMost": 7
+        }
+      ],
+      "capture": "sortie-5-end"
+    }
+  ]
+}

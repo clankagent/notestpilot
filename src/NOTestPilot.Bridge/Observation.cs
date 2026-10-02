@@ -20,6 +20,10 @@ internal static class Observation
     private static readonly Process process = Process.GetCurrentProcess();
     private static readonly Dictionary<uint, float> lastDamage = new Dictionary<uint, float>();
     private static readonly Dictionary<uint, object> firstAirborneContacts = new Dictionary<uint, object>();
+    // One physics step can emit more than the rolling queue's 64 entries.
+    // Retain the initiating damage/joint event independently of that burst.
+    private static readonly Dictionary<string, object> firstDamageEvents = new Dictionary<string, object>();
+    private static readonly Queue<string> firstDamageKeys = new Queue<string>();
     private static readonly Queue<object> sceneLoadEvents = new Queue<object>();
     private static long mapTypeChecks;
 
@@ -44,6 +48,10 @@ internal static class Observation
             prefix: new HarmonyMethod(typeof(Observation), nameof(JointsEvent)));
         harmony.Patch(AccessTools.Method(typeof(UnitPart), "OnJointBreak"),
             prefix: new HarmonyMethod(typeof(Observation), nameof(JointBreakEvent)));
+        harmony.Patch(AccessTools.Method(typeof(UnitPart), "TakeDamage"),
+            prefix: new HarmonyMethod(typeof(Observation), nameof(PartTakeDamageEvent)));
+        harmony.Patch(AccessTools.Method(typeof(UnitPart), "ApplyDamage"),
+            prefix: new HarmonyMethod(typeof(Observation), nameof(PartApplyDamageEvent)));
     }
 
     private static void SceneLoadEvent()
@@ -110,7 +118,49 @@ internal static class Observation
     private static void JointBreakEvent(UnitPart __instance, float breakForce)
     {
         if (__instance.parentUnit is Aircraft aircraft && aircraft.Player != null)
-            Record(aircraft, "OnJointBreak", new { breakForce, part = PartSnapshot(__instance) });
+        {
+            var recorded = Record(aircraft, "OnJointBreak", new { breakForce, part = PartSnapshot(__instance) });
+            RetainFirst(aircraft, "OnJointBreak", recorded);
+        }
+    }
+
+    private static bool HasFirst(Aircraft aircraft, string kind)
+        => firstDamageEvents.ContainsKey(aircraft.NetId + ":" + kind);
+
+    private static void RetainFirst(Aircraft aircraft, string kind, object recorded)
+    {
+        if (recorded == null || HasFirst(aircraft, kind)) return;
+        string key = aircraft.NetId + ":" + kind;
+        firstDamageEvents.Add(key, recorded);
+        firstDamageKeys.Enqueue(key);
+        while (firstDamageKeys.Count > 64) firstDamageEvents.Remove(firstDamageKeys.Dequeue());
+    }
+
+    private static void PartTakeDamageEvent(UnitPart __instance, float pierceDamage, float blastDamage,
+        float amountAffected, float fireDamage, float impactDamage, PersistentID dealerID)
+    {
+        if (!(__instance.parentUnit is Aircraft aircraft) || aircraft.Player == null
+            || HasFirst(aircraft, "PartTakeDamage")
+            || !(pierceDamage > 0 || blastDamage > 0 || fireDamage > 0 || impactDamage > 0)) return;
+        // Incoming values precede armor calculations. This records the caller;
+        // the original method still decides whether any damage is applied.
+        RetainFirst(aircraft, "PartTakeDamage", Record(aircraft, "PartTakeDamage", new {
+            part = PartSnapshot(__instance), pierceDamage, blastDamage, amountAffected, fireDamage,
+            impactDamage, dealerValid = dealerID.IsValid, dealerIsSelf = dealerID == aircraft.persistentID }));
+    }
+
+    private static void PartApplyDamageEvent(UnitPart __instance, float netPierceDamage, float netBlastDamage,
+        float netFireDamage, float netImpactDamage)
+    {
+        if (!(__instance.parentUnit is Aircraft aircraft) || aircraft.Player == null) return;
+        float total = netPierceDamage + netBlastDamage + netFireDamage + netImpactDamage;
+        if (!(total > 0)) return;
+        bool destructive = total >= Math.Max(1f, __instance.hitPoints);
+        string kind = destructive ? "DestructivePartApplyDamage" : "PartApplyDamage";
+        if (HasFirst(aircraft, kind)) return;
+        RetainFirst(aircraft, kind, Record(aircraft, kind, new {
+            part = PartSnapshot(__instance), netPierceDamage, netBlastDamage, netFireDamage,
+            netImpactDamage, hitPointsBefore = __instance.hitPoints, predictedHitPointsAfter = __instance.hitPoints - total }));
     }
 
     private static object PartSnapshot(UnitPart part)
@@ -195,6 +245,7 @@ internal static class Observation
         return new {
         eventCount = sequence, events = events.ToArray(),
         firstAirborneContacts = firstAirborneContacts.Values.ToArray(),
+        firstDamageEvents = firstDamageEvents.Values.ToArray(),
         mapTypeChecks, sceneLoadEvents = sceneLoadEvents.ToArray(),
         // Cumulative samples include loading/menu time. Runner uses window deltas.
         frames, fixedSteps, frameBuckets = frameBuckets.ToArray(), maximumFrameMs,
