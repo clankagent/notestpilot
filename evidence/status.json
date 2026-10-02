@@ -8,17 +8,17 @@
     "linux_assembly_sha256": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a"
   },
   "runner_unit_tests": {
-    "passed": 49,
+    "passed": 52,
     "platforms": [
-      "Linux Python3.14:49 passed",
+      "Linux CI Python3.12 and3.14:52 passed",
       "Windows Python3.12:51 passed of 52 tests, POSIX signal test skipped",
-      "CI latest public commit:43 passed before this change"
+      "Linux CI verified commit d3886b7234f66f903d6704d4ce38a55a930a170a:52 passed"
     ],
     "scope": "test tooling, not game behaviour",
     "previous_remote_linux_passed": 30,
     "latest_ci_passed_before_pause_checkpoint": 35,
     "latest_remote_linux_passed": 49,
-    "latest_ci_passed": 43,
+    "latest_ci_passed": 52,
     "windows_passed": 51,
     "windows_skipped": 1
   },
