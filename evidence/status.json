@@ -1,5 +1,5 @@
 {
-  "checkpoint": "2026-10-02: evidence-gated combat-loss branch added; first remote attempt stopped on an airbrake animation exception",
+  "checkpoint": "2026-10-02: bounded loading-lifetime trace verified in five real game processes; intermittent loading failure remains unresolved",
   "game": {
     "version": "0.34.1",
     "steam_build": 24724541,
@@ -11,7 +11,7 @@
     "passed": 49,
     "platforms": [
       "Linux Python3.14:49 passed",
-      "Windows Python3.12:48 passed, POSIX signal test skipped",
+      "Windows Python3.12:51 passed of 52 tests, POSIX signal test skipped",
       "CI latest public commit:43 passed before this change"
     ],
     "scope": "test tooling, not game behaviour",
@@ -19,7 +19,7 @@
     "latest_ci_passed_before_pause_checkpoint": 35,
     "latest_remote_linux_passed": 49,
     "latest_ci_passed": 43,
-    "windows_passed": 48,
+    "windows_passed": 51,
     "windows_skipped": 1
   },
   "bridge": {
@@ -8264,6 +8264,24 @@
     "latest_native_recovery_fifth_airborne_gate": "verified missile loss after 58.03 of 60 seconds; normal ejection and replacement passed; fifth gun-flight and rocket phases omitted",
     "planned_five_sorties_completed": false,
     "latest_run_missile_damage_observed_before_speed_failure": true
+  },
+  "scene_lifecycle_diagnostic": {
+    "optional": true,
+    "default_enabled": false,
+    "game_processes": 5,
+    "independent_udp_clients": 4,
+    "activation_verified_in_all_roles": true,
+    "trainer_removal_scheduling_observed": true,
+    "matching_incoming_removal_observed_in_all_clients": true,
+    "observer_failures": 0,
+    "event_overflow": 0,
+    "skipped_correlation_attempts": 0,
+    "diagnostic_run_outcome": "Takeoff survival check failed after externally caused missile damage; the failure is retained",
+    "separate_completed_diagnostic": "Four clients completed five minutes of flight and gun bursts with the earlier lifetime observer",
+    "loading_failure_fixed": false,
+    "performance_comparison_eligible": false,
+    "retail_steam_coverage": false,
+    "details": "../docs/scene-diagnostics.md"
   },
   "combat_loss_branch": {
     "experimental": true,

@@ -29,6 +29,7 @@ internal static class Observation
 
     internal static void Install(Harmony harmony)
     {
+        SceneLifecycleTrace.Install(harmony);
         harmony.Patch(AccessTools.Method(typeof(NuclearOption.SavedMission.Mission), "OnSceneLoaded"),
             prefix: new HarmonyMethod(typeof(Observation), nameof(SceneLoadEvent)));
         harmony.Patch(AccessTools.Method(typeof(NuclearOption.SceneLoading.MapLoader), "GetObjectType"),
@@ -246,7 +247,7 @@ internal static class Observation
         eventCount = sequence, events = events.ToArray(),
         firstAirborneContacts = firstAirborneContacts.Values.ToArray(),
         firstDamageEvents = firstDamageEvents.Values.ToArray(),
-        mapTypeChecks, sceneLoadEvents = sceneLoadEvents.ToArray(),
+        mapTypeChecks, sceneLoadEvents = sceneLoadEvents.ToArray(), sceneLifecycleTrace = SceneLifecycleTrace.Snapshot(),
         // Cumulative samples include loading/menu time. Runner uses window deltas.
         frames, fixedSteps, frameBuckets = frameBuckets.ToArray(), maximumFrameMs,
         realtimeSeconds = Time.realtimeSinceStartup,

@@ -39,10 +39,11 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Performance-mod comparison | One complete baseline/Spatial pair; no whole-server gain established. Earlier failures retained |
 | Five-sortie aging workload | Four full sorties completed. An enemy missile interrupted the fifth; its remaining firing checks were skipped and recorded |
 | Automatic reaction to missile damage | One live pass verified missile damage triggered normal ejection and replacement, with the same players receiving new aircraft. Repeated recovery remains unverified |
+| Loading-lifetime diagnostic | Captured trainer removal scheduling and matching network removal on all four clients. The intermittent loading failure remains unresolved |
 | Long multiplayer sessions | Not verified |
 
-The runner also has **49 automated tests** (all pass on Linux; 48 pass on Windows
-with the POSIX signal test skipped). These protect the testing tool;
+The runner also has **52 automated tests** (51 pass on Windows, with the POSIX
+signal test skipped; the previous Linux check passed 49 tests). These protect the testing tool;
 they do not count as game tests. See [the evidence summary](evidence/status.json).
 
 The [interactive resource report](https://clankagent.github.io/noperf/resource-report.html)
@@ -153,6 +154,7 @@ leaves the original network update running.
 - [How commands reach the game](docs/control.md)
 - [What passes and failures mean](docs/testing.md)
 - [Build and remote-lab setup](docs/development.md)
+- [Optional loading diagnostics](docs/scene-diagnostics.md)
 
 No game binaries or decompiled source are included. Unofficial; not affiliated
 with Shockfront Studios. Use the bridge only in disposable test processes. It is
