@@ -28,6 +28,55 @@ POLICY = {"resumeAt": "Eject", "actors": [{"target": "client", "playerPath": "pl
 
 
 class CombatRecoveryTests(unittest.TestCase):
+    def test_async_missile_callback_requires_exact_build(self):
+        states = damage_fixture()
+        states["server"]["assemblySha256"] = "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a"
+        states["server"]["observation"]["firstDamageEvents"][0]["callers"] = [
+            "DamageEffects.BlastFrag", "Missile+<ExplosionForceOnPhysicsFrame>d__141.MoveNext"]
+        self.assertIsNotNone(verified_missile_loss(states, ASSERTIONS, POLICY))
+        for build in (None, "unverified-build"):
+            with self.subTest(build=build):
+                changed = copy.deepcopy(states)
+                changed["server"]["assemblySha256"] = build
+                self.assertIsNone(verified_missile_loss(changed, ASSERTIONS, POLICY))
+        legacy = damage_fixture()
+        legacy["server"]["assemblySha256"] = "unverified-build"
+        self.assertIsNotNone(verified_missile_loss(legacy, ASSERTIONS, POLICY))
+
+    def test_async_missile_callback_rejects_unrelated_or_other_ordinal_calls(self):
+        for caller in ("Missile+<UnfoldFins>d__130.MoveNext",
+                       "Missile+<ExplosionForceOnPhysicsFrame>d__142.MoveNext",
+                       "Other+<ExplosionForceOnPhysicsFrame>d__141.MoveNext",
+                       "DamageEffects.BlastFrag"):
+            with self.subTest(caller=caller):
+                states = damage_fixture()
+                states["server"]["assemblySha256"] = "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a"
+                states["server"]["observation"]["firstDamageEvents"][0]["callers"] = [caller]
+                self.assertIsNone(verified_missile_loss(states, ASSERTIONS, POLICY))
+
+    def test_async_callback_keeps_dealer_replication_and_capture_gates(self):
+        original = damage_fixture()
+        original["server"]["assemblySha256"] = "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a"
+        original["server"]["observation"]["firstDamageEvents"][0]["callers"] = [
+            "Missile+<ExplosionForceOnPhysicsFrame>d__141.MoveNext"]
+        for mode in ("self", "invalid", "missing-replication", "wrong-part", "wrong-hp",
+                     "wrong-aircraft", "stale", "not-airborne", "nonlethal", "time-gap", "mission-failed"):
+            with self.subTest(mode=mode):
+                states = copy.deepcopy(original)
+                incoming, destructive = states["server"]["observation"]["firstDamageEvents"]
+                if mode == "self": incoming["damage"]["dealerIsSelf"] = True
+                elif mode == "invalid": incoming["damage"]["dealerValid"] = False
+                elif mode == "missing-replication": states["client"]["observation"]["firstDamageEvents"] = []
+                elif mode == "wrong-part": states["client"]["observation"]["firstDamageEvents"][0]["damage"]["part"]["partID"] = 20
+                elif mode == "wrong-hp": states["client"]["observation"]["firstDamageEvents"][0]["damage"]["predictedHitPointsAfter"] = -1
+                elif mode == "wrong-aircraft": states["client"]["localPlayerAircraftNetId"] = 8
+                elif mode == "stale": incoming["seconds"] = 70
+                elif mode == "not-airborne": incoming["radarAltitude"] = 79
+                elif mode == "nonlethal": destructive["damage"]["predictedHitPointsAfter"] = 1
+                elif mode == "time-gap": destructive["seconds"] = 103
+                elif mode == "mission-failed": states["server"]["missionRunning"] = False
+                self.assertIsNone(verified_missile_loss(states, ASSERTIONS, POLICY))
+
     def test_status_error_retains_prior_samples_without_allowing_the_error(self):
         state = damage_fixture()["server"]
         state["players"][0]["speed"] = 100

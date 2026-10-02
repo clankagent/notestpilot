@@ -67,6 +67,14 @@ pass. The separate recovery scenario now has one native run in which the
 verified missile-loss branch led through ordinary ejection and replacement;
 repeat recovery and longer combat coverage remain unverified.
 
+Missile-loss evidence also recognizes the deferred explosion callback on the
+verified game build. It still requires recent external airborne damage, a
+destroyed part, matching damage on the controlling client, and the same player
+and aircraft identities. Unrelated callbacks and unknown builds cannot use this
+alternate path. A recorded flight that exposed the missing callback coverage
+remains failed; offline reevaluation and unit tests do not establish a new
+runtime recovery pass.
+
 Wrong request IDs, missing state, rejected actions, process exits, restarts and
 deadlines fail. Unexpected game errors fail, including errors on other clients
 during observation. An incomplete error journal fails. Switching aircraft cannot

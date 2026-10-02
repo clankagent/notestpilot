@@ -281,7 +281,9 @@ def verified_missile_loss(states, assertions, policy):
         incoming = next((e for e in matching if e.get("action") == "PartTakeDamage"
                         and e.get("damage", {}).get("dealerValid") is True
                         and e.get("damage", {}).get("dealerIsSelf") is False
-                        and "Missile.ServerFixedUpdate" in e.get("callers", [])), None)
+                        and ("Missile.ServerFixedUpdate" in e.get("callers", [])
+                             or (server.get("assemblySha256") == "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a"
+                                 and "Missile+<ExplosionForceOnPhysicsFrame>d__141.MoveNext" in e.get("callers", [])))), None)
         destructive = next((e for e in matching if e.get("action") == "DestructivePartApplyDamage"
                            and isinstance(e.get("damage", {}).get("predictedHitPointsAfter"), (int, float))
                            and e["damage"]["predictedHitPointsAfter"] <= 0
