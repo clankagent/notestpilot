@@ -35,6 +35,7 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Four-player ten-minute flight | Three independent baselines and one matched Spatial run passed 50 checks each: all four stayed airborne, fired and retained their aircraft. Earlier failures preserved |
 | Fifteen-minute flight and firing | Failed after about ten minutes airborne: one pilot died from collision damage. Both stayed connected |
 | Dedicated-server mission rotation | Failed during ship-effect cleanup and, in a separate occupied run, turret cleanup; both retained |
+| Stock server without BepInEx or a server bridge | Passed 41 checks: four independent UDP clients, 180s takeoff and 300s flight with gun bursts; all four consumed ammunition. Client-witnessed checks; see [scope](docs/stock-server.md) |
 | Steam authentication / retail clients | Not tested |
 | Performance-mod comparison | One complete baseline/Spatial pair; no whole-server gain established. Earlier failures retained |
 | Five-sortie aging workload | Four full sorties completed. An enemy missile interrupted the fifth; its remaining firing checks were skipped and recorded |
@@ -42,8 +43,8 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Loading-lifetime diagnostic | Captured trainer removal scheduling and matching network removal on all four clients. The intermittent loading failure remains unresolved |
 | Long multiplayer sessions | Not verified |
 
-The runner also has **52 automated tests** (all pass in Linux CI; 51 pass on
-Windows, with the POSIX signal test skipped). These protect the testing tool;
+The tooling also has **76 automated tests** (75 pass on Windows, with the
+POSIX signal test skipped; the updated Linux CI run is pending). These protect the testing tool;
 they do not count as game tests. See [the evidence summary](evidence/status.json).
 
 The [interactive resource report](https://clankagent.github.io/noperf/resource-report.html)
@@ -142,7 +143,9 @@ The flight controller responds to each aircraft's state; matching tasks and
 outcomes are more useful than replaying identical inputs. Repeat in alternating
 order. Both variants currently need the test bridge on the server, so the baseline
 is **without the performance mod**, rather than a completely stock installation.
-A server with no BepInEx or bridge needs a separate launch and observation path.
+A separate experimental stock-server path passed the four-client workload above.
+It uses client observations and external process counters, without server RPC.
+The normal CLI still launches an instrumented server; [stock-server details](docs/stock-server.md) describe the low-level API and its limits.
 
 The headless clients need a small UDP adapter because this build normally tries
 retail Steam callbacks even for UDP. The server's normal UDP password, build and

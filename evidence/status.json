@@ -1,5 +1,5 @@
 {
-  "checkpoint": "2026-10-02: bounded loading-lifetime trace verified in five real game processes; intermittent loading failure remains unresolved",
+  "checkpoint": "2026-10-03: stock Linux server passed four-client takeoff and five-minute flight/firing checks; client-witnessed coverage",
   "game": {
     "version": "0.34.1",
     "steam_build": 24724541,
@@ -8,19 +8,21 @@
     "linux_assembly_sha256": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a"
   },
   "runner_unit_tests": {
-    "passed": 52,
+    "passed": 75,
     "platforms": [
-      "Linux CI Python3.12 and3.14:52 passed",
-      "Windows Python3.12:51 passed of 52 tests, POSIX signal test skipped",
-      "Linux CI verified commit d3886b7234f66f903d6704d4ce38a55a930a170a:52 passed"
+      "Windows:75 passed of76; POSIX signal test skipped",
+      "Current76-test Linux CI run pending",
+      "Previously verified Linux CI:52 passed"
     ],
     "scope": "test tooling, not game behaviour",
     "previous_remote_linux_passed": 30,
     "latest_ci_passed_before_pause_checkpoint": 35,
     "latest_remote_linux_passed": 49,
     "latest_ci_passed": 52,
-    "windows_passed": 51,
-    "windows_skipped": 1
+    "windows_passed": 75,
+    "windows_skipped": 1,
+    "total": 76,
+    "current_linux_ci": "pending"
   },
   "bridge": {
     "linux_compile": "pass, zero warnings/errors",
@@ -8191,7 +8193,7 @@
     "noperf_comparison": "One completed four-client baseline-Spatial pair passed50checks each with actual patch activation verified; CPU0.757baseline/0.761Spatial cores, within passing-baseline variation. No whole-server gain established; later baseline loading failures retained.",
     "native_dedicated_startup": "passed; waits for players, first join loads stock Escalation, both matching clients join",
     "server_mod_manifest": "Runtime Spatial-only server loading passed37checks; loaded-plugin GUID and actual patch log verified. Clients remained bridge-only.",
-    "latest_runner_report_guards": "43Linux/CI tooling tests pass,42Windows pass with one POSIX signal test skipped. Live remote game SIGTERM verified: incomplete samples retained, cancelled result, own processes stopped and logs archived. Cancelled workload is not a full game pass.",
+    "latest_runner_report_guards": "76 tooling tests:75Windows pass with one POSIX signal test skipped; currentLinuxCI pending. Tooling passes do not establish native gameplay. Live remote cancellation previously verified: incomplete samples retained, cancelled result and owned processes stopped. Cancelled workloads are not full game passes.",
     "scenario_generation": "One-to-four-player generator uses0.5sec bursts every20sec and rejects exhausted/untouched ammunition. Four-player600sec generated flight/firing workload passed. Longer generated durations remain unverified and can exhaust ammunition without resupply.",
     "gun_bursts": "Passed54checks: both actors fired three1sec bursts, server ammunition decreased, then stayed unchanged while steering remained leased.",
     "occupied_reconnect": "Failed in native-flight-reconnect.json: RadarWarning.Update exception on first disconnect, even through normal quit-path semantics.",
@@ -8200,7 +8202,8 @@
     "flight_diagnostics": "Read-only physical joint-break callbacks and first-airborne-contact retention were actually exercised in a failed instrumented flight: joint breaks around935m preceded own-part contacts, but saved hitpoints were already negative and initiating damage remains unresolved. Loading traces also caught a destroyed client registry entry before the original error. No errors suppressed or objects removed.",
     "late_join_loading": "Focused sixty-second-delayed second join passed10checks. Separate load failures remain retained in both variants; read-only scene trace caught a destroyed aircraft registry entry immediately before the original loader error. No objects removed or error waiver. Exact lifetime sequence and retail applicability remain unverified.",
     "ejection_replacement_repeat": "Two consecutive native two-client lifecycle repeats with the same diagnostic bridge passed51checks each: initial flight, rockets, airborne ejection, normal replacement requests and second flight. Original player identities retained. This does not establish natural-death recovery, occupied reconnect or long combat coverage.",
-    "job_profiling": "Three instrumented two-client6min workloads passed30checks each; all16 added job targets emitted measurements. Native physics and ground/job inputs warrant further investigation. Instrumented inclusive timings overlap and include waits; no capacity or speedup conclusion."
+    "job_profiling": "Three instrumented two-client6min workloads passed30checks each; all16 added job targets emitted measurements. Native physics and ground/job inputs warrant further investigation. Instrumented inclusive timings overlap and include waits; no capacity or speedup conclusion.",
+    "stock_server_no_loader": "Passed41checks: stock Linux server without BepInEx or server bridge; four independent dedicated-build UDP clients completed180s takeoff and300s flight/gunbursts. All four retained aircraft and consumed ammunition. Client-witnessed assertions and external server counters; no authoritative server RPC."
   },
   "limitations": [
     "Server and clients share one VM",
@@ -8228,7 +8231,7 @@
     ],
     "scope": "thread CPU sample, not production capacity estimate or mod benefit"
   },
-  "project_state": "Experimental tested foundation: two repeated two-sortie lifecycle passes, three four-client10min baselines and one matched Spatial pass. One native evidence-gated missile-loss recovery pass completed ejection and replacement after four full sorties; the fifth airborne check interrupted at 58.03/60 seconds, so the fifth gun/rocket phases were omitted. Deeper profiling completed. Long uninterrupted survival, intermittent loading, occupied reconnect and rotation failures remain unresolved; retail Steam, truly stock/no-loader, five completed aging sorties and realistic capacity are unverified.",
+  "project_state": "Experimental tested foundation: two repeated two-sortie lifecycle passes, three four-client10min baselines and one matched Spatial pass. One native evidence-gated missile-loss recovery pass completed ejection and replacement after four full sorties; the fifth airborne check interrupted at 58.03/60 seconds, so the fifth gun/rocket phases were omitted. Deeper profiling completed. Long uninterrupted survival, intermittent loading, occupied reconnect and rotation failures remain unresolved. A separate stock/no-loader server passed41checks with four dedicated-build UDP clients,180s takeoff and300s flight/gunbursts. Retail Steam, five completed aging sorties and realistic capacity remain unverified.",
   "multicore_samples": [
     {
       "cpu_model": "AMD Ryzen 5 PRO 3600",
@@ -8292,5 +8295,39 @@
     "strict_survival_fixture_changed": false,
     "gate": "Recent server external-missile trace, destructive part damage and matching controlling-client damage; unrelated errors remain fatal.",
     "reports": "Interrupted flight duration and omitted weapon checks are retained. One native run verified normal ejection and replacement after the fifth airborne check was interrupted; this does not count as a completed survival observation or five complete sorties."
+  },
+  "stock_server_coverage": {
+    "experimental": true,
+    "server_bepinex_installed": false,
+    "server_bridge_installed": false,
+    "independent_dedicated_build_udp_clients": 4,
+    "checks_passed": 41,
+    "takeoff_seconds": 180,
+    "flight_seconds": 300,
+    "takeoff_control_requests": 36,
+    "flight_control_requests": 60,
+    "all_four_ammunition_consumption_verified": true,
+    "assertion_scope": "owning-client state; external server process identity and resource counters",
+    "server_flight_mean_cpu_cores": 0.7724107766139997,
+    "server_flight_sampled_peak_resident_bytes": 1151328256,
+    "client_resources_reported_separately": true,
+    "client_flight_mean_cpu_cores_range": [
+      0.6708479443083406,
+      0.6838487575439552
+    ],
+    "client_flight_sampled_peak_resident_bytes_range": [
+      1193857024,
+      1202286592
+    ],
+    "shared_lab_vm": true,
+    "authoritative_server_state_observed": false,
+    "source_scenario_semantically_equivalent": false,
+    "server_frame_timing_measured": false,
+    "retail_steam_coverage": false,
+    "capacity_evidence": false,
+    "paired_mod_benefit_established": false,
+    "general_cli_stock_mode_integrated": false,
+    "api": "../src/notestpilot/stock_server.py",
+    "details": "../docs/stock-server.md"
   }
 }
