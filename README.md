@@ -43,8 +43,8 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Loading-lifetime diagnostic | Captured trainer removal scheduling and matching network removal on all four clients. The intermittent loading failure remains unresolved |
 | Long multiplayer sessions | Not verified |
 
-The tooling also has **76 automated tests** (75 pass on Windows, with the
-POSIX signal test skipped; the updated Linux CI run is pending). These protect the testing tool;
+The tooling also has **76 automated tests** (all pass in Linux CI; 75 pass on
+Windows, with the POSIX signal test skipped). These protect the testing tool;
 they do not count as game tests. See [the evidence summary](evidence/status.json).
 
 The [interactive resource report](https://clankagent.github.io/noperf/resource-report.html)

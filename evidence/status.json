@@ -11,18 +11,18 @@
     "passed": 75,
     "platforms": [
       "Windows:75 passed of76; POSIX signal test skipped",
-      "Current76-test Linux CI run pending",
-      "Previously verified Linux CI:52 passed"
+      "Linux CI:76 passed on Python3.11 and3.14"
     ],
     "scope": "test tooling, not game behaviour",
     "previous_remote_linux_passed": 30,
     "latest_ci_passed_before_pause_checkpoint": 35,
     "latest_remote_linux_passed": 49,
-    "latest_ci_passed": 52,
+    "latest_ci_passed": 76,
     "windows_passed": 75,
     "windows_skipped": 1,
     "total": 76,
-    "current_linux_ci": "pending"
+    "current_linux_ci": "passed on Python3.11 and3.14",
+    "current_linux_ci_url": "https://github.com/clankagent/notestpilot/actions/runs/37083062179"
   },
   "bridge": {
     "linux_compile": "pass, zero warnings/errors",
@@ -8193,7 +8193,7 @@
     "noperf_comparison": "One completed four-client baseline-Spatial pair passed50checks each with actual patch activation verified; CPU0.757baseline/0.761Spatial cores, within passing-baseline variation. No whole-server gain established; later baseline loading failures retained.",
     "native_dedicated_startup": "passed; waits for players, first join loads stock Escalation, both matching clients join",
     "server_mod_manifest": "Runtime Spatial-only server loading passed37checks; loaded-plugin GUID and actual patch log verified. Clients remained bridge-only.",
-    "latest_runner_report_guards": "76 tooling tests:75Windows pass with one POSIX signal test skipped; currentLinuxCI pending. Tooling passes do not establish native gameplay. Live remote cancellation previously verified: incomplete samples retained, cancelled result and owned processes stopped. Cancelled workloads are not full game passes.",
+    "latest_runner_report_guards": "76 tooling tests pass in Linux CI on Python3.11 and3.14;75Windows pass with one POSIX signal test skipped. Tooling passes do not establish native gameplay. Live remote cancellation previously verified: incomplete samples retained, cancelled result and owned processes stopped. Cancelled workloads are not full game passes.",
     "scenario_generation": "One-to-four-player generator uses0.5sec bursts every20sec and rejects exhausted/untouched ammunition. Four-player600sec generated flight/firing workload passed. Longer generated durations remain unverified and can exhaust ammunition without resupply.",
     "gun_bursts": "Passed54checks: both actors fired three1sec bursts, server ammunition decreased, then stayed unchanged while steering remained leased.",
     "occupied_reconnect": "Failed in native-flight-reconnect.json: RadarWarning.Update exception on first disconnect, even through normal quit-path semantics.",
