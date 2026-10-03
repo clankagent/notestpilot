@@ -37,6 +37,7 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Dedicated-server mission rotation | Failed during ship-effect cleanup and, in a separate occupied run, turret cleanup; both retained |
 | Stock server without BepInEx or a server bridge | Passed 41 checks: four independent UDP clients, 180s takeoff and 300s flight with gun bursts; all four consumed ammunition. Client-witnessed checks; see [scope](docs/stock-server.md) |
 | Four-player planned replacement on a stock server | Separate harness passed 62 checks: airborne ejection, new aircraft with the same players, another takeoff and one minute of healthy flight before and after. Combat-damage recovery remains unverified on this stock path |
+| Four-player flight with continuously renewed controls on a stock server | Passed a separate 240-second task, including takeoff: all four retained their aircraft and were sampled airborne for 165–179 seconds. No losses occurred, so its damage-response branch was not exercised |
 | Steam authentication / retail clients | Not tested |
 | Performance-mod comparison | One complete baseline/Spatial pair; no whole-server gain established. Earlier failures retained |
 | Five-sortie aging workload | Four full sorties completed. An enemy missile interrupted the fifth; its remaining firing checks were skipped and recorded |
@@ -44,8 +45,8 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Loading-lifetime diagnostic | Captured trainer removal scheduling and matching network removal on all four clients. The intermittent loading failure remains unresolved |
 | Long multiplayer sessions | Not verified |
 
-The tooling also has **76 automated tests** (all pass in Linux CI; 75 pass on
-Windows, with the POSIX signal test skipped). These protect the testing tool;
+The tooling also has **92 automated tests** (91 pass on Windows, with the POSIX
+signal test skipped). These protect the testing tool;
 they do not count as game tests. See [the evidence summary](evidence/status.json).
 
 The [interactive resource report](https://clankagent.github.io/noperf/resource-report.html)
