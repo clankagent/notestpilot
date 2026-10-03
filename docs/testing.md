@@ -124,7 +124,10 @@ ratios do not establish the new machine's capacity.
 The current baseline retains BepInEx and the same NOTestPilot bridge used by the
 candidate server. It measures the effect of adding the candidate mod to that
 instrumented environment. A genuinely stock server without either loader or
-bridge is a different comparison and is not implemented by the current runner.
+bridge now has a separate [client-witnessed testing path](stock-server.md). It is
+not a stock mode in the normal CLI, and it cannot supply the server-state checks
+used by the instrumented runner. No completed stock-versus-mod comparison has
+established a gain.
 
 Retail clients, Steam authentication, deliberate target engagement and long-session
 stability remain unverified coverage. Mission rotation was exercised and failed.

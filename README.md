@@ -36,6 +36,7 @@ Verified on Linux, Nuclear Option **0.34.1 / Steam build 24724541**:
 | Fifteen-minute flight and firing | Failed after about ten minutes airborne: one pilot died from collision damage. Both stayed connected |
 | Dedicated-server mission rotation | Failed during ship-effect cleanup and, in a separate occupied run, turret cleanup; both retained |
 | Stock server without BepInEx or a server bridge | Passed 41 checks: four independent UDP clients, 180s takeoff and 300s flight with gun bursts; all four consumed ammunition. Client-witnessed checks; see [scope](docs/stock-server.md) |
+| Four-player planned replacement on a stock server | Separate harness passed 62 checks: airborne ejection, new aircraft with the same players, another takeoff and one minute of healthy flight before and after. Combat-damage recovery remains unverified on this stock path |
 | Steam authentication / retail clients | Not tested |
 | Performance-mod comparison | One complete baseline/Spatial pair; no whole-server gain established. Earlier failures retained |
 | Five-sortie aging workload | Four full sorties completed. An enemy missile interrupted the fifth; its remaining firing checks were skipped and recorded |

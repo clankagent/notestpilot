@@ -1,5 +1,5 @@
 {
-  "checkpoint": "2026-10-03: stock Linux server passed four-client takeoff and five-minute flight/firing checks; client-witnessed coverage",
+  "checkpoint": "2026-10-03: four-client planned ejection/replacement passed on stock Linux server; longer profiling and combat coverage remain unfinished",
   "game": {
     "version": "0.34.1",
     "steam_build": 24724541,
@@ -8328,6 +8328,49 @@
     "paired_mod_benefit_established": false,
     "general_cli_stock_mode_integrated": false,
     "api": "../src/notestpilot/stock_server.py",
+    "details": "../docs/stock-server.md",
+    "later_batch_startup_pass": {
+      "checks_passed": 41,
+      "flight_seconds_requested": 300,
+      "server_counter_bracket_seconds": 299.4699801169918,
+      "server_flight_mean_cpu_cores": 0.7420777198208082,
+      "server_flight_sampled_peak_resident_bytes": 1124454400,
+      "client_flight_mean_cpu_cores_range": [
+        0.6380510099926396,
+        0.6465960872243528
+      ],
+      "client_flight_sampled_peak_resident_bytes_range": [
+        1154478080,
+        1174507520
+      ],
+      "startup_order_changed": true,
+      "late_join_fixed": false,
+      "performance_comparison_eligible": false,
+      "client_frame_counters_available": true,
+      "server_frame_counters_available": false
+    }
+  },
+  "stock_server_planned_replacement": {
+    "checks_passed": 62,
+    "clients": 4,
+    "server_bepinex_installed": false,
+    "server_bridge_installed": false,
+    "takeoff_seconds_requested_per_sortie": 180,
+    "healthy_flight_seconds_requested_per_sortie": 60,
+    "sorties_completed": 2,
+    "once_only_ejections": 4,
+    "same_players_different_aircraft_verified": true,
+    "old_controls_cleared": true,
+    "native_spawn_prerequisite_observed": "no living unejected old pilot",
+    "null_aircraft_association_observed": false,
+    "unexpected_errors_ignored": false,
+    "planned_ejection_only": true,
+    "combat_damage_recovery_verified": false,
+    "authoritative_server_state_observed": false,
+    "retail_steam_coverage": false,
+    "capacity_evidence": false,
+    "performance_comparison_eligible": false,
+    "general_cli_integrated": false,
     "details": "../docs/stock-server.md"
   }
 }
