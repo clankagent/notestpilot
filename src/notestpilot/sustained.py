@@ -19,8 +19,8 @@ def finite(value):
 
 def require_motion(owner, state):
     """One shared domain guard for every path that can renew a flight lease."""
-    require(all(finite(owner.get(k)) and owner[k] >= 0 for k in ('radarAltitude', 'speed')),
-            'Negative/nonfinite altitude or speed', state)
+    require(finite(owner.get('radarAltitude')) and finite(owner.get('speed')) and owner['speed'] >= 0,
+            'Nonfinite altitude or negative/nonfinite speed', state)
 
 
 def rpc_caller(callers):

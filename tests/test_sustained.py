@@ -1,6 +1,6 @@
 import copy
 import unittest
-from notestpilot.sustained import execute_sustained, incoming_rpc_loss, GAME_ASSEMBLY_SHA256
+from notestpilot.sustained import execute_sustained, incoming_rpc_loss, require_motion, GAME_ASSEMBLY_SHA256
 from notestpilot.runner import TestFailure
 
 
@@ -163,12 +163,12 @@ class SustainedTests(unittest.TestCase):
         self.assertTrue(result['fullDurationAirborneRequirementPassed'])
         for a in result['actors'].values():self.assertEqual(65.,a['airborneSeconds'])
     def test_initial_negative_motion_rejected_before_any_action(self):
-        for key in ('radarAltitude','speed'):
+        for key in ('speed',):
             c,bs,i,s=self.setup_run();self.change_motion(bs,lambda p:p.update({key:-10.}))
             with self.assertRaises(TestFailure):self.run_task(c,bs,i,s)
             self.assertTrue(all(not b.calls for b in bs.values()))
     def test_replacement_negative_motion_prevents_fly(self):
-        for key in ('radarAltitude','speed'):
+        for key in ('speed',):
             c,bs,i,s=self.setup_run();original=bs['a'].status
             def status():
                 state=original()
@@ -178,6 +178,36 @@ class SustainedTests(unittest.TestCase):
             with self.assertRaises(TestFailure):self.run_task(c,bs,i,s)
             self.assertEqual([0],[t for cmd,t in bs['a'].calls if cmd=='fly'])
             self.assertEqual('engine',bs['a'].calls[-1][0])
+    def test_signed_ground_altitude_initial_lease_preserves_raw_value(self):
+        c,bs,i,s=self.setup_run()
+        def transform(p):
+            if c()==0:p.update(radarAltitude=-0.000122189522,speed=0.256693065)
+        self.change_motion(bs,transform)
+        result=self.run_task(c,bs,i,s)
+        self.assertEqual([0,20,40,60],[t for cmd,t in bs['b'].calls if cmd=='fly'])
+        self.assertFalse(result['perfComparisonEligible'])
+    def test_signed_ground_altitude_replacement_lease(self):
+        c,bs,i,s=self.setup_run();original=bs['a'].status
+        def status():
+            state=original()
+            if bs['a'].spawned and not any(cmd=='fly' and t>0 for cmd,t in bs['a'].calls):
+                state['players'][0].update(radarAltitude=-0.000122189522,speed=0.256693065)
+            return state
+        bs['a'].status=status
+        result=self.run_task(c,bs,i,s)
+        self.assertEqual(1,len(result['actors']['a']['recoveries']))
+        self.assertTrue(any(cmd=='fly' and t>0 for cmd,t in bs['a'].calls))
+    def test_motion_domain_missing_bool_nonfinite_and_negative_speed(self):
+        owner=dict(radarAltitude=-0.000122189522,speed=0.256693065)
+        require_motion(owner,{})
+        self.assertEqual(-0.000122189522,owner['radarAltitude'])
+        for key in ('radarAltitude','speed'):
+            for value in (None,True,False,float('nan'),float('inf'),-float('inf')):
+                bad=dict(owner);bad[key]=value
+                with self.assertRaises(TestFailure):require_motion(bad,{})
+            bad=dict(owner);del bad[key]
+            with self.assertRaises(TestFailure):require_motion(bad,{})
+        with self.assertRaises(TestFailure):require_motion(dict(owner,speed=-0.0001),{})
     def test_missing_or_wrong_build_never_authorizes_loss(self):
         for build in (None,'wrong'):
             c,bs,i,s=self.setup_run();c.now=5;state=bs['a'].status();state['assemblySha256']=build
