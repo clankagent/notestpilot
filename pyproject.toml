@@ -1,0 +1,16 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "notestpilot"
+version = "0.2.0"
+description = "Programmable, private Nuclear Option server mock-player tooling"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+notestpilot = "notestpilot.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/notestpilot"]

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Deterministic>true</Deterministic>
+    <EnableSourceLink>false</EnableSourceLink>
+    <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <Reference Include="BepInEx"><HintPath>$(BepInExCore)/BepInEx.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(BepInExCore)/0Harmony.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(ManagedPath)/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine"><HintPath>$(ManagedPath)/UnityEngine.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(ManagedPath)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.PhysicsModule"><HintPath>$(ManagedPath)/UnityEngine.PhysicsModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Mirage"><HintPath>$(ManagedPath)/Mirage.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Mirage.SocketLayer"><HintPath>$(ManagedPath)/Mirage.SocketLayer.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UniTask"><HintPath>$(ManagedPath)/UniTask.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+  <Target Name="CheckReferences" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('$(ManagedPath)/Assembly-CSharp.dll')" Text="Set ManagedPath to the approved game assemblies." />
+    <Error Condition="!Exists('$(BepInExCore)/BepInEx.dll')" Text="Set BepInExCore to the BepInEx 5 core folder." />
+  </Target>
+</Project>

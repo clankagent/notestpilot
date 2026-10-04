@@ -1,0 +1,517 @@
+{
+  "gameAssemblySha256": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a",
+  "date": "2026-10-04",
+  "coverage": "Short disposable server-side mock-player fixtures; no retail clients or transport coverage",
+  "resourceMethod": "Linux game-process CPU tick deltas and RSS during observed mission-running intervals. Includes stock Escalation simulation and test adapter; not per-mock cost, steady-state sizing, or a before/after capacity comparison.",
+  "runs": [
+    {
+      "run": 4,
+      "checksPassed": 19,
+      "checks": [
+        "native mission running",
+        "local host authenticated through native handlers",
+        "distinct native player identities",
+        "alpha native player/aircraft linkage",
+        "alpha server simulation",
+        "alpha no autonomous NPC brain",
+        "bravo native player/aircraft linkage",
+        "bravo server simulation",
+        "bravo no autonomous NPC brain",
+        "alpha directed task ticking",
+        "alpha actual displacement",
+        "alpha directed state only",
+        "bravo directed task ticking",
+        "bravo actual displacement",
+        "bravo directed state only",
+        "cancel alpha only",
+        "stale aircraft command rejected",
+        "bravo retained task after rejected command",
+        "mock registry cleanup"
+      ],
+      "runtimeSha256": "0cb2808b6037ae0bb385b96f737a8ee6deb7f2e51269a0ed93908a88d01dbb41",
+      "privateEvidenceArchiveSha256": "4f7ae6cfffa08a86aebeff5199d7b6522f108a8522baa7fa85d0d764c51f7d6c",
+      "nativeQuit": true,
+      "gameExitCode": 0,
+      "ownedChildGone": true,
+      "eventCounts": {},
+      "resources": {
+        "missionObservedSeconds": 16.79,
+        "gameCpuSeconds": 11.37,
+        "meanBusyCores": 0.677,
+        "rssMinMiB": 998.9,
+        "rssMaxMiB": 1048.7
+      }
+    },
+    {
+      "run": 5,
+      "checksPassed": 25,
+      "checks": [
+        "native mission running",
+        "local host authenticated through native handlers",
+        "distinct native player identities",
+        "alpha native player/aircraft linkage",
+        "alpha server simulation",
+        "alpha no autonomous NPC brain",
+        "bravo native player/aircraft linkage",
+        "bravo server simulation",
+        "bravo no autonomous NPC brain",
+        "alpha directed task ticking",
+        "alpha actual displacement",
+        "alpha directed state only",
+        "bravo directed task ticking",
+        "bravo actual displacement",
+        "bravo directed state only",
+        "alpha physically turns toward authored east task",
+        "bravo retains separate north heading",
+        "cancel alpha only",
+        "stale aircraft command rejected",
+        "bravo retained task after rejected command",
+        "mock registry cleanup",
+        "native bullet created by exact shooter",
+        "native hit on designated victim",
+        "native attributed applied damage on designated victim",
+        "combat actors cleaned up"
+      ],
+      "runtimeSha256": "add0f8c5ddba68fe9c3589c9db18c36e5d51459e23f200a43791e1557ce89951",
+      "privateEvidenceArchiveSha256": "8955199c0c3f19a85d8ff114c754240c35f85aee6626efc1f30914aafd7ae42e",
+      "nativeQuit": true,
+      "gameExitCode": 0,
+      "ownedChildGone": true,
+      "eventCounts": {
+        "gun_bullet_created": 216,
+        "part_damage_call": 1,
+        "part_damage_applied": 1,
+        "unit_hit_registered": 1
+      },
+      "resources": {
+        "missionObservedSeconds": 28.74,
+        "gameCpuSeconds": 19.58,
+        "meanBusyCores": 0.681,
+        "rssMinMiB": 986.1,
+        "rssMaxMiB": 1062.7
+      },
+      "designatedCombat": {
+        "bullets": 216,
+        "hits": 1,
+        "positiveAppliedDamageCalls": 1
+      }
+    },
+    {
+      "run": 6,
+      "checksPassed": 32,
+      "checks": [
+        "native mission running",
+        "local host authenticated through native handlers",
+        "distinct native player identities",
+        "alpha native player/aircraft linkage",
+        "alpha server simulation",
+        "alpha no autonomous NPC brain",
+        "bravo native player/aircraft linkage",
+        "bravo server simulation",
+        "bravo no autonomous NPC brain",
+        "alpha directed task ticking",
+        "alpha actual displacement",
+        "alpha directed state only",
+        "bravo directed task ticking",
+        "bravo actual displacement",
+        "bravo directed state only",
+        "alpha physically turns toward authored east task",
+        "bravo retains separate north heading",
+        "cancel alpha only",
+        "stale aircraft command rejected",
+        "bravo retained task after rejected command",
+        "mock registry cleanup",
+        "native bullet created by exact shooter",
+        "native hit on designated victim",
+        "native attributed applied damage on designated victim",
+        "combat actors cleaned up",
+        "native ejection retires airframe",
+        "replacement preserves player with new aircraft generation",
+        "retired airframe command rejected by runtime",
+        "replacement task survives stale command",
+        "name reuse creates distinct native player",
+        "retired player command rejected by runtime",
+        "replacement registry cleanup"
+      ],
+      "runtimeSha256": "add0f8c5ddba68fe9c3589c9db18c36e5d51459e23f200a43791e1557ce89951",
+      "privateEvidenceArchiveSha256": "b1ff741a322c1145c3de2d6c86ec3ced50905c31e79a7cb6d69bfc9aa3f1aec3",
+      "nativeQuit": true,
+      "gameExitCode": 0,
+      "ownedChildGone": true,
+      "eventCounts": {
+        "gun_bullet_created": 286,
+        "part_damage_call": 2,
+        "part_damage_applied": 2,
+        "unit_hit_registered": 1
+      },
+      "resources": {
+        "missionObservedSeconds": 37.01,
+        "gameCpuSeconds": 24.17,
+        "meanBusyCores": 0.653,
+        "rssMinMiB": 987.0,
+        "rssMaxMiB": 1072.2
+      },
+      "designatedCombat": {
+        "bullets": 286,
+        "hits": 1,
+        "positiveAppliedDamageCalls": 2
+      }
+    },
+    {
+      "run": 7,
+      "checksPassed": 36,
+      "checks": [
+        "host rejects retired runtime before mutation",
+        "actor.create rejects retired runtime before mutation",
+        "quit rejects retired runtime before mutation",
+        "rejected startup mutations leave idle live runtime",
+        "native mission running",
+        "local host authenticated through native handlers",
+        "distinct native player identities",
+        "alpha native player/aircraft linkage",
+        "alpha server simulation",
+        "alpha no autonomous NPC brain",
+        "bravo native player/aircraft linkage",
+        "bravo server simulation",
+        "bravo no autonomous NPC brain",
+        "alpha directed task ticking",
+        "alpha actual displacement",
+        "alpha directed state only",
+        "bravo directed task ticking",
+        "bravo actual displacement",
+        "bravo directed state only",
+        "alpha physically turns toward authored east task",
+        "bravo retains separate north heading",
+        "cancel alpha only",
+        "stale aircraft command rejected",
+        "bravo retained task after rejected command",
+        "mock registry cleanup",
+        "native bullet created by exact shooter",
+        "native hit on designated victim",
+        "native attributed applied damage on designated victim",
+        "combat actors cleaned up",
+        "native ejection retires airframe",
+        "replacement preserves player with new aircraft generation",
+        "retired airframe command rejected by runtime",
+        "replacement task survives stale command",
+        "name reuse creates distinct native player",
+        "retired player command rejected by runtime",
+        "replacement registry cleanup"
+      ],
+      "runtimeSha256": "55ee80cd2af710effd8d0b565c3dce57c7d3d5638eb1b0edf9b6ffb1c9b730fe",
+      "privateEvidenceArchiveSha256": "d8a148e34d8c99a2cef9bd7fd416ac4430c4030fb70da7887a91c1810c0330c5",
+      "nativeQuit": true,
+      "gameExitCode": 0,
+      "ownedChildGone": true,
+      "eventCounts": {
+        "gun_bullet_created": 114,
+        "part_damage_call": 2,
+        "part_damage_applied": 2,
+        "unit_hit_registered": 1
+      },
+      "resources": {
+        "missionObservedSeconds": 32.2,
+        "gameCpuSeconds": 21.07,
+        "meanBusyCores": 0.654,
+        "rssMinMiB": 1012.0,
+        "rssMaxMiB": 1081.3
+      },
+      "designatedCombat": {
+        "bullets": 114,
+        "hits": 1,
+        "positiveAppliedDamageCalls": 2
+      }
+    },
+    {
+      "run": 8,
+      "checksPassed": 40,
+      "checks": [
+        "host rejects retired runtime before mutation",
+        "actor.create rejects retired runtime before mutation",
+        "quit rejects retired runtime before mutation",
+        "rejected startup mutations leave idle live runtime",
+        "native mission running",
+        "local host authenticated through native handlers",
+        "distinct native player identities",
+        "first spawn requires explicit null generation",
+        "rejected first spawn created no airframe",
+        "alpha native player/aircraft linkage",
+        "alpha server simulation",
+        "alpha no autonomous NPC brain",
+        "bravo native player/aircraft linkage",
+        "bravo server simulation",
+        "bravo no autonomous NPC brain",
+        "alpha directed task ticking",
+        "alpha actual displacement",
+        "alpha directed state only",
+        "bravo directed task ticking",
+        "bravo actual displacement",
+        "bravo directed state only",
+        "alpha physically turns toward authored east task",
+        "bravo retains separate north heading",
+        "cancel alpha only",
+        "stale aircraft command rejected",
+        "bravo retained task after rejected command",
+        "mock registry cleanup",
+        "native bullet created by exact shooter",
+        "native hit on designated victim",
+        "native attributed applied damage on designated victim",
+        "combat actors cleaned up",
+        "native ejection retires airframe",
+        "replacement spawn rejects stale generation",
+        "rejected replacement preserves retired generation",
+        "replacement preserves player with new aircraft generation",
+        "retired airframe command rejected by runtime",
+        "replacement task survives stale command",
+        "name reuse creates distinct native player",
+        "retired player command rejected by runtime",
+        "replacement registry cleanup"
+      ],
+      "runtimeSha256": "f2a9ada4c8f08196dbf24dbee12fcbe60232caf745c1731cef652ca8f5f43a9d",
+      "privateEvidenceArchiveSha256": "4219b438c594dd27ad6bebab2e0c6fbd443e96e2d4f38c113a417546ad6ad0ce",
+      "nativeQuit": true,
+      "gameExitCode": 0,
+      "ownedChildGone": true,
+      "eventCounts": {
+        "gun_bullet_created": 218,
+        "part_damage_call": 2,
+        "part_damage_applied": 2,
+        "unit_hit_registered": 1
+      },
+      "resources": {
+        "missionObservedSeconds": 35.6,
+        "gameCpuSeconds": 23.13,
+        "meanBusyCores": 0.65,
+        "rssMinMiB": 997.8,
+        "rssMaxMiB": 1060.2
+      },
+      "designatedCombat": {
+        "bullets": 218,
+        "hits": 1,
+        "positiveAppliedDamageCalls": 2
+      }
+    },
+    {
+      "run": 9,
+      "checksPassed": 8,
+      "checks": [
+        "host rejects retired runtime before mutation",
+        "actor.create rejects retired runtime before mutation",
+        "quit rejects retired runtime before mutation",
+        "rejected startup mutations leave idle live runtime",
+        "native mission running",
+        "local host authenticated through native handlers",
+        "public explicit-target script passes",
+        "public example cleans only its mock actors"
+      ],
+      "runtimeSha256": "f2a9ada4c8f08196dbf24dbee12fcbe60232caf745c1731cef652ca8f5f43a9d",
+      "privateEvidenceArchiveSha256": "0a3db42c4374cd084433f2a2b2410d926b5348c22cff19d7f84b431d157f382a",
+      "nativeQuit": true,
+      "gameExitCode": 0,
+      "ownedChildGone": true,
+      "eventCounts": {},
+      "resources": {
+        "missionObservedSeconds": 12.58,
+        "gameCpuSeconds": 8.8,
+        "meanBusyCores": 0.699,
+        "rssMinMiB": 986.8,
+        "rssMaxMiB": 1049.3
+      },
+      "publicExample": {
+        "nativeBullet": true,
+        "exactVictimHit": true,
+        "attributedPositiveAppliedDamage": true,
+        "proofSequences": {
+          "bullet": 1,
+          "hit": 283,
+          "applied": 280
+        },
+        "observedEvents": 283
+      },
+      "publicExampleSha256": "2ec7b5e260e33edea6e88683f36a769c94b2900cee3819a6e92333041acb95d9"
+    },
+    {
+      "run": 10,
+      "checksPassed": 49,
+      "checks": [
+        "host rejects retired runtime before mutation",
+        "actor.create rejects retired runtime before mutation",
+        "quit rejects retired runtime before mutation",
+        "rejected startup mutations leave idle live runtime",
+        "native mission running",
+        "local host authenticated through native handlers",
+        "lost create reply recovered only exact creation receipt",
+        "active creation receipt cannot be replayed",
+        "distinct native player identities",
+        "first spawn requires explicit null generation",
+        "rejected first spawn created no airframe",
+        "alpha native player/aircraft linkage",
+        "alpha server simulation",
+        "alpha no autonomous NPC brain",
+        "bravo native player/aircraft linkage",
+        "bravo server simulation",
+        "bravo no autonomous NPC brain",
+        "alpha directed task ticking",
+        "alpha actual displacement",
+        "alpha directed state only",
+        "bravo directed task ticking",
+        "bravo actual displacement",
+        "bravo directed state only",
+        "alpha physically turns toward authored east task",
+        "bravo retains separate north heading",
+        "cancel alpha only",
+        "stale aircraft command rejected",
+        "bravo retained task after rejected command",
+        "mock registry cleanup",
+        "retired creation receipt cannot be replayed",
+        "native bullet created by exact shooter",
+        "native hit on designated victim",
+        "native attributed applied damage on designated victim",
+        "combat actors cleaned up",
+        "native ejection retires airframe",
+        "replacement spawn rejects stale generation",
+        "rejected replacement preserves retired generation",
+        "replacement preserves player with new aircraft generation",
+        "retired airframe command rejected by runtime",
+        "replacement task survives stale command",
+        "name reuse creates distinct native player",
+        "retired player command rejected by runtime",
+        "replacement registry cleanup",
+        "public example fails on lost actor.create reply",
+        "public example cleans exact owned actor after lost actor.create reply",
+        "public example fails on lost actor.spawn reply",
+        "public example cleans exact owned actor after lost actor.spawn reply",
+        "final public explicit-target script passes",
+        "final public example actor cleanup"
+      ],
+      "runtimeSha256": "60f7999cfcb0f1cf1f37fbee84c154a2cf67b211e67f518bd58b28b95a4a6f5b",
+      "privateEvidenceArchiveSha256": "c67dbc9ef29097249d148c9a83ea1d1126c345de8a7494409debff3887e16e77",
+      "nativeQuit": true,
+      "gameExitCode": 0,
+      "ownedChildGone": true,
+      "eventCounts": {
+        "gun_bullet_created": 314,
+        "part_damage_call": 4,
+        "part_damage_applied": 4,
+        "unit_hit_registered": 2
+      },
+      "resources": {
+        "missionObservedSeconds": 50.62,
+        "gameCpuSeconds": 34.01,
+        "meanBusyCores": 0.672,
+        "rssMinMiB": 995.5,
+        "rssMaxMiB": 1079.1
+      },
+      "designatedCombat": {
+        "bullets": 314,
+        "hits": 2,
+        "positiveAppliedDamageCalls": 4
+      },
+      "publicExample": {
+        "nativeBullet": true,
+        "exactVictimHit": true,
+        "attributedPositiveAppliedDamage": true,
+        "proofSequences": {
+          "bullet": 326,
+          "hit": 564,
+          "applied": 561
+        },
+        "observedEvents": 245
+      },
+      "publicExampleSha256": "152f283bc00dca6c977caac2e68031095ccdc5d069b0e636bffe400f36bc2253"
+    },
+    {
+      "run": 12,
+      "checksPassed": 8,
+      "checks": [
+        "host rejects retired runtime before mutation",
+        "actor.create rejects retired runtime before mutation",
+        "quit rejects retired runtime before mutation",
+        "rejected startup mutations leave idle live runtime",
+        "native mission running",
+        "local host authenticated through native handlers",
+        "public lifecycle script passes",
+        "public example cleans only its mock actors"
+      ],
+      "runtimeSha256": "70f7c89bf7f756f724123d3ecad03689ae7dc3a74788b6681669865b5e5f8a63",
+      "privateEvidenceArchiveSha256": "691001e87b27c71e3c9529b81f9cf123f0897b242b2856bd2cfe62a30a1de377",
+      "nativeQuit": true,
+      "gameExitCode": 0,
+      "ownedChildGone": true,
+      "eventCounts": {},
+      "resources": {
+        "missionObservedSeconds": 32.77,
+        "gameCpuSeconds": 22.41,
+        "meanBusyCores": 0.684,
+        "rssMinMiB": 997.3,
+        "rssMaxMiB": 1062.6
+      },
+      "publicLifecycleChecks": {
+        "independentNativeLinksServerSimulationNoNPC": true,
+        "independentPhysicalTurnAndStraightNavigation": true,
+        "cancelIsolation": true,
+        "ejectionReplacementPreservesPlayerNewGeneration": true,
+        "staleAircraftCannotCancelReplacement": true,
+        "recreatedNameRejectsRetiredNativePlayer": true
+      },
+      "publicLifecycleSha256": "6cc4f10bb0239a921b9a7d5f3518dcd47d34334377ca61a0f0515f0e2ef379b0"
+    },
+    {
+      "run": 13,
+      "checksPassed": 8,
+      "checks": [
+        "host rejects retired runtime before mutation",
+        "actor.create rejects retired runtime before mutation",
+        "quit rejects retired runtime before mutation",
+        "rejected startup mutations leave idle live runtime",
+        "native mission running",
+        "local host authenticated through native handlers",
+        "public explicit-target script passes",
+        "public example cleans only its mock actors"
+      ],
+      "runtimeSha256": "70f7c89bf7f756f724123d3ecad03689ae7dc3a74788b6681669865b5e5f8a63",
+      "privateEvidenceArchiveSha256": "bbef54596580e256ac5f4a710291237b9b576659be2e8fbeb22eae70315d3805",
+      "nativeQuit": true,
+      "gameExitCode": 0,
+      "ownedChildGone": true,
+      "eventCounts": {},
+      "resources": {
+        "missionObservedSeconds": 12.72,
+        "gameCpuSeconds": 9.06,
+        "meanBusyCores": 0.712,
+        "rssMinMiB": 994.7,
+        "rssMaxMiB": 1046.0
+      },
+      "publicExample": {
+        "nativeBullet": true,
+        "exactVictimHit": true,
+        "attributedPositiveAppliedDamage": true,
+        "proofSequences": {
+          "bullet": 1,
+          "hit": 277,
+          "applied": 274
+        },
+        "observedEvents": 279
+      },
+      "publicExampleSha256": "152f283bc00dca6c977caac2e68031095ccdc5d069b0e636bffe400f36bc2253"
+    }
+  ],
+  "failedRuns": [
+    {
+      "run": 1,
+      "reason": "Initial callback argument binding mismatch; corrected before subsequent run"
+    },
+    {
+      "run": 2,
+      "reason": "Dedicated-build internal host authentication initialization incomplete; corrected with narrowly scoped native-handler adapter"
+    },
+    {
+      "run": 3,
+      "reason": "Spawn lookup did not use the public native aircraft key; corrected"
+    },
+    {
+      "run": 11,
+      "reason": "Lifecycle assertion incorrectly required all crew seats to carry the controlling pilot state; corrected to use explicit seat metadata, with idle passenger remaining outside directed control"
+    }
+  ]
+}
