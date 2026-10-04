@@ -101,3 +101,23 @@ to erase every effect. Quitting the disposable server ends the entire fixture.
 These mocks test authoritative server game behavior. They do not test retail
 client login, ownership transfer over transport, packet serialization, rendering
 or a human multiplayer session. Keep those as separate tests.
+
+There is also a simulation difference: a normal remote player's aircraft runs
+its flight simulation on the owning client and sends flight snapshots to the
+server. These ownerless mocks instead run that simulation on the server. They
+therefore add native flight work while omitting incoming snapshot validation and
+timing, independent transport peers and replication recipients. Mock actor counts
+and resource measurements are not equivalent to the same number of connected
+players.
+
+Combat takes a different path too. Server-simulated bullets cause native impacts
+and damage directly; remote-client hit claims normally go through server hit
+validation. These mocks do not exercise that claim/validation path. Ejection runs
+the native server sequence directly, bypassing the client command and its checks.
+
+Native aircraft creation, steering helpers, weapon routines, bullets and damage
+are still used. The adapter bypasses authenticated player initialization, faction
+save restoration and joining allowance, and ordinary aircraft request checks.
+It also skips saving faction data and sending reward displays to a nonexistent
+client. This makes it useful for scripted simulation and lifecycle regressions;
+normal connection, request and persistence behavior needs separate coverage.
