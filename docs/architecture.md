@@ -4,6 +4,12 @@ A test is a Python program. It creates named mock players, gives each one a task
 reads what the server did, and makes assertions. Tasks can change in response to
 observations: this is a two-way control API, not a recording of button presses.
 
+The implemented mode is **server simulation testing**. Each mock has native game
+identity and an aircraft, but no client connection or owner. The server runs the
+aircraft simulation. This is useful for repeatable flight, gun, damage and
+lifecycle regressions; it does not model a connected player's request path. See
+[Testing modes](testing-modes.md) for the boundary and the proposed second mode.
+
 All mock players share the running server's world and game process. They each
 have a native `Player`, `PlayerRef`, faction membership and associated aircraft.
 They have no network connection or Steam identity. This allows server behavior
@@ -44,11 +50,13 @@ if inspection["opposing"] and inspection["known"] and inspection["accurate"]:
 # then cancel, replace the task or fail with the observed state.
 ```
 
-The control listener accepts authenticated newline-delimited JSON on loopback.
-It queues requests for Unity's main thread. Python waits and branches outside
-the game; the directed task runs with the game's normal pilot update callbacks.
-No simulation frequency is changed. An attack has an explicit deadline, and
-the script's waits also have deadlines and retain their last observed state.
+`Session.status()`, `Session.create()`, `Actor.spawn()`, `Actor.goto()`,
+`Actor.attack()`, `Actor.cancel()`, `Actor.remove()`, `Session.events()` and
+`Session.quit()` are the consumer entrypoints. The authenticated loopback
+listener queues control requests for Unity's main thread. Python waits and
+branches outside the game; directed tasks use the game's normal pilot update
+callbacks. No simulation frequency is changed. Attacks and script waits have
+deadlines and retain their last observed state.
 
 ## Handles protect the intended actor
 
@@ -98,26 +106,4 @@ linked aircraft and registry entries. Native ejected crew and other emitted
 world objects follow their normal world lifecycle; actor removal is not a promise
 to erase every effect. Quitting the disposable server ends the entire fixture.
 
-These mocks test authoritative server game behavior. They do not test retail
-client login, ownership transfer over transport, packet serialization, rendering
-or a human multiplayer session. Keep those as separate tests.
-
-There is also a simulation difference: a normal remote player's aircraft runs
-its flight simulation on the owning client and sends flight snapshots to the
-server. These ownerless mocks instead run that simulation on the server. They
-therefore add native flight work while omitting incoming snapshot validation and
-timing, independent transport peers and replication recipients. Mock actor counts
-and resource measurements are not equivalent to the same number of connected
-players.
-
-Combat takes a different path too. Server-simulated bullets cause native impacts
-and damage directly; remote-client hit claims normally go through server hit
-validation. These mocks do not exercise that claim/validation path. Ejection runs
-the native server sequence directly, bypassing the client command and its checks.
-
-Native aircraft creation, steering helpers, weapon routines, bullets and damage
-are still used. The adapter bypasses authenticated player initialization, faction
-save restoration and joining allowance, and ordinary aircraft request checks.
-It also skips saving faction data and sending reward displays to a nonexistent
-client. This makes it useful for scripted simulation and lifecycle regressions;
-normal connection, request and persistence behavior needs separate coverage.
+The exact boundaries and bypassed checks are listed in [Testing modes](testing-modes.md).

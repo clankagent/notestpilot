@@ -1,4 +1,4 @@
-"""Inspect a running opt-in server; custom tasks belong in Python scripts."""
+"""Server simulation tests with native mocks; no connected-player coverage."""
 
 import argparse
 import json

@@ -1,6 +1,7 @@
 {
   "gameAssemblySha256": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a",
   "date": "2026-10-04",
+  "mode": "server-simulation",
   "coverage": "Disposable server-side mock-player fixtures; individual run summaries identify observed duration. No retail clients or transport coverage.",
   "resourceMethod": "Linux game-process CPU tick deltas and RSS during observed mission-running intervals. Includes stock Escalation simulation and test adapter; not per-mock cost, steady-state sizing, or a before/after capacity comparison.",
   "runs": [

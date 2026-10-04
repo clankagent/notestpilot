@@ -1,9 +1,16 @@
 # What has actually passed
 
-These are real dedicated-build game runs in disposable Linux labs, using built-in
+These are checks of the **Server simulation** mode: real dedicated-build game runs
+in disposable Linux labs, using built-in
 Escalation, BepInEx 5 and the exact game assembly hash documented in the README.
 There is one game process with server-side mock players. There are no separate
 retail clients in these tests.
+
+Mock aircraft are simulated on the server. Normal remote-player aircraft instead
+send their client-simulated flight snapshots and hit claims through server
+validation. These tests do not cover that path, joining funds, purchases,
+reservations or saved-player persistence. Native reward routines are retained,
+but kill/score assertions are still unverified. See [testing modes](testing-modes.md).
 
 ## Verified foundation
 
@@ -94,6 +101,9 @@ including the stock Escalation world and test adapter.
 The four-actor follow-up averaged **0.763 busy cores**, with RSS of **996–1152 MiB**.
 The two runs used different turn schedules; their difference is not an isolated
 measurement of the cost of adding two actors.
+Server simulation adds mock flight physics to the server while omitting remote
+player networking and validation. Its resource figures cannot predict the cost
+of connected players, even when the actor counts match.
 
 The five-minute navigation-to-combat session averaged **0.683 busy cores** over
 345.17 seconds of observed mission time, with sampled RSS of **984–1136 MiB**.

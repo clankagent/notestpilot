@@ -1,8 +1,32 @@
-# NOTestPilot — programmable pilots
+# NOTestPilot — programmable server tests
 
-A fresh design for testing Nuclear Option server behavior with programmable mock
-players. Tasks and targets belong to the test script. Selected game flight,
-aiming and weapon routines provide the mechanics.
+Script repeatable Nuclear Option gameplay tests with multiple native mock players
+in one game process. Choose their tasks, destinations, exact targets and weapons;
+observe native game effects and assert what happened.
+
+The available mode is **Server simulation**. It runs the mock aircraft's physics
+on the server and uses native flight, weapon and damage mechanics. It is useful
+for gameplay and mod regressions, independently scripted actors and lifecycle
+tests. It does not reproduce the full path of a connected remote player.
+
+## Testing modes
+
+| Mode | Status | Purpose |
+|---|---|---|
+| Server simulation | Available; measured game scenarios pass | Script native aircraft, combat and lifecycle behavior in one game process |
+| Player requests | Proposed; not implemented or selectable | Exercise normal player requests, funds, aircraft ownership and server validation |
+
+A normal remote player simulates flight on their client and sends snapshots;
+Server simulation instead flies the mock aircraft on the server. Its native
+impacts also bypass the remote client's hit-claim validation. Authentication,
+normal joining funds, aircraft purchase/reservation, saved-player data and
+per-client networking are outside the current mode's coverage.
+
+Native ammunition, firing cadence, impacts and damage still run. This is a
+deliberate simulation test tool, not an equivalent number of connected players.
+See [the mode comparison](docs/testing-modes.md) for the precise shared behavior,
+bypasses and intended second mode. There is no mode-selection flag yet; all
+current scripts use Server simulation.
 
 This branch is a new orphan history. The previous headless-client implementation
 is preserved on `main`.
@@ -163,6 +187,7 @@ Useful script operations:
 Attack currently requires a live opposing target with accurate native HQ tracking.
 It does not invent visibility or apply artificial damage. A fire request is not a
 hit: tests should assert native hit and attributed applied-damage events separately.
+These assertions cover the server impact/damage path, not remote-client hit claims.
 
 Actor handles bind the server instance, player identity and aircraft generation.
 Old handles cannot silently control replacements. Commands are never retried
