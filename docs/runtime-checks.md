@@ -27,7 +27,7 @@ native create and spawn commands: the example failed, recovered only its own
 actors, and cleaned them without repeating the mutations. A separate run executed the public combat
 example itself, rather than relying on a private wrapper's equivalent logic.
 
-The Python suite passes **58 tests**, covering real loopback transport, identity
+The Python suite passes **65 tests**, covering real loopback transport, identity
 checks, no automatic command retries, deadlines, incomplete evidence and example
 cleanup. A reflection check validates **24 Harmony callback bindings** against
 the supplied game assemblies. These checks supplement the game runs; they do
@@ -53,8 +53,32 @@ heading response was **14.83°** and minimum phase displacement **2.91 km**.
 Cancelling the first actor left every other actor progressing. Exact-owned cleanup
 and a clean native game exit passed again.
 
-These prove the measured two-actor and four-actor airborne scenarios. Combat
-transitions in the same sustained session still need their own runtime checks.
+These prove the measured two-actor and four-actor airborne navigation scenarios.
+A separate sustained session checked the combat transitions below.
+
+## Navigation, combat, cancellation and navigation again
+
+The same native player and airframe completed **60.01 seconds** of navigation,
+attacked an exact opposing aircraft with native bullets, a registered hit and
+positive attributed applied damage, then stopped firing. A fresh event cursor
+after cancellation began a **3.001-second** window with no new shooter bullets.
+The aircraft then flew for **30.02 seconds**, covering **3.09 km** and turning
+**19.9°** toward its new destination. The friendly pilot continued independently;
+all owned actors were cleaned up and the game exited natively with code zero.
+
+The same public script passed again with **300.04 seconds of initial navigation**,
+covering about **33 km** per pilot, followed by native gun effects and
+cancellation. The same player and aircraft then resumed navigation for
+**30.06 seconds**, covering **3.13 km** with a **19.8°** turn.
+The independent friendly kept progressing. The
+post-cancellation event cursor remained unchanged throughout the observed
+**3.115-second** window, and cleanup and native game exit passed again.
+
+The target was a newly created airborne fixture approximately 386–391 m ahead of the
+observed shooter. Existing aircraft were not repositioned. This checks task
+transitions and native weapon effects, rather than a realistic combat encounter.
+Hit registration can be observed after damage application because its observer
+runs after the native method returns; sequence numbers describe observation order.
 
 ## Resource observations
 
@@ -70,6 +94,11 @@ including the stock Escalation world and test adapter.
 The four-actor follow-up averaged **0.763 busy cores**, with RSS of **996–1152 MiB**.
 The two runs used different turn schedules; their difference is not an isolated
 measurement of the cost of adding two actors.
+
+The five-minute navigation-to-combat session averaged **0.683 busy cores** over
+345.17 seconds of observed mission time, with sampled RSS of **984–1136 MiB**.
+These are whole-game measurements, including the mission and adapter; they do
+not isolate the scripting overhead or compare against an unmodified server.
 
 Measurements use Linux game-process CPU tick deltas and RSS during observed
 mission-running intervals, roughly 17–51 seconds for the fuller short runs and

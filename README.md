@@ -19,6 +19,10 @@ Two-actor and four-actor scenarios also passed five minutes of repeated measured
 cancellation isolation, with native identity and control ownership checked
 throughout. That airborne fixture is still narrower than a full mission.
 
+A separate session also passed five minutes of navigation followed by exact-target
+gunfire, cancellation and a measured turn when the same aircraft resumed flying.
+A second pilot continued independently through those task changes.
+
 Mock players do not establish authentication, real client packet handling or
 retail Steam coverage. Longer missions, other aircraft and weapons, mission
 changes and larger actor counts remain to be tested. No capacity or resource
@@ -126,8 +130,23 @@ The actor count can range from 2 to 4 and the turn angle from 10° to 35°:
 uv run python examples/sustained_tasks.py --actors 4 --turn-degrees 15
 ```
 
-The script
-requires every remaining actor to progress when it cancels the first actor.
+The script requires every remaining actor to progress when it cancels the first actor.
+
+To exercise different tasks on the same player and aircraft:
+
+```sh
+uv run python examples/task_transitions.py
+```
+
+The script first observes a minute of navigation, creates an opposing airborne
+target ahead of the pilot's measured position, and commands an exact gun station.
+It requires native bullets, a hit and attributed applied damage. After cancellation,
+it checks a three-second window for new shooter bullets, then requires a physical
+turn when that same aircraft resumes navigation. A friendly pilot keeps flying
+throughout. Existing projectiles may still hit after firing stops.
+Use `--navigation-seconds 300` to put the combat transition after five minutes of
+flight. Every stage has a deadline and reports the observed task and evidence on
+failure; the script removes only actors it created.
 
 Useful script operations:
 

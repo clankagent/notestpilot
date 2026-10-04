@@ -590,6 +590,106 @@
         ]
       },
       "publicSustainedSha256": "a2a01e956aec70afbb5660b0dfd2ef7bc6183cad316f8ad96e8798ff515f8daf"
+    },
+    {
+      "run": 16,
+      "checksPassed": 8,
+      "checks": [
+        "host rejects retired runtime before mutation",
+        "actor.create rejects retired runtime before mutation",
+        "quit rejects retired runtime before mutation",
+        "rejected startup mutations leave idle live runtime",
+        "native mission running",
+        "local host authenticated through native handlers",
+        "public task-transition script passes",
+        "public example cleans only its mock actors"
+      ],
+      "runtimeSha256": "70f7c89bf7f756f724123d3ecad03689ae7dc3a74788b6681669865b5e5f8a63",
+      "privateEvidenceArchiveSha256": "b2ae466d4d4a8a5927f3bffa572096f209b4b05c3ba46241dff795920a366ec0",
+      "nativeQuit": true,
+      "gameExitCode": 0,
+      "ownedChildGone": true,
+      "eventCounts": {},
+      "resources": {
+        "missionObservedSeconds": 103.54,
+        "gameCpuSeconds": 68.45,
+        "meanBusyCores": 0.661,
+        "rssMinMiB": 987.4,
+        "rssMaxMiB": 1098.3
+      },
+      "publicTransitions": {
+        "checks": {
+          "nativeBulletExactHitAttributedDamage": true,
+          "cancelIsolationNoNewShooterBullets": true,
+          "sameNativePlayerAirframeResumedTurn": true
+        },
+        "nativeBullet": true,
+        "exactVictimHit": true,
+        "attributedPositiveAppliedDamage": true,
+        "initialNavigationSeconds": 60.01,
+        "resumedNavigationSeconds": 30.02,
+        "minimumInitialDisplacementMetres": 6209.9,
+        "shooterResumedDisplacementMetres": 3094.8,
+        "shooterResumedTurnDegrees": 19.89,
+        "quietSeconds": 3.001,
+        "proofSequences": {
+          "bullet": 1,
+          "hit": 249,
+          "applied": 248
+        },
+        "observedEvents": 264
+      },
+      "publicTransitionsSha256": "4be01cf1cf6ceb377f1fd1a2f5223d08c0f49f0840ba5a82098d2f4060e44f8f"
+    },
+    {
+      "run": 17,
+      "checksPassed": 8,
+      "checks": [
+        "host rejects retired runtime before mutation",
+        "actor.create rejects retired runtime before mutation",
+        "quit rejects retired runtime before mutation",
+        "rejected startup mutations leave idle live runtime",
+        "native mission running",
+        "local host authenticated through native handlers",
+        "public task-transition script passes",
+        "public example cleans only its mock actors"
+      ],
+      "runtimeSha256": "70f7c89bf7f756f724123d3ecad03689ae7dc3a74788b6681669865b5e5f8a63",
+      "privateEvidenceArchiveSha256": "d895b605301e9255bb4b5f9867ad6d98e2813ed40cfd53a46ee5f462c047b20e",
+      "nativeQuit": true,
+      "gameExitCode": 0,
+      "ownedChildGone": true,
+      "eventCounts": {},
+      "resources": {
+        "missionObservedSeconds": 345.17,
+        "gameCpuSeconds": 235.92,
+        "meanBusyCores": 0.683,
+        "rssMinMiB": 984.2,
+        "rssMaxMiB": 1136.2
+      },
+      "publicTransitions": {
+        "checks": {
+          "nativeBulletExactHitAttributedDamage": true,
+          "cancelIsolationNoNewShooterBullets": true,
+          "sameNativePlayerAirframeResumedTurn": true
+        },
+        "nativeBullet": true,
+        "exactVictimHit": true,
+        "attributedPositiveAppliedDamage": true,
+        "initialNavigationSeconds": 300.04,
+        "resumedNavigationSeconds": 30.06,
+        "minimumInitialDisplacementMetres": 32986.8,
+        "shooterResumedDisplacementMetres": 3128.2,
+        "shooterResumedTurnDegrees": 19.8,
+        "quietSeconds": 3.115,
+        "proofSequences": {
+          "bullet": 1,
+          "hit": 309,
+          "applied": 306
+        },
+        "observedEvents": 320
+      },
+      "publicTransitionsSha256": "4be01cf1cf6ceb377f1fd1a2f5223d08c0f49f0840ba5a82098d2f4060e44f8f"
     }
   ],
   "failedRuns": [
