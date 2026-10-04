@@ -18,12 +18,15 @@ Coordinates and valid target IDs must come from the chosen mission's state.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import base64
+import binascii
 import json
 import math
 import os
 import socket
 import time
 import uuid
+from collections.abc import Sequence
 from typing import Any
 
 
@@ -52,6 +55,14 @@ class CreationUncertain(RuntimeError):
         self.creation_id = creation_id
         self.instance = instance
         self.cause = cause
+
+
+class RequestJoinUncertain(RuntimeError):
+    """A single native request-player join has an uncertain outcome, never replay."""
+
+    def __init__(self, name: str, creation_id: str, instance: str, cause: Exception):
+        super().__init__(f"Request-player join uncertain for {name!r}; inspect its exact correlation for cleanup")
+        self.name, self.creation_id, self.instance, self.cause = name, creation_id, instance, cause
 
 
 class EventOverflow(RuntimeError):
@@ -116,6 +127,7 @@ class Session:
         self.max_response_bytes = max_response_bytes
         self.instance: str | None = None
         self.event_cursor = 0
+        self._request_packet_cursors: dict[tuple[str, str], int | None] = {}
 
     def call(self, command: str, args: dict | None = None, *, timeout: float | None = None) -> Any:
         """Issue exactly one request, with finite total transport time."""
@@ -309,6 +321,93 @@ class Session:
             raise StaleActor("Creation recovery found no exact name/correlation match")
         return self._bind(uncertainty.name, state)
 
+    def join_request_player(self, name: str, password: str, *,
+                            allowed_errors: tuple[tuple[str, str], ...] = ()) -> RequestPlayer:
+        """Join once through native virtual-connection requests, then poll readiness.
+
+        This adapter does not establish socket delivery or client-owned flight.
+        An uncertain result permits exact-correlation inspection for cleanup only.
+        """
+        if not isinstance(name, str) or not name.strip() or len(name) > 64:
+            raise ValueError("Request-player name must contain 1..64 characters")
+        if not isinstance(password, str):
+            raise ValueError("password must be a string")
+        if not isinstance(allowed_errors, tuple) or any(not isinstance(pair, tuple) or len(pair) != 2
+                or any(not isinstance(part, str) for part in pair) for pair in allowed_errors):
+            raise ValueError("allowed_errors must be a tuple of exact (kind, message) string pairs")
+        self.status()
+        creation_id = uuid.uuid4().hex
+        try:
+            state = self._state(self.call("request_join", {"name": name, "password": password,
+                                "creationId": creation_id, "instance": self.instance, "mode": "player-requests"}))
+            def ready(snapshot):
+                row = self._request_row(name, snapshot)
+                if row.get("creationId") != creation_id:
+                    raise ProtocolError("Join correlation changed while awaiting readiness")
+                if row.get("state") in ("failed", "disconnected"):
+                    raise CommandError("Native request-player join failed")
+                return row.get("ready") is True and type(row.get("playerId")) is int and row["playerId"] > 0
+            if not ready(state):
+                state = self.wait_for(ready, "native request-player readiness", timeout=self.timeout,
+                                      allowed_errors=allowed_errors)
+            return self._bind_request_player(name, state)
+        except (TransportError, ProtocolError, WaitTimeout, RuntimeFailure, StaleActor) as failure:
+            raise RequestJoinUncertain(name, creation_id, self.instance, failure) from failure
+
+    def recover_request_player(self, uncertainty: RequestJoinUncertain) -> RequestPlayer:
+        """Bind only an exact join receipt, including pending rows, for cleanup."""
+        if not isinstance(uncertainty, RequestJoinUncertain):
+            raise ValueError("Expected RequestJoinUncertain")
+        state = self.status()
+        if state["instance"] != uncertainty.instance:
+            raise StaleActor("Request join recovery refused a changed runtime")
+        row = self._request_row(uncertainty.name, state)
+        if row.get("creationId") != uncertainty.creation_id:
+            raise StaleActor("Request join recovery found no exact name/correlation match")
+        bound = self._bind_request_player(uncertainty.name, state)
+        return RequestPlayer(self, bound.name, bound.connection_id, bound.player_id, bound.aircraft_id,
+                             bound.instance, tuple(c for c in bound.capabilities if c in ("status", "disconnect")))
+
+    def request_player(self, name: str) -> RequestPlayer:
+        """Explicitly bind the current request-player generation, never a mock."""
+        return self._bind_request_player(name, self.status())
+
+    def _request_row(self, name: str, state: dict) -> dict:
+        registry = state.get("requestPlayers")
+        if not isinstance(registry, list):
+            raise ProtocolError("Request-player registry missing")
+        rows = [row for row in registry if isinstance(row, dict) and row.get("name") == name]
+        if len(rows) != 1:
+            raise StaleActor("Request player missing or ambiguous")
+        row = rows[0]
+        if row.get("mode") != "player-requests":
+            raise ProtocolError("Request-player mode mismatch")
+        return row
+
+    def _bind_request_player(self, name: str, state: dict) -> RequestPlayer:
+        row = self._request_row(name, state)
+        connection = row.get("connectionId")
+        if not isinstance(connection, str) or not connection:
+            raise ProtocolError("Request connection identity missing")
+        player = row.get("playerId")
+        if player is not None:
+            _integer(player, "request playerId", 1)
+        aircraft = row.get("aircraft")
+        if aircraft is not None and not isinstance(aircraft, dict):
+            raise ProtocolError("Malformed request aircraft")
+        generation = None if aircraft is None else _integer(aircraft.get("id"), "request aircraft.id", 1)
+        capabilities = row.get("capabilities")
+        ready = row.get("ready")
+        if type(ready) is not bool:
+            raise ProtocolError("Request-player readiness missing")
+        allowed = {"status", "join_faction", "purchase_airframe", "request_spawn", "disconnect"}
+        if (not isinstance(capabilities, list) or any(not isinstance(c, str) or c not in allowed for c in capabilities)
+                or len(set(capabilities)) != len(capabilities) or "status" not in capabilities):
+            raise ProtocolError("Malformed request-player capabilities")
+        if (player is None or not ready) and any(c not in ("status", "disconnect") for c in capabilities):
+            raise ProtocolError("Pending join has unsafe capabilities")
+        return RequestPlayer(self, name, connection, player, generation, state["instance"], tuple(capabilities))
+
     def quit(self) -> dict:
         """Quit the bound disposable runtime once; never retry uncertain results."""
         self.status()
@@ -360,6 +459,135 @@ class Session:
         if after is None:
             self.event_cursor = next_cursor
         return batch
+
+
+@dataclass(frozen=True)
+class RequestPlayer:
+    """Native request capability; no direct spawn pose, server control or firing."""
+
+    session: Session
+    name: str
+    connection_id: str
+    player_id: int | None
+    aircraft_id: int | None
+    instance: str
+    capabilities: tuple[str, ...]
+    mode: str = "player-requests"
+
+    def _checked(self, capability: str) -> dict:
+        current = self.session.request_player(self.name)
+        if self.mode != "player-requests" or (current.mode, current.instance, current.connection_id, current.player_id, current.aircraft_id) != (
+                self.mode, self.instance, self.connection_id, self.player_id, self.aircraft_id):
+            raise StaleActor("Request-player mode, connection or native generation changed")
+        if capability not in self.capabilities or capability not in current.capabilities:
+            raise CommandError("Request-player capability unavailable: " + capability)
+        return {"name": self.name, "mode": self.mode, "instance": self.instance, "connectionId": self.connection_id,
+                "playerId": self.player_id, "aircraftId": self.aircraft_id}
+
+    def _command(self, command: str, capability: str, extra: dict | None = None) -> dict:
+        args = self._checked(capability)
+        args.update(extra or {})
+        return self.session._state(self.session.call(command, args))
+
+    def status(self) -> dict:
+        state = self._command("request_status", "status")
+        current = self.session._bind_request_player(self.name, state)
+        if (current.connection_id, current.player_id, current.aircraft_id) != (self.connection_id, self.player_id, self.aircraft_id):
+            raise StaleActor("Request status changed native identity; rebind explicitly")
+        return self.session._request_row(self.name, state)
+
+    def packets(self) -> list[dict]:
+        """Drain copied native outgoing records once; this consumes diagnostics.
+
+        Sequences start at one per connection, independently of event cursors.
+        A gap, malformed batch or lost drain response permanently invalidates
+        this Session's packet evidence for that connection. No request is retried.
+        Raw packet contents should remain in private diagnostic artifacts.
+        """
+        key = (self.instance, self.connection_id)
+        previous = self.session._request_packet_cursors.get(key, 0)
+        if previous is None:
+            raise ProtocolError("Request packet journal evidence was lost; this connection cannot be drained again")
+        row = self.status()  # Includes exact mode/runtime/player/generation guards.
+        if type(row.get("packetGap")) is not bool or row["packetGap"]:
+            self.session._request_packet_cursors[key] = None
+            raise ProtocolError("Native packet journal reports a gap or lacks complete evidence")
+        args = {"name": self.name, "mode": self.mode, "instance": self.instance, "connectionId": self.connection_id,
+                "playerId": self.player_id, "aircraftId": self.aircraft_id}
+        try:
+            batch = self.session.call("request_packets", args)
+            if not isinstance(batch, list) or len(batch) > 4096:
+                raise ProtocolError("Malformed or oversized request packet batch")
+            copied, total = [], 0
+            for packet in batch:
+                if not isinstance(packet, dict):
+                    raise ProtocolError("Malformed request packet record")
+                sequence = _integer(packet.get("sequence"), "packet.sequence", 1)
+                if sequence != previous + 1:
+                    raise ProtocolError("Request packet sequence is duplicated, truncated or nonconsecutive")
+                channel, encoded = packet.get("channel"), packet.get("bytes")
+                if channel not in ("reliable", "unreliable", "notify") or not isinstance(encoded, str):
+                    raise ProtocolError("Request packet channel or bytes malformed")
+                if len(encoded) > 4 * ((1024 * 1024 + 2) // 3):
+                    raise ProtocolError("Request packet exceeds per-packet limit")
+                try:
+                    decoded = base64.b64decode(encoded, validate=True)
+                except (binascii.Error, ValueError) as failure:
+                    raise ProtocolError("Request packet bytes are not strict base64") from failure
+                if not decoded or len(decoded) > 1024 * 1024 or base64.b64encode(decoded).decode("ascii") != encoded:
+                    raise ProtocolError("Request packet bytes are empty, oversized or noncanonical")
+                total += len(decoded)
+                if total > 16 * 1024 * 1024:
+                    raise ProtocolError("Request packet batch exceeds total byte limit")
+                copied.append({"sequence": sequence, "channel": channel, "bytes": encoded})
+                previous = sequence
+        except (TransportError, ProtocolError):
+            self.session._request_packet_cursors[key] = None
+            raise
+        self.session._request_packet_cursors[key] = previous
+        return copied
+
+    def join_faction(self, faction: str) -> dict:
+        if not isinstance(faction, str) or not faction:
+            raise ValueError("faction must be a native faction name")
+        return self._command("request_join_faction", "join_faction", {"faction": faction})
+
+    def purchase_airframe(self, aircraft: str) -> dict:
+        if not isinstance(aircraft, str) or not aircraft:
+            raise ValueError("aircraft must be a native aircraft key")
+        return self._command("request_purchase_airframe", "purchase_airframe", {"aircraft": aircraft})
+
+    def request_spawn(self, airbase: str, aircraft: str, *, loadout: Sequence[str | None] | None = None,
+                      fuel: float = 1, livery: int | None = None) -> RequestPlayer:
+        """One native airbase spawn request; inspect native outcome, never fallback.
+
+        Returns a new generation handle. A native rejection can leave it without
+        an aircraft; inspect status/receipts to assert the game's actual outcome.
+        """
+        if not isinstance(airbase, str) or not airbase or not isinstance(aircraft, str) or not aircraft:
+            raise ValueError("airbase and aircraft must be native catalog names")
+        if type(fuel) not in (int, float) or not math.isfinite(fuel) or not 0 <= fuel <= 1:
+            raise ValueError("fuel must be finite and in 0..1")
+        if livery is not None and (type(livery) is not int or livery < 0):
+            raise ValueError("livery must be a nonnegative builtin index or None")
+        mounts = None
+        if loadout is not None:
+            if not isinstance(loadout, Sequence) or isinstance(loadout, (str, bytes)) or len(loadout) > 16:
+                raise ValueError("loadout must be a sequence of native weapon mounts")
+            mounts = []
+            for mount in loadout:
+                if mount is not None and (not isinstance(mount, str) or not mount):
+                    raise ValueError("Each loadout station requires a native weapon-mount key or None")
+                mounts.append(mount)
+        state = self._command("request_spawn", "request_spawn", {"airbase": airbase, "aircraft": aircraft,
+                               "loadout": mounts, "fuel": fuel, "livery": livery})
+        current = self.session._bind_request_player(self.name, state)
+        if (current.connection_id, current.player_id) != (self.connection_id, self.player_id):
+            raise ProtocolError("Spawn request changed native player/connection")
+        return current
+
+    def disconnect(self) -> dict:
+        return self._command("request_disconnect", "disconnect")
 
 
 @dataclass(frozen=True)

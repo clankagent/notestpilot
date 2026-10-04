@@ -1,0 +1,270 @@
+{
+  "date": "2026-10-04",
+  "mode": "player-requests",
+  "gameAssemblySha256": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a",
+  "transport": "Separate virtual non-host connections; copied native serialized messages dispatched in memory.",
+  "mission": "Built-in Escalation, unchanged simulation cadence, disposable dedicated-build process with BepInEx 5.",
+  "localPythonTests": 93,
+  "harmonyCallbackBindingsChecked": 24,
+  "notEstablished": [
+    "socket delivery",
+    "retail or Steam authentication",
+    "client-owned flight and hit claims",
+    "persistence or rejoining",
+    "all missions, aircraft and loadouts",
+    "sustained multiplayer play",
+    "player capacity or performance savings"
+  ],
+  "runs": [
+    {
+      "run": 20,
+      "question": "One-player native authentication, economy and validated spawn",
+      "passed": true,
+      "runtimeSha256": "380efa4a6f7a2f45da76c722518fd182bd74d32fc9d25a2b4c581e0c03214bee",
+      "privateEvidenceArchiveSha256": "06410a6635023272d1d8f1c0f6e5aff4df9ad67e72ca6a846b256ac07c516b3b",
+      "checks": [
+        "host rejects retired runtime before mutation",
+        "actor.create rejects retired runtime before mutation",
+        "quit rejects retired runtime before mutation",
+        "rejected startup mutations leave idle live runtime",
+        "native mission running",
+        "local host authenticated through native handlers",
+        "native owned non-host player ready",
+        "request creation did not add a server-simulation actor",
+        "fresh native auth has no restored faction",
+        "native faction selection succeeds",
+        "native joining allowance credited",
+        "unaffordable purchase preserves funds and inventory",
+        "unaffordable purchase records native InventoryCost",
+        "unowned airframe rejected by native spawn reply",
+        "affordable native purchase charges exact cost",
+        "affordable native purchase credits one ordinary airframe",
+        "foreign faction airbase rejected without spending inventory",
+        "owned native spawn request allowed",
+        "native spawned aircraft belongs to exact nonhost connection",
+        "request aircraft retains normal remote simulation",
+        "spawn consumes native owned airframe into use",
+        "native disconnect unregisters peer and character",
+        "server simulation registry remains untouched"
+      ],
+      "nativeQuit": true,
+      "gameExitCode": 0,
+      "ownedChildGone": true
+    },
+    {
+      "run": 23,
+      "question": "Two-player native ownership, rate limiting, refill and isolation",
+      "passed": true,
+      "runtimeSha256": "54a6b8470fa845e9ea79a832e3cb7097369c493f16ee7cd37310af3d3018a2e4",
+      "privateEvidenceArchiveSha256": "39d1cab646fc57d37d899d959317bbf2e1bc937072f9b0f7e5015e3d1022150c",
+      "checks": [
+        "host rejects retired runtime before mutation",
+        "actor.create rejects retired runtime before mutation",
+        "quit rejects retired runtime before mutation",
+        "rejected startup mutations leave idle live runtime",
+        "native mission running",
+        "local host authenticated through native handlers",
+        "two distinct ready native nonhost peers",
+        "fresh players have no faction inventory or aircraft",
+        "native wrong-owner request returns failed exact reply",
+        "native sender records NoAuthority",
+        "exact native authority error observed once",
+        "wrong owner does not charge error flags to target",
+        "wrong-owner leaves both players unchanged",
+        "native rate bucket permits ten queries then rejects eleventh",
+        "native sender records RateLimit without disconnect",
+        "other peer independent native rate bucket still permits query",
+        "native bucket refills without resetting limits",
+        "all guard probes preserve both native economies and aircraft",
+        "no server simulation actor or tool-created aircraft",
+        "first native disconnect removes exact membership and identities",
+        "second peer survives first disconnect unchanged",
+        "second native disconnect cleans exact peer"
+      ],
+      "nativeQuit": true,
+      "gameExitCode": 0,
+      "ownedChildGone": true
+    },
+    {
+      "run": 24,
+      "question": "Actual public two-player purchase/spawn example",
+      "passed": true,
+      "runtimeSha256": "54a6b8470fa845e9ea79a832e3cb7097369c493f16ee7cd37310af3d3018a2e4",
+      "privateEvidenceArchiveSha256": "770f5b48861d5fb9390257a8748d39d9a38826a34fc0eed1b83c2317fc7a1bb6",
+      "checks": [
+        "host rejects retired runtime before mutation",
+        "actor.create rejects retired runtime before mutation",
+        "quit rejects retired runtime before mutation",
+        "rejected startup mutations leave idle live runtime",
+        "native mission running",
+        "local host authenticated through native handlers",
+        "public two-player request scenario passes",
+        "public request scenario cleaned both native connections",
+        "public request scenario leaves server simulation actors untouched"
+      ],
+      "nativeQuit": true,
+      "gameExitCode": 0,
+      "ownedChildGone": true,
+      "publicExample": {
+        "checks": {
+          "nativeJoinAllowanceIdentityIsolation": true,
+          "exactCostInventoryPurchaseIsolation": true,
+          "correlatedOwnedSpawnRemoteAuthorityIsolation": true,
+          "disconnectIsolation": true,
+          "nativeDisconnectCleanup": true
+        },
+        "spawnReceipts": [
+          {
+            "replyId": 1,
+            "success": true,
+            "allowed": true,
+            "delayedSpawn": false
+          },
+          {
+            "replyId": 2,
+            "success": true,
+            "allowed": true,
+            "delayedSpawn": false
+          }
+        ],
+        "packetRecords": 4427,
+        "packetBatches": 22,
+        "selection": {
+          "aircraft": "COIN",
+          "cost": 11.5,
+          "airbases": [
+            "Vigil Cay Naval Airbase",
+            "Agrapol Airbase"
+          ]
+        },
+        "cleanup": {
+          "connections": 2,
+          "complete": true
+        },
+        "observedSeconds": 2.104,
+        "durationMeaning": "Short request scenario only; excludes game startup and is not a sustained-flight or capacity measurement."
+      }
+    },
+    {
+      "run": 25,
+      "question": "Same public example in a separate fresh mission",
+      "passed": true,
+      "runtimeSha256": "54a6b8470fa845e9ea79a832e3cb7097369c493f16ee7cd37310af3d3018a2e4",
+      "privateEvidenceArchiveSha256": "53467b0ad5f34ffa52ea943d85f8fd2f8efba4b8eab07d3301c246794627c1a3",
+      "checks": [
+        "host rejects retired runtime before mutation",
+        "actor.create rejects retired runtime before mutation",
+        "quit rejects retired runtime before mutation",
+        "rejected startup mutations leave idle live runtime",
+        "native mission running",
+        "local host authenticated through native handlers",
+        "public two-player request scenario passes",
+        "public request scenario cleaned both native connections",
+        "public request scenario leaves server simulation actors untouched"
+      ],
+      "nativeQuit": true,
+      "gameExitCode": 0,
+      "ownedChildGone": true,
+      "publicExample": {
+        "checks": {
+          "nativeJoinAllowanceIdentityIsolation": true,
+          "exactCostInventoryPurchaseIsolation": true,
+          "correlatedOwnedSpawnRemoteAuthorityIsolation": true,
+          "disconnectIsolation": true,
+          "nativeDisconnectCleanup": true
+        },
+        "spawnReceipts": [
+          {
+            "replyId": 1,
+            "success": true,
+            "allowed": true,
+            "delayedSpawn": false
+          },
+          {
+            "replyId": 2,
+            "success": true,
+            "allowed": true,
+            "delayedSpawn": false
+          }
+        ],
+        "packetRecords": 4537,
+        "packetBatches": 22,
+        "selection": {
+          "aircraft": "COIN",
+          "cost": 11.5,
+          "airbases": [
+            "Vigil Cay Naval Airbase",
+            "Agrapol Airbase"
+          ]
+        },
+        "cleanup": {
+          "connections": 2,
+          "complete": true
+        },
+        "observedSeconds": 2.217,
+        "durationMeaning": "Short request scenario only; excludes game startup and is not a sustained-flight or capacity measurement."
+      }
+    },
+    {
+      "run": 26,
+      "question": "Final runtime metadata and actual public example",
+      "passed": true,
+      "runtimeSha256": "168e9631523d0ac678b21df4938ec966620a78e326c6a4d3b81616d67e2e53bd",
+      "privateEvidenceArchiveSha256": "b642f9cb3ba09454d2c37c3636a3e8f72084dc82ca77e724b8f92fd52837e727",
+      "checks": [
+        "host rejects retired runtime before mutation",
+        "actor.create rejects retired runtime before mutation",
+        "quit rejects retired runtime before mutation",
+        "rejected startup mutations leave idle live runtime",
+        "native mission running",
+        "local host authenticated through native handlers",
+        "runtime advertises distinct optional request coverage",
+        "public two-player request scenario passes",
+        "public request scenario cleaned both native connections",
+        "public request scenario leaves server simulation actors untouched"
+      ],
+      "nativeQuit": true,
+      "gameExitCode": 0,
+      "ownedChildGone": true,
+      "publicExample": {
+        "checks": {
+          "nativeJoinAllowanceIdentityIsolation": true,
+          "exactCostInventoryPurchaseIsolation": true,
+          "correlatedOwnedSpawnRemoteAuthorityIsolation": true,
+          "disconnectIsolation": true,
+          "nativeDisconnectCleanup": true
+        },
+        "spawnReceipts": [
+          {
+            "replyId": 1,
+            "success": true,
+            "allowed": true,
+            "delayedSpawn": false
+          },
+          {
+            "replyId": 2,
+            "success": true,
+            "allowed": true,
+            "delayedSpawn": false
+          }
+        ],
+        "packetRecords": 4361,
+        "packetBatches": 21,
+        "selection": {
+          "aircraft": "COIN",
+          "cost": 11.5,
+          "airbases": [
+            "Vigil Cay Naval Airbase",
+            "Agrapol Airbase"
+          ]
+        },
+        "cleanup": {
+          "connections": 2,
+          "complete": true
+        },
+        "observedSeconds": 2.027,
+        "durationMeaning": "Short request scenario only; excludes game startup and is not a sustained-flight or capacity measurement."
+      }
+    }
+  ]
+}

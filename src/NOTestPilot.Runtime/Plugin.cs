@@ -61,6 +61,7 @@ public sealed class Plugin : BaseUnityPlugin
             MockPlayers.Initialize(harmony);
             MockLifecycle.Initialize(harmony);
             Events.Install(harmony);
+            if (Environment.GetEnvironmentVariable("NOTESTPILOT_PLAYER_REQUESTS") == "1") RequestConnections.Initialize();
         }
         catch { harmony.UnpatchSelf(); throw; }
         listener = new TcpListener(IPAddress.Loopback, port);
@@ -117,6 +118,9 @@ public sealed class Plugin : BaseUnityPlugin
 
     private void Update()
     {
+        RequestConnections.Tick();
+        RequestActions.Tick();
+        RequestDiagnostics.Tick();
         for (int i = 0; i < 4 && pending.TryDequeue(out var request); i++)
             Execute(request).Forget();
     }
@@ -186,8 +190,30 @@ public sealed class Plugin : BaseUnityPlugin
                 if (name != "Escalation" && name != "Terminal Control") throw new ArgumentException("Built-in lab mission required");
                 var mission = CommandLineArgParser.LoadMission(name, false);
                 MissionManager.SetMission(mission, false);
-                await NetworkManagerNuclearOption.i.StartHostAsync(new HostOptions(SocketType.UDP, GameState.Multiplayer, mission.MapKey) { UdpPort = 17777, MaxConnections = 1, Password = token });
+                await NetworkManagerNuclearOption.i.StartHostAsync(new HostOptions(SocketType.UDP, GameState.Multiplayer, mission.MapKey) {
+                    UdpPort = 17777, MaxConnections = Environment.GetEnvironmentVariable("NOTESTPILOT_PLAYER_REQUESTS") == "1" ? 8 : 1, Password = token });
                 return Snapshot();
+            case "request_join":
+                if ((string)args["instance"] != instance) throw new InvalidOperationException("Stale or missing runtime instance");
+                if ((string)args["mode"] != "player-requests") throw new InvalidOperationException("Player requests mode is required");
+                if (!MissionManager.IsRunning) throw new InvalidOperationException("Mission required");
+                RequestConnections.Create((string)args["name"], (string)args["password"], (string)args["creationId"]);
+                return Snapshot();
+            case "request_status":
+                RequestActions.Bound(args, instance, pending: true); return Snapshot();
+            case "request_probe":
+                return RequestDiagnostics.Run(args, instance);
+            case "request_join_faction":
+                RequestActions.JoinFaction(RequestActions.Bound(args, instance), (string)args["faction"]); return Snapshot();
+            case "request_purchase_airframe":
+                RequestActions.Purchase(RequestActions.Bound(args, instance), (string)args["aircraft"]); return Snapshot();
+            case "request_spawn":
+                RequestActions.Spawn(RequestActions.Bound(args, instance), args); return Snapshot();
+            case "request_disconnect":
+                RequestConnections.Disconnect(RequestActions.Bound(args, instance, pending: true)); return Snapshot();
+            case "request_packets":
+                return RequestConnections.DrainPackets(RequestActions.Bound(args, instance, pending: true))
+                    .Select(p => new { sequence = p.Sequence, channel = p.Channel, bytes = Convert.ToBase64String(p.Bytes) }).ToArray();
             case "actor.create":
                 if ((string)args["instance"] != instance) throw new InvalidOperationException("Stale or missing runtime instance");
                 if (!MissionManager.IsRunning) throw new InvalidOperationException("Mission required");
@@ -238,6 +264,7 @@ public sealed class Plugin : BaseUnityPlugin
             case "quit":
                 if ((string)args["instance"] != instance) throw new InvalidOperationException("Stale or missing runtime instance");
                 foreach (var player in MockPlayers.Players.ToArray()) { if (player.Aircraft != null) DirectedPilot.For(player.Aircraft).Cancel(); MockPlayers.Remove(player); }
+                RequestConnections.Cleanup();
                 Application.Quit(); return new { accepted = true };
             default: throw new ArgumentException("Unknown command");
         }
@@ -250,15 +277,21 @@ public sealed class Plugin : BaseUnityPlugin
             protocol = 2, instance, assemblySha256 = ReviewedBuild, menuReady = ready,
             serverActive = ready && NetworkManagerNuclearOption.i.Server.Active,
             missionRunning = MissionManager.IsRunning, mission = MissionManager.CurrentMission?.Name,
-            coverage = "programmable server mock players; no real client/authentication coverage",
+            coverage = "server simulation; optional native in-memory player requests; no sockets, retail clients or client-owned flight",
+            requestPlayers = RequestActions.Snapshot(),
+            requestDiagnostics = RequestDiagnostics.AllStatus(),
             localHostAdapter = new { authenticationAttempts = LocalHostAdapter.AuthenticationAttempts,
                 nameFallbacks = LocalHostAdapter.NameFallbacks,
                 identityReady = ready && NetworkManagerNuclearOption.i.Client.Player?.Identity != null },
             errors = new { count = Interlocked.Read(ref errorCount), recent = errors.ToArray() },
             factions = FactionRegistry.GetAllHQs().Select(h => h.faction.factionName).ToArray(),
+            factionEconomy = FactionRegistry.GetAllHQs().Select(h => new { faction = h.faction.factionName, funds = h.factionFunds, joinAllowance = h.playerJoinAllowance }).ToArray(),
             airbases = FactionRegistry.airbaseLookup.Select(b => new { name = b.Key, faction = b.Value.CurrentHQ?.faction.factionName,
-                position = Coordinates(b.Value.transform.position.ToGlobalPosition().AsVector3()) }).ToArray(),
+                position = Coordinates(b.Value.transform.position.ToGlobalPosition().AsVector3()),
+                disabled = b.Value.disabled, availableAircraft = b.Value.GetAvailableAircraft().Select(d => d.jsonKey).ToArray() }).ToArray(),
             aircraftTypes = ready ? Encyclopedia.Lookup.Where(x => x.Value is AircraftDefinition).Select(x => x.Key).ToArray() : new string[0],
+            aircraftCatalog = ready ? Encyclopedia.Lookup.Values.OfType<AircraftDefinition>().Select(d => new {
+                key = d.jsonKey, cost = d.value, rank = d.aircraftParameters.rankRequired }).ToArray() : new object[0],
             actors = MockPlayers.Players.Select(p => new {
                 actor = MockPlayers.Name(p), creationId = MockPlayers.CreationId(p), playerId = p.NetId, score = p.PlayerScore, faction = p.HQ?.faction.factionName,
                 aircraft = p.Aircraft == null ? null : new {
@@ -287,6 +320,7 @@ public sealed class Plugin : BaseUnityPlugin
         stopping = true; listener?.Stop(); Application.logMessageReceived -= OnLog;
         foreach (var p in MockPlayers.Players.ToArray()) if (p.Aircraft != null) DirectedPilot.For(p.Aircraft).Cancel();
         MockPlayers.Cleanup();
+        RequestConnections.Cleanup();
         harmony?.UnpatchSelf();
     }
 }

@@ -3,6 +3,7 @@ import socket
 import threading
 import time
 import unittest
+from unittest.mock import patch
 
 from notestpilot import CommandError, EventOverflow, ProtocolError, RuntimeFailure, Session, StaleActor, TransportError, WaitTimeout
 from notestpilot.__main__ import two_actor_example
@@ -113,9 +114,20 @@ class ClientTests(unittest.TestCase):
         self.assertEqual([r["command"] for r in peer.requests], ["status", "status"])
 
     def test_wait_timeout_preserves_last_state(self):
+        clock = [0.0]
+        observed = []
+        def exceeds_deadline_after_snapshot(snapshot):
+            observed.append(snapshot)
+            clock[0] = 11.0
+            return False
         with Peer([state()]) as peer:
-            with self.assertRaises(WaitTimeout) as caught:
-                peer.client().wait_for(lambda s: False, "a specific state", timeout=0.02, interval=1)
+            # Keep real TCP framing, but advance the deadline clock only after
+            # the predicate has received a complete snapshot. No tiny wall-time
+            # budget or assumed monotonic call count decides this assertion.
+            with patch("notestpilot.client.time.monotonic", side_effect=lambda: clock[0]):
+                with self.assertRaises(WaitTimeout) as caught:
+                    peer.client().wait_for(exceeds_deadline_after_snapshot, "a specific state", timeout=10, interval=1)
+            self.assertEqual(observed, [state()])
             self.assertEqual(caught.exception.last_state, state())
             self.assertEqual(caught.exception.description, "a specific state")
         self.assertEqual(len(peer.requests), 1)

@@ -1,6 +1,6 @@
 # What has actually passed
 
-These are checks of the **Server simulation** mode: real dedicated-build game runs
+The Server simulation checks below use real dedicated-build game runs
 in disposable Linux labs, using built-in
 Escalation, BepInEx 5 and the exact game assembly hash documented in the README.
 There is one game process with server-side mock players. There are no separate
@@ -8,7 +8,7 @@ retail clients in these tests.
 
 Mock aircraft are simulated on the server. Normal remote-player aircraft instead
 send their client-simulated flight snapshots and hit claims through server
-validation. These tests do not cover that path, joining funds, purchases,
+validation. Server simulation tests do not cover that path, joining funds, purchases,
 reservations or saved-player persistence. Native reward routines are retained,
 but kill/score assertions are still unverified. See [testing modes](testing-modes.md).
 
@@ -34,7 +34,7 @@ native create and spawn commands: the example failed, recovered only its own
 actors, and cleaned them without repeating the mutations. A separate run executed the public combat
 example itself, rather than relying on a private wrapper's equivalent logic.
 
-The Python suite passes **65 tests**, covering real loopback transport, identity
+The Python suite passes **93 tests**, covering real loopback transport, identity
 checks, no automatic command retries, deadlines, incomplete evidence and example
 cleanup. A reflection check validates **24 Harmony callback bindings** against
 the supplied game assemblies. These checks supplement the game runs; they do
@@ -87,6 +87,46 @@ transitions and native weapon effects, rather than a realistic combat encounter.
 Hit registration can be observed after damage application because its observer
 runs after the native method returns; sequence numbers describe observation order.
 
+## Native Player requests checks
+
+Separate fixtures use virtual non-host connections in the same game process,
+with original non-Steam authentication, scene readiness and serialized request
+dispatch. These are request-handling checks, not flight or network-delivery tests.
+
+| Check | Observed result |
+|---|---|
+| Native entry | Distinct authenticated non-host player owned by its connection; ordinary scene readiness |
+| Joining allowance | Fresh player allocation changed from 0 to the mission's normal 45 |
+| Unaffordable purchase | Cost 65 rejected; allocation and inventory unchanged, native `InventoryCost` retained |
+| Accepted purchase | COIN cost 11.5 deducted exactly; one ordinary owned airframe credited |
+| Spawn eligibility | Unowned airframe and foreign-faction airbase rejected through correlated native replies |
+| Owned spawn | Native hangar created the connection-owned aircraft; inventory moved into use, `LocalSim=false`, `remoteSim=true` |
+| Wrong owner | A request from one player targeting another was rejected by the original dispatcher; `NoAuthority`, one native error, target unchanged |
+| Native rate limit | Ten same-frame read-only queries succeeded, the eleventh failed; the second player's independent bucket remained usable and the first refilled normally |
+| Two-player consumer scenario | The actual public example passed normal allowances, exact-cost purchases, owned spawns, identity/economy isolation and independent cleanup |
+| Disconnect | Native membership and owned/visible identities cleared; the other player survived the first disconnect unchanged |
+
+The guard fixture uses an existing read-only return RPC, so rate/ownership tests
+do not need to modify funds. Original error flags and penalties are retained.
+The intentional wrong-owner error is explicitly accounted for against its exact
+sender, target and reply; unrelated errors fail the fixture.
+
+Native spawn RPC success is distinct from the game's `Allowed` result and from
+the later aircraft appearing. Tests assert the correlated reply and actual owner.
+Error flags are cumulative: an earlier rejected purchase can remain recorded
+after a later accepted request. There is no extra-funds or direct-spawn fallback.
+
+These fixtures do not establish retail/Steam login, sockets, client-owned flight
+or hit claims, persistence after reconnect, every aircraft/loadout, or sustained
+multiplayer play. Their short durations are not player-capacity measurements.
+
+The actual public two-player example passed in three separate fresh missions.
+Each checked ordinary allowances, exact purchase debits and inventory credits,
+two correlated owned spawns, independent disconnects and native cleanup.
+[Request-mode evidence](player-request-checks.json) records the checks, tested
+runtime hashes and private evidence archive hashes. The final runtime hash is
+`168e9631523d0ac678b21df4938ec966620a78e326c6a4d3b81616d67e2e53bd`.
+
 ## Resource observations
 
 Across the fuller short runs, the whole game process averaged about **0.65–0.68
@@ -125,10 +165,10 @@ logs and game files are excluded from this repository.
 - Longer missions, deliberate collision avoidance, takeoff, landing and waypoint arrival.
 - Other aircraft, missiles, turrets, ground targets and kill/score scenarios.
 - Many simultaneous actors, mission reloads and complete emitted-object cleanup.
-- Retail Steam clients, authentication, client ownership and network packet paths.
+- Retail/Steam authentication, client-owned flight and socket transport.
 - Steady-state capacity or a performance improvement over the previous approach.
 
-The fixture deliberately starts two aircraft airborne, nearby and aligned. It
+The Server simulation combat fixture starts two aircraft airborne, nearby and aligned. It
 checks native mechanics and precise script ownership; it is not a realistic
 combat encounter or a claim of full multiplayer coverage. Known headless texture
 upload errors are explicitly allowed by the lab fixture; unexpected errors,

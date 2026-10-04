@@ -1,112 +1,110 @@
 # Testing modes
 
-NOTestPilot currently provides **server simulation testing**. A separate
-**player request testing** mode is a possible next step; it is not implemented.
-Both are development tests against a disposable dedicated game. Neither mode by
-itself proves retail-client or network-transport behavior. There is no `--mode`
-flag; current scripts use server simulation.
+NOTestPilot implements two complementary modes in one disposable dedicated game.
+Use Server simulation for scripted flight and combat, and Player requests for
+native entry, economy and spawn decisions. Neither establishes retail-client or
+socket-transport behavior.
 
-## Available: server simulation
+| Behavior | Server simulation | Player requests |
+|---|---|---|
+| Player identity | Ownerless native mock Player | Native non-host Player owned by its virtual connection |
+| Authentication | Bypassed for mocks | Original non-Steam authentication and password exchange |
+| Flight | Native physics runs on the server | Normal remote simulation retained; client physics is not supplied |
+| Gun and damage | Native server firing, bullets, hits and damage; remote hit-claim validation bypassed | Client firing/hit requests are not implemented |
+| Economy and spawn | Direct fixture creation bypasses allowance, inventory and request checks | Original faction allowance, purchase and validated airbase spawn requests |
+| Framework guards | Mock control handle guards | Native sender ownership, RPC rate limits and argument decoding, plus immutable control handles |
+| Lifecycle | Script cancellation, ejection/replacement and owned mock cleanup | Native disconnect, owned-identity and observer cleanup |
+| Networking | No mock peer | Copied native messages delivered in memory; sockets and remote rendering untested |
 
-The script creates ownerless native `Player` records and aircraft in one server
-process. It directs tasks through `Session.create()`, `Actor.spawn()`,
-`Actor.goto()` and `Actor.attack()`, then checks `Actor.status()` and
-`Session.events()`. Cancellation and cleanup use `Actor.cancel()` and
-`Actor.remove()`; `Session.quit()` ends the disposable fixture.
+## Server simulation
 
-The game still performs native flight simulation, aiming helpers, gun firing,
-bullet creation, collision, hit registration, damage application, ejection and
-aircraft replacement. This makes the mode useful for scripted flight, gun/damage
-and lifecycle regressions. It does not establish what a connected player can
-request, what the server accepts from that player, or what another client sees.
+`Session.create()` creates a mock identity. `Actor.spawn()`, `goto()` and `attack()`
+assign its aircraft pose and explicit tasks. The adapter uses selected native
+steering, ballistic and firing helpers; it does not install the ordinary NPC
+brain. Native flight, gun/damage, lifecycle and repeated navigation fixtures pass.
+Native reward math is retained, but kill-score assertions remain unverified.
+Mock faction save restoration/saving and connected-player request checks are
+bypassed. Resource use measures this fixture, not connected-player capacity.
 
-| Behavior | Server simulation mode |
-|---|---|
-| Aircraft flight | Runs on the server for the ownerless mock; incoming client flight snapshots and their validation are bypassed. |
-| Gun and damage | Uses native server bullet, hit and damage routines. A remote client's hit claim and the server validation of that claim are bypassed. |
-| Player entry and economy | Mock identity is created directly. Connected-player join checks, joining funds, faction allocations, reservations, purchases and ordinary aircraft request checks are bypassed. |
-| Inventory and persistence | Faction save restoration and saving faction data are bypassed. |
-| Ejection and lifecycle | Native server ejection/replacement behavior is exercised directly; the client ejection request and its checks are bypassed. |
-| Replication | No connected client receives state. Snapshot timing, serialization, delivery, and remote observation are untested. |
-| Rewards and score | Native reward/score math is retained, but kill/score assertions are unverified and there is no client recipient for reward displays. Retaining that math does not test normal purchases, lifecycle requests, kill attribution or kill-score outcomes. |
+## Player requests
 
-Resource use and actor counts describe this server-side fixture. They are not a
-measurement of connected-player cost or capacity.
-
-## Proposed: player request testing
-
-This mode is not implemented and is not part of current test coverage. Its goal
-is to give each test player a connection context and send native game messages
-through the normal server dispatcher. Source inspection found a route that keeps
-authentication, sender ownership, argument decoding and per-player RPC rate
-checks. It needs a game runtime proof before it can be called working:
+`Session.join_request_player(name, password)` creates a separate virtual endpoint
+and completes the game's original authentication and scene-readiness path. It
+does not stamp successful authentication or invent Steam identities.
 
 ```mermaid
 flowchart LR
-    Script["Test script"] --> Peer["Separate virtual connection per player"]
-    Peer --> Entry["Native message dispatcher"]
-    Entry --> Auth["Normal non-Steam authentication and scene readiness"]
-    Auth --> Player["Native player initialization with connection owner"]
-    Entry --> Dispatch["Normal RPC ownership, rate and argument checks"]
-    Dispatch --> Join["Faction join handler"]
-    Dispatch --> Purchase["Reserve / purchase handler"]
-    Dispatch --> Spawn["Aircraft spawn-request handler"]
-    Join --> Allowance["Normal joining allowance / saved state"]
-    Purchase --> Funds["Funds and inventory checks"]
-    Funds --> Reservation["Native reserve / purchase action"]
-    Spawn --> Rules["Funds · inventory · spawn checks"]
-    Rules --> Aircraft["Native aircraft creation"]
-    Player --> State["Server state and response"]
-    Allowance --> State
-    Reservation --> State
-    Aircraft --> State
-    State --> Script
+    Script["RequestPlayer script"] --> Peer["Separate virtual connection"]
+    Peer --> Dispatch["Original native message dispatcher"]
+    Dispatch --> Auth["Non-Steam auth · password · scene readiness"]
+    Auth --> Player["Native Player with connection owner"]
+    Dispatch --> Guards["RPC sender ownership · rate · decoding"]
+    Guards --> Economy["Native faction join · allowance · purchase"]
+    Guards --> Spawn["Native airbase · inventory · loadout checks"]
+    Spawn --> Aircraft["Connection-owned aircraft · remote simulation"]
+    Player --> Evidence["State and copied native replies"]
+    Economy --> Evidence
+    Aircraft --> Evidence
+    Evidence --> Script
 ```
 
-The virtual connection would carry native messages in memory through the same
-dispatcher and decoder used for incoming messages. This bypasses sockets and UDP
-delivery, rather than authentication or the normal request checks. Source indicates
-the game's existing non-Steam path can supply authentication and per-player
-saved-state objects; the proposal does not invent Steam identities or use real
-accounts.
+Requests are serialized and submitted with their own native sender to the
+registered dispatcher. Direct gameplay calls and host-sender shortcuts are not
+used. A rejection never falls back to free creation, extra funds or server flight
+control. Native errors and replies remain visible.
 
-Calling a purchase method directly is insufficient: it skips framework ownership
-and rate checks, and some public command wrappers choose the host sender. The
-adapter must bind each request to its own native connection and retain native
-errors, replies and notices. No rejected request may fall back to direct aircraft
-creation, extra funds or server flight control.
+The separate `RequestPlayer` handle provides `join_faction()`,
+`purchase_airframe()`, `request_spawn()`, `status()`, `packets()` and
+`disconnect()`. Choose faction, airbase and affordable aircraft from live
+mission metadata; omitting a loadout uses the aircraft's native default. Status
+does not expose a loadout-preset or weapon-mount catalog. Reservations are not
+exposed by this API. A spawn request
+returning an allowed native result may still be waiting for a hangar; require its
+exact correlated receipt and actual linked aircraft before declaring success.
+Rebind explicitly after the aircraft generation changes.
 
-### First proof
+Native game checks passed authentication and readiness, ordinary allowance,
+unaffordable purchase rejection, exact-cost inventory credit, unowned and
+foreign-base spawn rejection, and an owned aircraft with normal remote authority.
+A two-peer fixture passed wrong-owner rejection, native rate limiting and refill,
+independent sender state and complete disconnect cleanup. The public two-player
+purchase/spawn example also passed its full native checks. Rejoining, persistence,
+other missions and loadouts need further checks.
 
-1. Complete native non-Steam authentication and scene readiness for one virtual
-   connection; verify the player is owned by that connection.
-2. Join a faction through its normal request and observe the ordinary allowance,
-   faction funds and owned-airframe state.
-3. Reject an unaffordable purchase with funds and inventory unchanged; accept an
-   affordable purchase with the exact native cost deducted and inventory credited.
-4. Request an airbase spawn using that inventory. Verify normal eligibility,
-   resource use and player/aircraft ownership; reject an unowned or forbidden spawn.
-5. Reject a request from the wrong owner and verify native rate limiting.
-6. Disconnect and verify native player, connection and observer cleanup.
+### Enable and run
 
-These are acceptance criteria, not test results. Private framework bindings,
-outgoing-message handling and native saved-state behavior remain unverified in a
-running fixture. Rejoining and persistence need their own later checks.
+Use the reviewed runtime and an already running disposable mission, as described
+in the [README setup](../README.md#build-and-check). Set
+`NOTESTPILOT_PLAYER_REQUESTS=1` on the game process. Supply the Python script's
+private control port/token and explicit `NOTESTPILOT_PASSWORD` matching the lab
+password, then run:
 
-### Shared tooling, different actions
+```sh
+uv run python examples/player_requests.py
+```
 
-Both modes can share the script transport, observations, bounded waits, native
-event evidence and immutable runtime/player/aircraft handles. Lost replies must
-remain uncertain; spending or spawning must never be retried automatically.
+The example checks two distinct identities, independent allowance and purchases,
+correlated owned spawns and cleanup. It fails on uncertain outcomes and cleans
+only its own connections. Native guard diagnostics require the additional
+`NOTESTPILOT_REQUEST_PROBES=1` opt-in; they are bounded read-only queries, not a
+general RPC interface.
 
-The request mode needs a distinct player handle with join, purchase, reserve and
-airbase-spawn operations. Existing free-position `Actor.spawn()`, `goto()` and
-server `attack()` must not silently become available to request players. Keep
-the adapters separate until both have native evidence; extract shared code only
-where its behavior is actually the same.
+### Evidence and cleanup
 
-Player-request tests would complement server simulation tests rather than replace
-them. They could validate server-side request decisions, but would still not
-prove retail login, client flight simulation, packet transport, replication to a
-second process, or rendering. Testing client-owned flight would require a separate
-client-simulation adapter and its own evidence.
+`packets()` consumes bounded chunks of copied native outgoing messages. Keep raw
+packet records in private diagnostic storage. Capture the current sent-sequence
+boundary and drain through it; new output can continue, so an empty queue is not
+an acceptance condition. A lost response or sequence gap invalidates that
+connection's packet evidence. Native reply observation happens before consumer
+drains and does not remove packets.
+
+Handles bind runtime, connection, player and aircraft generation. An uncertain
+join can be inspected through its exact creation receipt for cleanup; never
+adopt a same-name foreign player or replay a mutation. Spending and spawning are
+issued once. Verify native disconnected membership, zero owned/visible identities
+and complete cleanup rather than relying only on a disconnected label.
+
+Player requests retains native per-player saved-state contexts, but reconnect
+persistence is unverified. It does not provide client-owned flight snapshots,
+hit claims, UDP delivery, retail Steam authentication, replication to another
+process or rendering. Those require separate adapters and evidence.

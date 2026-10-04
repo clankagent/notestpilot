@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "notestpilot"
 version = "0.2.0"
-description = "Scripted Nuclear Option server simulation tests with native mock players"
+description = "Scripted Nuclear Option server simulation and native player-request tests"
 requires-python = ">=3.11"
 dependencies = []
 

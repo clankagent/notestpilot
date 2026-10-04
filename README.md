@@ -1,32 +1,32 @@
 # NOTestPilot — programmable server tests
 
-Script repeatable Nuclear Option gameplay tests with multiple native mock players
-in one game process. Choose their tasks, destinations, exact targets and weapons;
-observe native game effects and assert what happened.
+Script repeatable Nuclear Option tests with multiple native test players in one
+game process. Direct aircraft tasks or submit player requests, observe native
+effects, and assert what happened.
 
-The available mode is **Server simulation**. It runs the mock aircraft's physics
-on the server and uses native flight, weapon and damage mechanics. It is useful
-for gameplay and mod regressions, independently scripted actors and lifecycle
-tests. It does not reproduce the full path of a connected remote player.
+Choose **Server simulation** for scripted flight, weapons and lifecycle tests,
+or **Player requests** for native authentication, joining, purchases and validated
+airbase spawning. Both run in one disposable game process with separate APIs.
 
 ## Testing modes
 
 | Mode | Status | Purpose |
 |---|---|---|
 | Server simulation | Available; measured game scenarios pass | Script native aircraft, combat and lifecycle behavior in one game process |
-| Player requests | Proposed; not implemented or selectable | Exercise normal player requests, funds, aircraft ownership and server validation |
+| Player requests | Implemented; native request and guard checks pass | Exercise non-Steam authentication, ordinary allowance, purchases, ownership and validated airbase spawning |
 
 A normal remote player simulates flight on their client and sends snapshots;
 Server simulation instead flies the mock aircraft on the server. Its native
 impacts also bypass the remote client's hit-claim validation. Authentication,
-normal joining funds, aircraft purchase/reservation, saved-player data and
-per-client networking are outside the current mode's coverage.
+normal joining funds, aircraft purchase/reservation and saved-player data are
+outside Server simulation coverage. Player requests exercises the native entry
+and request checks, while socket delivery and client-owned flight remain untested.
 
-Native ammunition, firing cadence, impacts and damage still run. This is a
+Server simulation retains native ammunition, firing cadence, impacts and damage. This is a
 deliberate simulation test tool, not an equivalent number of connected players.
 See [the mode comparison](docs/testing-modes.md) for the precise shared behavior,
-bypasses and intended second mode. There is no mode-selection flag yet; all
-current scripts use Server simulation.
+bypasses and request coverage. Use `Session.create()` for Server simulation or
+`Session.join_request_player()` for Player requests.
 
 This branch is a new orphan history. The previous headless-client implementation
 is preserved on `main`.
@@ -47,8 +47,18 @@ A separate session also passed five minutes of navigation followed by exact-targ
 gunfire, cancellation and a measured turn when the same aircraft resumed flying.
 A second pilot continued independently through those task changes.
 
-Mock players do not establish authentication, real client packet handling or
-retail Steam coverage. Longer missions, other aircraft and weapons, mission
+Server simulation mocks do not establish authentication. Separate Player requests
+checks passed native non-Steam authentication, allowance, rejected unaffordable
+purchases, exact-cost inventory credit, rejected unowned/foreign-base spawning
+and a connection-owned aircraft retaining remote simulation. A two-peer guard
+fixture also passed wrong-owner rejection, native rate limiting and refill,
+independent sender state and disconnect cleanup. The public two-player purchase
+and spawn example also passed in three fresh missions, including identity and
+economy isolation and exact-owned disconnect cleanup. See the
+[measured request checks](docs/runtime-checks.md#native-player-requests-checks).
+
+Neither mode establishes socket delivery or retail Steam coverage. Longer
+missions, other aircraft and weapons, mission
 changes and larger actor counts remain to be tested. No capacity or resource
 saving claim is made from these short checks.
 
@@ -57,8 +67,8 @@ results are local inputs, never repository contents.
 
 ## What a script controls
 
-Each named pilot has a native game `Player` record and its own aircraft. A script
-chooses the destination, exact target and weapon station. The adapter borrows the
+In Server simulation, each named pilot has a native game `Player` record and its
+own aircraft. A script chooses the destination, exact target and weapon station. The adapter borrows the
 game's steering and ballistic calculations and calls the normal firing path.
 The ordinary autonomous NPC brain is never assigned to these pilots.
 
@@ -77,7 +87,7 @@ These are server-side mock players without network connections. This architectur
 tests server game behavior; it does not exercise a retail client's login,
 transport or rendering. The previous network-client approach remains on `main`.
 
-## Write a task
+## Write a Server simulation task
 
 The Python package has no runtime dependencies. Use `uv sync`, then provide the
 private control port and token through `NOTESTPILOT_PORT` and `NOTESTPILOT_TOKEN`.
@@ -196,6 +206,43 @@ Lost events and observer errors invalidate evidence.
 
 See [the architecture](docs/architecture.md) for the control and lifecycle paths,
 and [runtime checks](docs/runtime-checks.md) for what has actually passed.
+
+## Test Player requests
+
+Enable `NOTESTPILOT_PLAYER_REQUESTS=1` on the disposable game process before
+starting its mission. Supply the Python script's `NOTESTPILOT_PASSWORD` explicitly
+with the same configured lab password; keep `NOTESTPILOT_PORT` and
+`NOTESTPILOT_TOKEN` for the private control connection.
+
+```sh
+uv run python examples/player_requests.py
+```
+
+The example joins two native non-host players, checks ordinary allowances and
+independent purchases, then requires each spawn's correlated native reply and
+actual connection-owned aircraft. It verifies remote simulation and cleans only
+its own connections on success or failure. The complete example and the separate
+request rejection/guard paths have passed real game checks.
+
+| Request API | Purpose |
+|---|---|
+| `session.join_request_player(name, password)` | Authenticate once and wait for native readiness |
+| `player.join_faction(faction)` | Request normal faction entry and allowance |
+| `player.purchase_airframe(key)` | Request a purchase using ordinary allocation |
+| `player.request_spawn(airbase, key)` | Request validated native spawning; returns a current handle |
+| `player.status()` | Inspect inventory, ownership and correlated spawn outcomes |
+| `player.packets()` | Consume one bounded chunk of copied native outgoing messages |
+| `player.disconnect()` | Run native connection and owned-object cleanup |
+
+An allowed spawn reply may precede the aircraft. Assert both the exact receipt
+and the linked aircraft, then explicitly rebind after its generation changes.
+Request players have no free-position spawn, `goto()` or server attack capability.
+After an uncertain join, use `recover_request_player()` only to inspect the exact
+creation receipt and clean up; never retry a purchase or spawn automatically.
+Packet drains consume diagnostics: keep raw bytes private, and drain through a
+captured sent-sequence boundary rather than waiting for a continuously producing
+connection to become empty. Lost drain responses or sequence gaps invalidate
+packet evidence.
 
 ## Build and check
 

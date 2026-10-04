@@ -1,16 +1,18 @@
 # How the programmable pilots work
 
-A test is a Python program. It creates named mock players, gives each one a task,
+A Server simulation test is a Python program. It creates named mock players, gives each one a task,
 reads what the server did, and makes assertions. Tasks can change in response to
 observations: this is a two-way control API, not a recording of button presses.
 
-The implemented mode is **server simulation testing**. Each mock has native game
+NOTestPilot has two modes. This page explains **Server simulation** tasks;
+[Player requests](testing-modes.md#player-requests) has its own native connection,
+authentication and request path. Each Server simulation mock has native game
 identity and an aircraft, but no client connection or owner. The server runs the
 aircraft simulation. This is useful for repeatable flight, gun, damage and
 lifecycle regressions; it does not model a connected player's request path. See
-[Testing modes](testing-modes.md) for the boundary and the proposed second mode.
+[Testing modes](testing-modes.md) for the implemented modes and their boundaries.
 
-All mock players share the running server's world and game process. They each
+All Server simulation mocks share the running server's world and game process. They each
 have a native `Player`, `PlayerRef`, faction membership and associated aircraft.
 They have no network connection or Steam identity. This allows server behavior
 tests without starting another complete game process for every actor.
@@ -60,7 +62,7 @@ deadlines and retain their last observed state.
 
 ## Handles protect the intended actor
 
-Every handle contains three identities: runtime instance, native player ID and
+Every Server simulation handle contains three identities: runtime instance, native player ID and
 aircraft persistent ID. `spawn()` returns a new immutable handle; keep that
 returned value. Ejection and replacement retire the old aircraft generation.
 Reusing a name does not transfer an old handle to the new player.
