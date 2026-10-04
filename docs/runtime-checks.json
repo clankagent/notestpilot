@@ -1,7 +1,7 @@
 {
   "gameAssemblySha256": "df5bed594dd84912efb3e57faa75b37d7e327bf4c8f5418f50411ad0ff46e24a",
   "date": "2026-10-04",
-  "coverage": "Short disposable server-side mock-player fixtures; no retail clients or transport coverage",
+  "coverage": "Disposable server-side mock-player fixtures; individual run summaries identify observed duration. No retail clients or transport coverage.",
   "resourceMethod": "Linux game-process CPU tick deltas and RSS during observed mission-running intervals. Includes stock Escalation simulation and test adapter; not per-mock cost, steady-state sizing, or a before/after capacity comparison.",
   "runs": [
     {
@@ -494,6 +494,102 @@
         "observedEvents": 279
       },
       "publicExampleSha256": "152f283bc00dca6c977caac2e68031095ccdc5d069b0e636bffe400f36bc2253"
+    },
+    {
+      "run": 14,
+      "checksPassed": 8,
+      "checks": [
+        "host rejects retired runtime before mutation",
+        "actor.create rejects retired runtime before mutation",
+        "quit rejects retired runtime before mutation",
+        "rejected startup mutations leave idle live runtime",
+        "native mission running",
+        "local host authenticated through native handlers",
+        "public sustained-task script passes",
+        "public example cleans only its mock actors"
+      ],
+      "runtimeSha256": "70f7c89bf7f756f724123d3ecad03689ae7dc3a74788b6681669865b5e5f8a63",
+      "privateEvidenceArchiveSha256": "8b61c1b0a593c08eb1dcbfe341d0f539e710fe50441619cf35b877f953ff0db4",
+      "nativeQuit": true,
+      "gameExitCode": 0,
+      "ownedChildGone": true,
+      "eventCounts": {},
+      "resources": {
+        "missionObservedSeconds": 301.74,
+        "gameCpuSeconds": 199.92,
+        "meanBusyCores": 0.663,
+        "rssMinMiB": 986.4,
+        "rssMaxMiB": 1127.3
+      },
+      "publicSustained": {
+        "requestedSeconds": 300,
+        "observedSeconds": 301.19,
+        "actors": 2,
+        "turnDegrees": 20,
+        "phases": 10,
+        "checks": {
+          "independentNativeIdentity": true,
+          "cancelIsolation": true,
+          "repeatedWaypoints": true,
+          "physicalMotionEveryPhase": true,
+          "signedHeadingResponseEveryPhase": true
+        },
+        "minimumPhaseDisplacementMetres": 2861.0,
+        "minimumSignedHeadingResponseDegrees": 19.93,
+        "sampledSpeedRangeMetresPerSecond": [
+          86.25,
+          112.41
+        ]
+      },
+      "publicSustainedSha256": "320cc28d124757b37727a21b663864ccbea982d085c6c77ad528c1831d9af1b4"
+    },
+    {
+      "run": 15,
+      "checksPassed": 8,
+      "checks": [
+        "host rejects retired runtime before mutation",
+        "actor.create rejects retired runtime before mutation",
+        "quit rejects retired runtime before mutation",
+        "rejected startup mutations leave idle live runtime",
+        "native mission running",
+        "local host authenticated through native handlers",
+        "public sustained-task script passes",
+        "public example cleans only its mock actors"
+      ],
+      "runtimeSha256": "70f7c89bf7f756f724123d3ecad03689ae7dc3a74788b6681669865b5e5f8a63",
+      "privateEvidenceArchiveSha256": "322010fb6fa621f14b93d63afd0f302cfe5987495a38c380b20b8c6ca391a037",
+      "nativeQuit": true,
+      "gameExitCode": 0,
+      "ownedChildGone": true,
+      "eventCounts": {},
+      "resources": {
+        "missionObservedSeconds": 303.17,
+        "gameCpuSeconds": 231.21,
+        "meanBusyCores": 0.763,
+        "rssMinMiB": 995.6,
+        "rssMaxMiB": 1151.8
+      },
+      "publicSustained": {
+        "requestedSeconds": 300,
+        "observedSeconds": 302.28,
+        "actors": 4,
+        "turnDegrees": 15,
+        "phases": 10,
+        "checks": {
+          "independentNativeIdentity": true,
+          "cancelIsolation": true,
+          "repeatedWaypoints": true,
+          "physicalMotionEveryPhase": true,
+          "signedHeadingResponseEveryPhase": true
+        },
+        "minimumPhaseDisplacementMetres": 2906.7,
+        "minimumSignedHeadingResponseDegrees": 14.83,
+        "sampledSpeedRangeMetresPerSecond": [
+          87.5,
+          112.38
+        ]
+      },
+      "publicSustainedSha256": "a2a01e956aec70afbb5660b0dfd2ef7bc6183cad316f8ad96e8798ff515f8daf"
     }
   ],
   "failedRuns": [

@@ -27,11 +27,34 @@ native create and spawn commands: the example failed, recovered only its own
 actors, and cleaned them without repeating the mutations. A separate run executed the public combat
 example itself, rather than relying on a private wrapper's equivalent logic.
 
-The Python suite passes **47 tests**, covering real loopback transport, identity
+The Python suite passes **58 tests**, covering real loopback transport, identity
 checks, no automatic command retries, deadlines, incomplete evidence and example
 cleanup. A reflection check validates **24 Harmony callback bindings** against
 the supplied game assemblies. These checks supplement the game runs; they do
 not substitute for them.
+
+The sustained-task orchestration tests also reject aircraft that keep moving and
+ticking while ignoring waypoint turns. Simulated telemetry in these tests does
+not establish sustained native flight; that needs a separate real game run.
+
+## Five-minute navigation check
+
+Two native mock players completed **301.19 seconds** of scripted navigation in
+one game process. Both responded physically to ten alternating waypoint turns;
+the smallest observed turn response was **19.9°** for a requested 20° turn.
+Every 30-second phase covered at least **2.86 km**. Native identities, server
+simulation, controlling task state and absence of autonomous NPC brains were
+checked throughout. Cancelling one actor left the other progressing, and both
+actors were removed before a clean native game exit.
+
+A second scenario with **four actors** and requested **15°** turns completed
+**302.28 seconds**. All forty actor/phase observations passed; the minimum
+heading response was **14.83°** and minimum phase displacement **2.91 km**.
+Cancelling the first actor left every other actor progressing. Exact-owned cleanup
+and a clean native game exit passed again.
+
+These prove the measured two-actor and four-actor airborne scenarios. Combat
+transitions in the same sustained session still need their own runtime checks.
 
 ## Resource observations
 
@@ -41,9 +64,17 @@ the Escalation world, native AI, physics, mock actors and test adapter. It is no
 the cost of a mock actor alone. The 30-second public lifecycle run averaged
 0.684 busy cores, with sampled RSS of 997–1063 MiB.
 
+The five-minute two-actor run averaged **0.663 busy cores** over its measured
+mission interval, with RSS of **986–1127 MiB**. These are whole-game observations,
+including the stock Escalation world and test adapter.
+The four-actor follow-up averaged **0.763 busy cores**, with RSS of **996–1152 MiB**.
+The two runs used different turn schedules; their difference is not an isolated
+measurement of the cost of adding two actors.
+
 Measurements use Linux game-process CPU tick deltas and RSS during observed
-mission-running intervals, roughly 17–51 seconds for the fuller runs. Startup, later mission
-aging and a prolonged human multiplayer workload are not represented. There is
+mission-running intervals, roughly 17–51 seconds for the fuller short runs and
+about five minutes for the navigation follow-up. Startup, later mission aging
+and a prolonged human multiplayer workload are not represented. There is
 no before/after comparison establishing resource savings or player capacity.
 
 [Machine-readable summaries](runtime-checks.json) include check names, exact
@@ -52,7 +83,7 @@ logs and game files are excluded from this repository.
 
 ## What remains unproven
 
-- Sustained missions, collision avoidance, takeoff, landing and waypoint arrival.
+- Longer missions, deliberate collision avoidance, takeoff, landing and waypoint arrival.
 - Other aircraft, missiles, turrets, ground targets and kill/score scenarios.
 - Many simultaneous actors, mission reloads and complete emitted-object cleanup.
 - Retail Steam clients, authentication, client ownership and network packet paths.

@@ -15,8 +15,12 @@ stale-handle rejection, and explicit-target gunfire with native hits and attribu
 applied damage. Ejection, replacement and reusing a retired player's name also
 pass. This remains development tooling with limited scenario coverage.
 
+Two-actor and four-actor scenarios also passed five minutes of repeated measured waypoint turns and
+cancellation isolation, with native identity and control ownership checked
+throughout. That airborne fixture is still narrower than a full mission.
+
 Mock players do not establish authentication, real client packet handling or
-retail Steam coverage. Longer sessions, other aircraft and weapons, mission
+retail Steam coverage. Longer missions, other aircraft and weapons, mission
 changes and larger actor counts remain to be tested. No capacity or resource
 saving claim is made from these short checks.
 
@@ -102,6 +106,28 @@ uv run python examples/lifecycle.py
 Both scripts produce a JSON result, exit unsuccessfully on failed assertions and
 keep cleanup failures visible. Their airborne fixtures exercise particular
 server mechanics, not a prolonged multiplayer session.
+
+For repeated navigation tasks in one session:
+
+```sh
+uv run python examples/sustained_tasks.py --duration-seconds 300
+```
+
+This script assigns two separated airborne pilots new waypoints every 30 seconds.
+Each phase requires measured movement and a turn toward the assigned direction,
+as well as the expected native identities, server simulation and task state.
+It checks cancellation isolation and cleans only its own actors. JSON diagnostics
+include phase timings, heading response and observed speed/altitude ranges.
+Durations below five minutes are labelled smoke tests. Consult the runtime checks
+for which durations and scenarios have actually passed against the game.
+The actor count can range from 2 to 4 and the turn angle from 10° to 35°:
+
+```sh
+uv run python examples/sustained_tasks.py --actors 4 --turn-degrees 15
+```
+
+The script
+requires every remaining actor to progress when it cancels the first actor.
 
 Useful script operations:
 
